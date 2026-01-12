@@ -1,89 +1,101 @@
 "use client"
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Edit, Trash2, Eye, Package2 } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package2, X, ZoomIn } from "lucide-react"
+import axios from "axios"
+
+// 1. MOCK DATA
+const MOCK_PRODUCTS = [
+  { id: 1, title: "Nike Air Jordan 1", category: "Shoes", price: 180.00, stock: 45, status: "Active", image: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/3396ee3c-08cc-4ada-baa9-655af12e3120/air-jordan-1-mid-shoes-X5pM09.png" },
+  { id: 2, title: "Nike Tech Fleece", category: "Apparel", price: 110.00, stock: 120, status: "Active", image: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/e6d5e56e-c15c-4394-8255-06d914d3f3f7/sportswear-tech-fleece-windrunner-mens-full-zip-hoodie-tour-Pml8P0.png" },
+  { id: 3, title: "Nike Air Max 90", category: "Shoes", price: 140.00, stock: 0, status: "Out of Stock", image: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/wzitsrb4oucx9xlfz0uy/air-max-90-mens-shoes-6n3vKB.png" },
+  { id: 4, title: "Nike Pro Dri-FIT", category: "Apparel", price: 35.00, stock: 200, status: "Active", image: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/c26a798b-7359-4672-8820-2139d486241b/pro-dri-fit-mens-tight-fit-sleeveless-top-VNzZ7v.png" },
+]
 
 const ProductsPage = () => {
-  const products = [
-    { 
-      id: "1", 
-      name: "Nike Air Max 270", 
-      category: "Shoes", 
-      price: 180, 
-      stock: 24, 
-      status: "Active", 
-      image: "https://image-cdn.hypb.st/https%3A%2F%2Fhypebeast.com%2Fimage%2F2020%2F03%2Fsize-nike-air-max-95-20-for-20-release-date-info-0.jpg?w=960&cbr=1&q=90&fit=max", 
-    }, 
-    { 
-      id: "2", 
-      name: "Nike Tech Fleece Hoodie", 
-      category: "Hoodies", 
-      price: 120, 
-      stock: 0, 
-      status: "Out of Stock", 
-      image: "https://images.prodirectsport.com/ProductImages/Main/1029527_Main_1954523.jpg", 
-    }, 
-    { 
-      id: "3", 
-      name: "Nike Utility Backpack", 
-      category: "Bags", 
-      price: 95, 
-      stock: 15, 
-      status: "Draft", 
-      image: "https://i5.walmartimages.com/seo/Nike-Utility-Elite-Training-Backpack-BLACK-BLACK-ENIGMA-STONE_a1907b5d-bbcd-4171-a4a2-9c89a533f32d.89440c0fddb1cd830b062b007741d9cc.jpeg", 
-    }, 
-    { 
-      id: "4", 
-      name: "Nike Air Force 1", 
-      category: "Shoes", 
-      price: 150, 
-      stock: 30, 
-      status: "Active", 
-      image: "https://image-cdn.hypb.st/https%3A%2F%2Fhypebeast.com%2Fimage%2F2015%2F10%2Fnike-air-force-1-07-lv8-croc-1.jpg?q=75&w=800&cbr=1&fit=max", 
-    }, 
-    { 
-      id: "5", 
-      name: "Nike React Infinity Run", 
-      category: "Shoes", 
-      price: 190, 
-      stock: 12, 
-      status: "Active", 
-      image: "https://believeintherun.com/wp-content/uploads/2022/05/nike-react-infinity-run-flyknit-3-cover.jpg", 
-    }, 
-    { 
-      id: "6", 
-      name: "Nike Dri-FIT Training Hoodie", 
-      category: "Hoodies", 
-      price: 110, 
-      stock: 20, 
-      status: "Active", 
-      image: "https://www.bfgcdn.com/1500_1500_90/008-1410-0211/nike-primary-dri-fit-uv-training-hoodie.jpg", 
-    }, 
-    { 
-      id: "7", 
-      name: "Nike Sportswear Club Hoodie", 
-      category: "Hoodies", 
-      price: 95, 
-      stock: 0, 
-      status: "Out of Stock", 
-      image: "https://www.lax.com/cdn/shop/files/nike-mens-nsw-club-hoodie-fz-bb-apparel-tops-nike-bv2645-071-xl-charcoal-071-942408.png?v=1723145409", 
-    }, 
-    { 
-      id: "8", 
-      name: "Nike Brasilia Training Backpack", 
-      category: "Bags", 
-      price: 85, 
-      stock: 18, 
-      status: "Active", 
-      image: "https://www.misterrunning.com/images/2021-media/nike-brasilia-95-zaino-da-allenamento-black-white-dh7709-010_A.jpg", 
-    },
-  ]
+  const [products, setProducts] = useState([])
+  
+  // Modals State
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [viewingImage, setViewingImage] = useState(null) // State for Image Popup
+  const [editingId, setEditingId] = useState(null)
+  
+  // Form State
+  const [formData, setFormData] = useState({
+    title: "",
+    category: "Shoes",
+    price: "",
+    stock: "",
+    status: "Active",
+    image: ""
+  })
+
+  // Initialize Data
+  useEffect(() => {
+    if (products.length === 0) {
+      setProducts(MOCK_PRODUCTS)
+      
+    }
+    axios.get("/api/products").then(res => setProducts(res.data))
+  }, [])
+
+  // Handlers
+  const handleDelete = (id) => {
+    if (confirm("Delete this product from inventory?")) {
+      setProducts(prev => prev.filter(p => p.id !== id))
+    }
+  }
+
+  const handleOpenAdd = () => {
+    setEditingId(null)
+    setFormData({ title: "", category: "Shoes", price: "", stock: "", status: "Active", image: "" })
+    setIsModalOpen(true)
+  }
+
+  const handleOpenEdit = (product) => {
+    setEditingId(product.id)
+    setFormData({
+      title: product.title,
+      category: product.category,
+      price: product.price,
+      stock: product.stock,
+      status: product.status,
+      image: product.image
+    })
+    setIsModalOpen(true)
+  }
+
+  const handleSave = (e) => {
+    e.preventDefault()
+    const displayImage = formData.image || "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b1bcbca4-e853-4df7-b329-5be3c61ee057/dunk-low-retro-mens-shoes-bc160F.png"
+    let finalStatus = formData.status
+    if (parseInt(formData.stock) === 0) finalStatus = "Out of Stock"
+
+    if (editingId) {
+      setProducts(prev => prev.map(p => p.id === editingId ? {
+        ...p, ...formData,
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock),
+        status: finalStatus,
+        image: displayImage
+      } : p))
+    } else {
+      const newProduct = {
+        id: Date.now(), ...formData,
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock),
+        status: finalStatus,
+        image: displayImage
+      }
+      setProducts(prev => [newProduct, ...prev])
+    }
+    setIsModalOpen(false)
+  }
 
   return (
     <div className="min-h-screen bg-black">
       {/* HEADER SECTION */}
       <div className="relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black px-6 pt-12 pb-8">
-        {/* Background pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
@@ -105,7 +117,10 @@ const ProductsPage = () => {
               </p>
             </div>
 
-            <Button className="group bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider px-8 py-6 rounded-full transition-all hover:scale-105">
+            <Button 
+              onClick={handleOpenAdd}
+              className="group bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider px-8 py-6 rounded-full transition-all hover:scale-105"
+            >
               <Plus size={20} className="mr-2" />
               Add Product
             </Button>
@@ -123,28 +138,18 @@ const ProductsPage = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-800">
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
-                        Product
-                      </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider hidden md:table-cell">
-                        Category
-                      </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
-                        Price
-                      </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
-                        Stock
-                      </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
-                        Actions
-                      </th>
+                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Product</th>
+                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider hidden md:table-cell">Category</th>
+                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Price</th>
+                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Stock</th>
+                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((product, idx) => (
+                    {products.length === 0 ? (
+                      <tr><td colSpan="6" className="px-4 py-8 text-center text-gray-500">No products.</td></tr>
+                    ) : products.map((product, idx) => (
                       <tr
                         key={product.id}
                         className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors group"
@@ -152,60 +157,45 @@ const ProductsPage = () => {
                       >
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0">
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
+                            <div 
+                              className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0 cursor-pointer"
+                              onClick={() => setViewingImage(product.image)} // Click image to view
+                            >
+                              <img src={product.image} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                             </div>
-                            <span className="text-white font-bold text-sm">
-                              {product.name}
-                            </span>
+                            <span className="text-white font-bold text-sm">{product.title}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-4 hidden md:table-cell">
-                          <span className="text-gray-400 text-sm">
-                            {product.category}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <span className="text-white font-bold text-sm">
-                            ${product.price}
-                          </span>
-                        </td>
+                        <td className="px-4 py-4 hidden md:table-cell"><span className="text-gray-400 text-sm">{product.category}</span></td>
+                        <td className="px-4 py-4"><span className="text-white font-bold text-sm">${product.price}</span></td>
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2">
                             <Package2 size={14} className="text-gray-500" />
-                            <span className={`text-sm font-bold ${
-                              product.stock === 0 ? 'text-red-400' : 'text-white'
-                            }`}>
-                              {product.stock}
-                            </span>
+                            <span className={`text-sm font-bold ${product.stock === 0 ? 'text-red-400' : 'text-white'}`}>{product.stock}</span>
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-                              product.status === "Active"
-                                ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                                : product.status === "Out of Stock"
-                                ? "bg-red-500/20 text-red-400 border border-red-500/50"
-                                : "bg-gray-500/20 text-gray-400 border border-gray-500/50"
-                            }`}
-                          >
-                            {product.status}
-                          </span>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                            product.status === "Active" ? "bg-green-500/20 text-green-400 border border-green-500/50" :
+                            product.status === "Out of Stock" ? "bg-red-500/20 text-red-400 border border-red-500/50" :
+                            "bg-gray-500/20 text-gray-400 border border-gray-500/50"
+                          }`}>{product.status}</span>
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex gap-2">
-                            <button className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                            {/* EYE / VIEW BUTTON */}
+                            <button 
+                              onClick={() => setViewingImage(product.image)}
+                              className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors group/eye relative"
+                              title="View Image"
+                            >
                               <Eye size={14} />
                             </button>
-                            <button className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors">
+
+                            <button onClick={() => handleOpenEdit(product)} className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors">
                               <Edit size={14} />
                             </button>
-                            <button className="p-2 bg-gray-800 hover:bg-red-600 text-white rounded-lg transition-colors">
+                            <button onClick={() => handleDelete(product.id)} className="p-2 bg-gray-800 hover:bg-red-600 text-white rounded-lg transition-colors">
                               <Trash2 size={14} />
                             </button>
                           </div>
@@ -218,38 +208,106 @@ const ProductsPage = () => {
             </div>
           </div>
 
-          {/* SIDEBAR - NIKE PANEL */}
-          <div className="relative overflow-hidden rounded-2xl">
-            <img
-              src="https://w0.peakpx.com/wallpaper/142/362/HD-wallpaper-nike-brand-logo-cool-cloud.jpg"
-              alt="Nike Background"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+          {/* SIDEBAR */}
+          <div className="relative overflow-hidden rounded-2xl hidden lg:block">
+            <img src="https://w0.peakpx.com/wallpaper/142/362/HD-wallpaper-nike-brand-logo-cool-cloud.jpg" alt="Nike Background" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
-            
             <div className="relative z-10 p-6 min-h-[400px] flex flex-col justify-end">
               <h2 className="text-5xl font-black text-white leading-tight tracking-tighter mb-3">
-                JUST<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">
-                  DO IT.
-                </span>
+                JUST<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">DO IT.</span>
               </h2>
-              <p className="text-gray-300 text-base font-medium max-w-xs">
-                Sleek control of your Nike inventory, pricing, and availability.
-              </p>
+              <p className="text-gray-300 text-base font-medium max-w-xs">Sleek control of your Nike inventory.</p>
             </div>
           </div>
         </div>
       </div>
 
+      {/* FORM MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl animate-in fade-in zoom-in duration-200">
+            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
+            <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-tight">{editingId ? "Edit Product" : "New Product"}</h2>
+            <form onSubmit={handleSave} className="space-y-4">
+              {/* Form fields same as before... */}
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Product Name</label>
+                <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Category</label>
+                  <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors appearance-none">
+                    <option value="Shoes">Shoes</option><option value="Apparel">Apparel</option><option value="Accessories">Accessories</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status</label>
+                  <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors appearance-none">
+                    <option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Out of Stock">Out of Stock</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Price ($)</label>
+                  <input type="number" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Stock Qty</label>
+                  <input type="number" required value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Image URL</label>
+                <input type="text" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
+              </div>
+              <div className="pt-4 flex gap-3">
+                <Button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-gray-800 text-white hover:bg-gray-700 font-bold py-6 rounded-xl transition-colors">Cancel</Button>
+                <Button type="submit" className="flex-1 bg-white text-black hover:bg-gray-200 font-black uppercase tracking-wider py-6 rounded-xl transition-colors">{editingId ? "Update" : "Create"}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* IMAGE PREVIEW MODAL */}
+      {viewingImage && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setViewingImage(null)}
+        >
+          <div className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center p-2">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setViewingImage(null)}
+              className="absolute -top-12 right-0 md:top-4 md:right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-all"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Image Container */}
+            <div 
+              className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10"
+              onClick={(e) => e.stopPropagation()} // Prevent close on image click
+            >
+              <img 
+                src={viewingImage} 
+                alt="Product Preview" 
+                className="max-h-[80vh] w-auto object-contain bg-gray-900"
+              />
+            </div>
+            
+            <p className="mt-4 text-gray-400 text-sm font-medium">Click outside to close</p>
+          </div>
+        </div>
+      )}
+
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       ` }} />
     </div>

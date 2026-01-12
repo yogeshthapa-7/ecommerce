@@ -1,26 +1,136 @@
 "use client"
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { User, Lock, Shield, AlertTriangle, Camera } from "lucide-react"
+import { User, Lock, Shield, AlertTriangle, Camera, CheckCircle, XCircle } from "lucide-react"
 
 const AdminSettingsPage = () => {
+  // --- STATE MANAGEMENT ---
+  const [isLoading, setIsLoading] = useState(false)
+  const fileInputRef = useRef(null)
+  
+  // Notification State
+  const [notification, setNotification] = useState(null)
+
+  // Profile State
   const [profile, setProfile] = useState({
     name: "Yogesh Thapa",
     email: "admin@nikeclone.com",
-    profilePic:
-      "https://wallpapers.com/images/hd/nike-logo-diuxayp2mn6ubbxd.jpg",
+    profilePic: "https://wallpapers.com/images/hd/nike-logo-diuxayp2mn6ubbxd.jpg",
   })
 
-  const handleProfileChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  // Password State
+  const [passwords, setPasswords] = useState({
+    current: "",
+    new: "",
+    confirm: ""
+  })
+
+  // --- HANDLERS ---
+
+  // Helper to show notifications
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type })
+    setTimeout(() => setNotification(null), 3000)
+  }
+
+  // Handle Text Inputs
+  const handleProfileChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value })
   }
 
+  const handlePasswordChange = (e) => {
+    setPasswords({ ...passwords, [e.target.name]: e.target.value })
+  }
+
+  // 1. Image Upload Logic
+  const triggerImageUpload = () => fileInputRef.current.click()
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const imageUrl = URL.createObjectURL(file)
+      setProfile(prev => ({ ...prev, profilePic: imageUrl }))
+      showNotification("Profile picture updated successfully!")
+    }
+  }
+
+  // 2. Save Profile Logic
+  const handleSaveProfile = () => {
+    if (!profile.name || !profile.email) {
+      showNotification("Name and Email are required.", "error")
+      return
+    }
+    
+    setIsLoading(true)
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false)
+      showNotification("Profile details saved successfully!")
+    }, 1000)
+  }
+
+  // 3. Update Password Logic
+  const handleUpdatePassword = () => {
+    if (!passwords.current || !passwords.new || !passwords.confirm) {
+      showNotification("Please fill in all password fields.", "error")
+      return
+    }
+
+    if (passwords.new !== passwords.confirm) {
+      showNotification("New passwords do not match.", "error")
+      return
+    }
+
+    if (passwords.new.length < 6) {
+      showNotification("Password must be at least 6 characters.", "error")
+      return
+    }
+
+    setIsLoading(true)
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false)
+      setPasswords({ current: "", new: "", confirm: "" }) // Reset fields
+      showNotification("Security password updated successfully!")
+    }, 1500)
+  }
+
+  // 4. Delete Account Logic
+  const handleDeleteAccount = () => {
+    const confirmDelete = window.confirm(
+      "Are you absolutely sure? This action cannot be undone and will delete your admin access."
+    )
+    
+    if (confirmDelete) {
+      setIsLoading(true)
+      // Simulate API call
+      setTimeout(() => {
+        setIsLoading(false)
+        alert("Account deleted. You will be redirected to login.")
+        // window.location.href = "/login"
+      }, 1000)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black relative">
+      
+      {/* CUSTOM NOTIFICATION TOAST */}
+      {notification && (
+        <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-right duration-300">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl border ${
+            notification.type === "success" 
+              ? "bg-green-900/90 border-green-500 text-white" 
+              : "bg-red-900/90 border-red-500 text-white"
+          }`}>
+            {notification.type === "success" ? <CheckCircle size={20} /> : <XCircle size={20} />}
+            <span className="font-bold text-sm">{notification.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* HEADER SECTION */}
       <div className="relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black px-6 pt-12 pb-8">
         {/* Background pattern */}
@@ -51,6 +161,7 @@ const AdminSettingsPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT - SETTINGS FORMS */}
           <div className="lg:col-span-2 space-y-6">
+            
             {/* PROFILE CARD */}
             <div 
               className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-gray-800 p-6"
@@ -58,7 +169,7 @@ const AdminSettingsPage = () => {
             >
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <div className="relative">
+                  <div className="relative group cursor-pointer" onClick={triggerImageUpload}>
                     <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-800 border-2 border-orange-500">
                       <img
                         src={profile.profilePic}
@@ -66,9 +177,21 @@ const AdminSettingsPage = () => {
                         className="h-full w-full object-cover"
                       />
                     </div>
-                    <button className="absolute -bottom-1 -right-1 p-1.5 bg-orange-500 rounded-full hover:bg-orange-600 transition-colors">
+                    {/* Hidden File Input */}
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+                    <button className="absolute -bottom-1 -right-1 p-1.5 bg-orange-500 rounded-full hover:bg-orange-600 transition-colors z-10">
                       <Camera size={12} className="text-white" />
                     </button>
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera size={20} className="text-white" />
+                    </div>
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -110,8 +233,12 @@ const AdminSettingsPage = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <Button className="w-full mt-4 bg-white text-black hover:bg-green-300 font-black text-sm uppercase tracking-wider py-6 rounded-xl">
-                    Save Profile Changes
+                  <Button 
+                    onClick={handleSaveProfile}
+                    disabled={isLoading}
+                    className="w-full mt-4 bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider py-6 rounded-xl transition-all disabled:opacity-50"
+                  >
+                    {isLoading ? "Saving..." : "Save Profile Changes"}
                   </Button>
                 </div>
               </div>
@@ -140,7 +267,10 @@ const AdminSettingsPage = () => {
                     Current Password
                   </Label>
                   <Input 
-                    type="password" 
+                    type="password"
+                    name="current"
+                    value={passwords.current}
+                    onChange={handlePasswordChange}
                     className="bg-gray-800 border-gray-700 text-white font-medium focus:border-blue-500 focus:ring-blue-500/20"
                   />
                 </div>
@@ -149,7 +279,10 @@ const AdminSettingsPage = () => {
                     New Password
                   </Label>
                   <Input 
-                    type="password" 
+                    type="password"
+                    name="new"
+                    value={passwords.new}
+                    onChange={handlePasswordChange}
                     className="bg-gray-800 border-gray-700 text-white font-medium focus:border-blue-500 focus:ring-blue-500/20"
                   />
                 </div>
@@ -158,14 +291,21 @@ const AdminSettingsPage = () => {
                     Confirm Password
                   </Label>
                   <Input 
-                    type="password" 
+                    type="password"
+                    name="confirm"
+                    value={passwords.confirm}
+                    onChange={handlePasswordChange}
                     className="bg-gray-800 border-gray-700 text-white font-medium focus:border-blue-500 focus:ring-blue-500/20"
                   />
                 </div>
 
                 <div className="md:col-span-3">
-                  <Button className="w-full mt-4 bg-white text-black hover:bg-blue-300 font-black text-sm uppercase tracking-wider py-6 rounded-xl">
-                    Update Password
+                  <Button 
+                    onClick={handleUpdatePassword}
+                    disabled={isLoading}
+                    className="w-full mt-4 bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider py-6 rounded-xl transition-all disabled:opacity-50"
+                  >
+                    {isLoading ? "Updating..." : "Update Password"}
                   </Button>
                 </div>
               </div>
@@ -188,7 +328,10 @@ const AdminSettingsPage = () => {
                   This action is permanent and cannot be undone. All data will be permanently deleted.
                 </p>
 
-                <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider py-6 rounded-xl border border-red-500">
+                <Button 
+                  onClick={handleDeleteAccount}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider py-6 rounded-xl border border-red-500 transition-all hover:scale-[1.01]"
+                >
                   Delete Admin Account
                 </Button>
               </div>
