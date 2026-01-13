@@ -19,13 +19,20 @@ Fast Performance: Leveraging Next.js Server Components and optimized image loadi
 
 🛠️ Tech Stack: Technology and their	Purpose
 
-Next.js----------------->	Framework for SSR & routing
-React------------------->	UI library
-Tailwind CSS------------>	Styling
-Shadcn UI--------------->	Accessible UI components
-Formik------------------>	Form state management
-Yup--------------------->	Schema validation
-Lucide-react------------>	Icon library
+Next.js----------------->	Framework for SSR & routing,
+
+React------------------->	UI library,
+
+Tailwind CSS------------>	Styling,
+
+Shadcn UI--------------->	Accessible UI components,
+
+Formik------------------>	Form state management,
+
+Yup--------------------->	Schema validation,
+
+Lucide-react------------>	Icon library,
+
 API--------------------->	Dynamic product data
 
 🖥️ Run the Project Locally
