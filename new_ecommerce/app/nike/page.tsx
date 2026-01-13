@@ -164,9 +164,7 @@ const NikeHomePage = () => {
                     <span className="text-xl font-black">{product.price}</span>
                   </div>
                   <p className="text-gray-400 text-sm">{product.desc}</p>
-                  <Button className="w-full bg-white text-black font-bold hover:bg-red-500 rounded-full group-hover:bg-red-500 group-hover:text-white transition-colors cursor-pointer">
-                    Add to Cart
-                  </Button>
+            
                 </div>
                 <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                   NEW
@@ -263,9 +261,7 @@ const NikeHomePage = () => {
                     </span>
                   </div>
                   <p className="text-gray-400 text-sm">{product.desc}</p>
-                  <Button className="w-full bg-white text-black font-bold hover:bg-red-500 rounded-full group-hover:bg-red-500 group-hover:text-white transition-colors cursor-pointer">
-                    Shop Now
-                  </Button>
+                 
                 </div>
               </div>
             ))}

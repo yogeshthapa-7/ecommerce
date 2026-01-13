@@ -1,4 +1,8 @@
 "use client"
+
+import { useRouter } from "next/navigation"
+import { useFormik } from "formik"
+import * as Yup from "yup"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,266 +13,410 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Mail, Lock, User, ArrowRight, Star, Zap, Gift } from "lucide-react"
+import { ArrowRight, AlertCircle } from "lucide-react"
+
+// Yup validation schema
+const validationSchema = Yup.object({
+  email: Yup.string()
+    .email("Please enter a valid email address")
+    .required("Email address is required"),
+  password: Yup.string()
+    .min(8, "Password must be at least 8 characters")
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain uppercase, lowercase, and number"
+    )
+    .required("Password is required"),
+  firstName: Yup.string()
+    .min(2, "First name must be at least 2 characters")
+    .matches(/^[a-zA-Z\s-']+$/, "First name contains invalid characters")
+    .required("First name is required"),
+  lastName: Yup.string()
+    .min(2, "Last name must be at least 2 characters")
+    .matches(/^[a-zA-Z\s-']+$/, "Last name contains invalid characters")
+    .required("Last name is required"),
+  dateOfBirth: Yup.date()
+    .max(new Date(), "Date of birth cannot be in the future")
+    .test("age", "You must be at least 13 years old", function(value) {
+      if (!value) return false
+      const today = new Date()
+      const birthDate = new Date(value)
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const monthDiff = today.getMonth() - birthDate.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+      return age >= 13
+    })
+    .required("Date of birth is required"),
+  gender: Yup.string()
+    .oneOf(["male", "female"], "Please select your gender")
+    .required("Please select your gender"),
+  emailUpdates: Yup.boolean()
+})
 
 export default function RegisterPage() {
+  const router = useRouter()
+
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+      firstName: "",
+      lastName: "",
+      dateOfBirth: "",
+      gender: "",
+      emailUpdates: false
+    },
+    validationSchema,
+   onSubmit: async (values, { setSubmitting, setFieldError }) => {
+  try {
+    const res = await fetch("/api/auth/register", { // ✅ FIXED PATH
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        dateOfBirth: values.dateOfBirth,
+        gender: values.gender,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setFieldError("email", data.message || "Registration failed");
+      return;
+    }
+
+    // ✅ Save credentials for login auto-fill
+    localStorage.setItem(
+      "registeredUser",
+      JSON.stringify({
+        email: values.email,
+        password: values.password,
+      })
+    );
+
+    router.push("/login"); // ✅ correct redirect
+  } catch (error) {
+    setFieldError("email", "Server error. Please try again.");
+  } finally {
+    setSubmitting(false);
+  }
+}
+
+  })
+
+  const handleGenderSelect = (gender: string) => {
+    formik.setFieldValue("gender", gender)
+    formik.setFieldTouched("gender", true)
+  }
+
   return (
-    <div className="min-h-screen w-full relative bg-white overflow-hidden">
-      {/* Full Background - Nike Product Lifestyle */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 grid grid-cols-2 lg:grid-cols-4 gap-0">
-          <img
-            src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b1bcbca4-e853-4df7-b329-5be3c61ee057/air-jordan-1-retro-high-og-shoes-Pz6fZ8.png"
-            alt="Jordan"
-            className="w-full h-full object-cover"
-          />
-          <img
-            src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco,u_126ab356-44d8-4a06-89b4-fcdcc8df0245,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/1c88c971-6071-4eb9-b2e2-995f9927e8f4/jumpman-two-trey-shoes-DmGJFZ.png"
-            alt="Jumpman"
-            className="w-full h-full object-cover"
-          />
-          <img
-            src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/0ba83e49-2ab2-442c-92f7-801ba0a06aa3/sb-zoom-janoski-og-skate-shoes-MLJmQJ.png"
-            alt="SB"
-            className="w-full h-full object-cover hidden lg:block"
-          />
-          <img
-            src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/c14dfb51-e737-4388-95f9-3c7a83ff1e69/blazer-mid-77-vintage-shoes-nw30B2.png"
-            alt="Blazer"
-            className="w-full h-full object-cover hidden lg:block"
-          />
-        </div>
-        {/* Strong overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/80 to-black/90 backdrop-blur-sm" />
-      </div>
-
-      {/* Content Container */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          
-          {/* LEFT SIDE - Nike Membership Benefits */}
-          <div className="hidden lg:block" style={{ animation: 'slideRight 0.8s ease-out' }}>
-            {/* Nike Logo */}
-            <div className="mb-12">
-              <svg viewBox="0 0 1000 356.39" className="w-32 h-auto fill-white">
-                <path d="M245.8,212.6l130.6-129.7c7.4-7.4,11.4-17.3,11.4-27.6c0-10.4-4-20.2-11.4-27.6l0,0c-15.2-15.2-39.9-15.2-55.1,0
-                  L151.5,197.4l169.8,169.8c15.2,15.2,39.9,15.2,55.1,0c7.4-7.4,11.4-17.3,11.4-27.6c0-10.4-4-20.2-11.4-27.6L245.8,212.6z" />
-                <path d="M0,283.7c0,24.5,7.8,48.6,22.3,68.7l0,0c8.5,11.8,25.2,14.6,37,6.1c11.8-8.5,14.6-25.2,6.1-37
-                  c-8.8-12.2-13.5-26.8-13.5-41.8c0-39.6,32.1-71.7,71.7-71.7h270.4c21.7,0,39.3-17.6,39.3-39.3c0-21.7-17.6-39.3-39.3-39.3H123.6
-                  C55.4,129.4,0,184.8,0,253V283.7z" />
-              </svg>
-            </div>
-
-            <h1 className="text-7xl font-black text-white leading-none tracking-tighter mb-6">
-              BECOME<br />
-              A NIKE<br />
-              MEMBER
-            </h1>
-            <p className="text-xl text-gray-300 font-medium leading-relaxed mb-8">
-              Join the Nike community and unlock exclusive benefits, rewards, and experiences.
-            </p>
-
-            {/* Member Benefits */}
-            <div className="space-y-5">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center flex-shrink-0">
-                  <Star size={24} className="text-white fill-white" />
-                </div>
-                <div>
-                  <h3 className="text-white font-black text-lg mb-1">Member Exclusive Products</h3>
-                  <p className="text-gray-400 text-sm">Get first access to the latest styles and limited releases</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center flex-shrink-0">
-                  <Zap size={24} className="text-white fill-white" />
-                </div>
-                <div>
-                  <h3 className="text-white font-black text-lg mb-1">Free Shipping & Returns</h3>
-                  <p className="text-gray-400 text-sm">No minimum spend required for members</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center flex-shrink-0">
-                  <Gift size={24} className="text-white" />
-                </div>
-                <div>
-                  <h3 className="text-white font-black text-lg mb-1">Special Birthday Reward</h3>
-                  <p className="text-gray-400 text-sm">Celebrate your special day with a gift from Nike</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT SIDE - Register Form */}
-          <div className="w-full" style={{ animation: 'slideUp 0.8s ease-out 0.2s backwards' }}>
-            <Card className="bg-white border-0 shadow-2xl rounded-3xl overflow-hidden">
-              {/* Top Nike Swoosh Accent */}
-              <div className="h-2 bg-gradient-to-r from-purple-500 via-blue-600 to-cyan-500" />
-              
-              <CardHeader className="space-y-3 pt-8 pb-6 px-8">
-                <CardTitle className="text-4xl font-black text-black tracking-tight">
-                  JOIN US
-                </CardTitle>
-                <p className="text-gray-600 text-sm font-medium">
-                  Create your Nike Member profile and get first access to the very best of Nike products, inspiration and community.
-                </p>
-              </CardHeader>
-
-              <CardContent className="space-y-6 px-8 pb-6">
-                {/* Social signup buttons */}
-                <div className="space-y-3">
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 flex items-center justify-center gap-3 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium transition-all"
-                  >
-                    <img
-                      src="https://www.svgrepo.com/show/303108/google-icon-logo.svg"
-                      alt="Google"
-                      className="h-5 w-5"
-                    />
-                    Sign up with Google
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 flex items-center justify-center gap-3 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium transition-all"
-                  >
-                    <img
-                      src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png"
-                      alt="Facebook"
-                      className="h-5 w-5"
-                    />
-                    Sign up with Facebook
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 flex items-center justify-center gap-3 border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 font-medium transition-all"
-                  >
-                    <img
-                      src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
-                      alt="Apple"
-                      className="h-5 w-5"
-                    />
-                    Sign up with Apple
-                  </Button>
-                </div>
-
-                {/* Divider */}
-                <div className="flex items-center gap-3">
-                  <div className="h-px flex-1 bg-gray-300" />
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">OR</span>
-                  <div className="h-px flex-1 bg-gray-300" />
-                </div>
-
-                {/* Register form */}
-                <form className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-gray-700 font-bold text-sm mb-2 block">
-                        First Name
-                      </Label>
-                      <Input
-                        type="text"
-                        placeholder="First Name"
-                        className="h-12 border-2 border-gray-200 focus:border-black text-base font-medium rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-gray-700 font-bold text-sm mb-2 block">
-                        Last Name
-                      </Label>
-                      <Input
-                        type="text"
-                        placeholder="Last Name"
-                        className="h-12 border-2 border-gray-200 focus:border-black text-base font-medium rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-700 font-bold text-sm mb-2 block">
-                      Email Address
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <Input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="pl-12 h-14 border-2 border-gray-200 focus:border-black text-base font-medium rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-gray-700 font-bold text-sm mb-2 block">
-                      Password
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <Input
-                        type="password"
-                        placeholder="Create a password"
-                        className="pl-12 h-14 border-2 border-gray-200 focus:border-black text-base font-medium rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="group w-full h-14 bg-black hover:bg-gray-800 text-white font-black text-base uppercase tracking-wider transition-all rounded-full mt-6"
-                  >
-                    Join Us
-                    <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </form>
-
-                <p className="text-xs text-gray-500 text-center leading-relaxed">
-                  By creating an account, you agree to Nike's{" "}
-                  <a href="#" className="underline">Privacy Policy</a> and{" "}
-                  <a href="#" className="underline">Terms of Use</a>.
-                </p>
-              </CardContent>
-
-              <CardFooter className="flex flex-col space-y-3 text-sm px-8 pb-8">
-                <p className="text-gray-600">
-                  Already a member?{" "}
-                  <a href="/login" className="font-black text-black hover:underline">
-                    Sign In
-                  </a>
-                </p>
-              </CardFooter>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Stylish geometric background - CSS only for performance */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Gradient orbs */}
+        <div className="absolute top-20 right-20 w-80 h-80 bg-gradient-to-br from-orange-100 to-transparent rounded-full blur-3xl opacity-30" />
+        <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-tr from-purple-100 to-transparent rounded-full blur-3xl opacity-30" />
         
-        @keyframes slideRight {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
+        {/* Grid pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, #000 1px, transparent 1px),
+              linear-gradient(to bottom, #000 1px, transparent 1px)
+            `,
+            backgroundSize: '80px 80px'
+          }}
+        />
+        
+        {/* Diagonal accent lines */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-5">
+          <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 100px,
+                #000 100px,
+                #000 102px
+              )`
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-6">
+        <div className="w-full max-w-md animate-slideUp">
+          {/* Nike logo */}
+          <div className="mb-8 flex justify-center">
+            <svg 
+              width="60" 
+              height="60" 
+              viewBox="0 0 24 24" 
+              fill="none"
+            >
+              <path 
+                d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z" 
+                fill="#000"
+              />
+            </svg>
+          </div>
+
+          {/* Floating card with backdrop */}
+          <div className="relative">
+            {/* Subtle shadow/glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-black/10 blur-xl transform translate-y-2" />
+            
+            <Card className="relative border-[1.5px] border-gray-200 shadow-2xl rounded-sm bg-white/95 backdrop-blur-sm">
+              <CardHeader className="px-8 pt-10 pb-6 space-y-3">
+                <CardTitle className="text-2xl font-bold text-center">
+                  BECOME A NIKE MEMBER
+                </CardTitle>
+              <p className="text-sm text-gray-600 text-center leading-relaxed">
+                Create your Nike Member profile and get first access to the very best of Nike products, inspiration and community.
+              </p>
+            </CardHeader>
+
+            <CardContent className="px-8 pb-8">
+              <form className="space-y-4" onSubmit={formik.handleSubmit}>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="sr-only">Email address</Label>
+                  <Input 
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formik.values.email}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${
+                      formik.touched.email && formik.errors.email ? 'border-red-500 focus-visible:border-red-500' : ''
+                    }`}
+                    placeholder="Email address"
+                    disabled={formik.isSubmitting}
+                  />
+                  {formik.touched.email && formik.errors.email && (
+                    <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
+                      <AlertCircle size={14} />
+                      <span>{formik.errors.email}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="password" className="sr-only">Password</Label>
+                  <Input 
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formik.values.password}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${
+                      formik.touched.password && formik.errors.password ? 'border-red-500 focus-visible:border-red-500' : ''
+                    }`}
+                    placeholder="Password"
+                    disabled={formik.isSubmitting}
+                  />
+                  {formik.touched.password && formik.errors.password && (
+                    <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
+                      <AlertCircle size={14} />
+                      <span>{formik.errors.password}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="firstName" className="sr-only">First Name</Label>
+                  <Input 
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    value={formik.values.firstName}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${
+                      formik.touched.firstName && formik.errors.firstName ? 'border-red-500 focus-visible:border-red-500' : ''
+                    }`}
+                    placeholder="First Name"
+                    disabled={formik.isSubmitting}
+                  />
+                  {formik.touched.firstName && formik.errors.firstName && (
+                    <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
+                      <AlertCircle size={14} />
+                      <span>{formik.errors.firstName}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="lastName" className="sr-only">Last Name</Label>
+                  <Input 
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={formik.values.lastName}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${
+                      formik.touched.lastName && formik.errors.lastName ? 'border-red-500 focus-visible:border-red-500' : ''
+                    }`}
+                    placeholder="Last Name"
+                    disabled={formik.isSubmitting}
+                  />
+                  {formik.touched.lastName && formik.errors.lastName && (
+                    <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
+                      <AlertCircle size={14} />
+                      <span>{formik.errors.lastName}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="dateOfBirth" className="sr-only">Date of Birth</Label>
+                  <Input 
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    type="date"
+                    value={formik.values.dateOfBirth}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${
+                      formik.touched.dateOfBirth && formik.errors.dateOfBirth ? 'border-red-500 focus-visible:border-red-500' : ''
+                    } ${formik.values.dateOfBirth ? 'text-gray-900' : 'text-gray-500'}`}
+                    placeholder="Date of Birth"
+                    disabled={formik.isSubmitting}
+                  />
+                  {formik.touched.dateOfBirth && formik.errors.dateOfBirth ? (
+                    <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
+                      <AlertCircle size={14} />
+                      <span>{formik.errors.dateOfBirth}</span>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500 pt-1">
+                      Get a Nike Member Reward every year on your Birthday.
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-xs text-gray-700">Gender</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleGenderSelect("male")}
+                      disabled={formik.isSubmitting}
+                      className={`h-12 border-[1.5px] transition-colors rounded-sm text-sm font-medium ${
+                        formik.values.gender === "male" 
+                          ? 'border-black bg-black text-white' 
+                          : formik.touched.gender && formik.errors.gender
+                          ? 'border-red-500 hover:border-red-600'
+                          : 'border-gray-300 hover:border-black'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      Male
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleGenderSelect("female")}
+                      disabled={formik.isSubmitting}
+                      className={`h-12 border-[1.5px] transition-colors rounded-sm text-sm font-medium ${
+                        formik.values.gender === "female" 
+                          ? 'border-black bg-black text-white' 
+                          : formik.touched.gender && formik.errors.gender
+                          ? 'border-red-500 hover:border-red-600'
+                          : 'border-gray-300 hover:border-black'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      Female
+                    </button>
+                  </div>
+                  {formik.touched.gender && formik.errors.gender && (
+                    <div className="flex items-center gap-1.5 text-red-600 text-xs">
+                      <AlertCircle size={14} />
+                      <span>{formik.errors.gender}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-start gap-3 py-2">
+                  <input 
+                    type="checkbox"
+                    id="emailUpdates"
+                    name="emailUpdates"
+                    checked={formik.values.emailUpdates}
+                    onChange={formik.handleChange}
+                    className="w-5 h-5 mt-0.5 rounded-sm border-gray-300 flex-shrink-0"
+                    disabled={formik.isSubmitting}
+                  />
+                  <label htmlFor="emailUpdates" className="text-xs text-gray-600 leading-relaxed cursor-pointer">
+                    Sign up for emails to get updates from Nike on products, offers and your Member benefits
+                  </label>
+                </div>
+
+                <p className="text-xs text-gray-500 text-center leading-relaxed pt-2">
+                  By creating an account, you agree to Nike's{" "}
+                  <a href="#" className="underline hover:text-black">Privacy Policy</a>
+                  {" "}and{" "}
+                  <a href="#" className="underline hover:text-black">Terms of Use</a>.
+                </p>
+
+                <Button 
+                  type="submit"
+                  disabled={formik.isSubmitting}
+                  className="w-full h-12 bg-black hover:bg-black/80 text-white rounded-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {formik.isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      JOINING...
+                    </div>
+                  ) : (
+                    "JOIN US"
+                  )}
+                </Button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  Already a Member?{" "}
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="font-medium text-black underline hover:text-gray-600 transition-colors"
+                  >
+                    Sign In.
+                  </button>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes slideUp {
+          from { 
+            opacity: 0; 
+            transform: translateY(20px); 
           }
-          to {
-            opacity: 1;
-            transform: translateX(0);
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
           }
         }
-      ` }} />
+
+        .animate-slideUp {
+          animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+      `}</style>
     </div>
   )
 }

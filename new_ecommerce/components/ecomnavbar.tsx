@@ -1,6 +1,7 @@
- import React, { useEffect, useState } from 'react'
- import { Button } from '@/components/ui/button';
- import {
+"use client";
+import React, { useEffect, useState } from 'react'
+import { Button } from '@/components/ui/button';
+import {
   Menu,
   X,
   ShoppingBag,
@@ -11,23 +12,27 @@
   Award,
   Users,
 } from 'lucide-react';
- 
- const EcomNavbar = () => {
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-     const [scrolled, setScrolled] = useState(false);
+import { useCart } from '@/app/context/CartContext';
 
-     useEffect(() => {
-        const handleScroll = () => {
-          setScrolled(window.scrollY > 20);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-      }, []);
-   return (
-     <div>
+const EcomNavbar = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   
- 
- {/* NAVBAR */}
+  // Cart functionality
+  const { setIsCartOpen, getCartCount } = useCart();
+  const cartCount = getCartCount();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div>
+      {/* NAVBAR */}
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled ? 'bg-black/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
@@ -88,13 +93,22 @@
                   className="bg-transparent border-none outline-none text-sm w-32 placeholder:text-gray-500"
                 />
               </div>
+              
+              {/* Cart Button with Counter */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="hidden md:flex hover:bg-red-400 hover:text-white"
+                className="hidden md:flex hover:bg-red-500 hover:text-white relative"
+                onClick={() => setIsCartOpen(true)}
               >
                 <ShoppingBag className="w-5 h-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
               </Button>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -132,11 +146,31 @@
               >
                 Sale
               </a>
+              
+              {/* Mobile Cart Button */}
+              <button
+                onClick={() => {
+                  setIsCartOpen(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center justify-between hover:text-gray-300 transition-colors"
+              >
+                <span>Cart</span>
+                <div className="flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </div>
+              </button>
             </nav>
           </div>
         )}
       </header>
-      </div>
- )
- }
-export default EcomNavbar
+    </div>
+  );
+};
+
+export default EcomNavbar;

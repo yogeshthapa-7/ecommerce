@@ -1,4 +1,9 @@
 "use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useFormik } from "formik"
+import * as Yup from "yup"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,181 +14,343 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Mail, ArrowRight, ArrowLeft, Shield } from "lucide-react"
+import { Mail, ArrowRight, ArrowLeft, Shield, AlertCircle, CheckCircle } from "lucide-react"
+
+// Yup validation schema
+const validationSchema = Yup.object({
+  email: Yup.string()
+    .email("Please enter a valid email address")
+    .required("Email address is required")
+})
 
 export default function ForgotPasswordPage() {
+  const router = useRouter()
+  const [emailSent, setEmailSent] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+
+  const formik = useFormik({
+    initialValues: {
+      email: ""
+    },
+    validationSchema,
+    onSubmit: async (values, { setSubmitting, setFieldError }) => {
+      try {
+        // Replace this with your actual API call
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        setEmailSent(true)
+        console.log("Password reset email sent to:", values.email)
+        
+      } catch (error) {
+        setFieldError("email", "Unable to send reset email. Please try again.")
+      } finally {
+        setSubmitting(false)
+      }
+    }
+  })
+
+  const handleResend = async () => {
+    setIsResending(true)
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log("Reset email resent to:", formik.values.email)
+    } catch (error) {
+      formik.setFieldError("email", "Unable to resend email. Please try again.")
+    } finally {
+      setIsResending(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen w-full relative bg-white overflow-hidden">
-      {/* Full Background - Nike Apparel & Accessories */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 grid grid-cols-3 gap-0">
-          <img
-            src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/d3eb254d-0901-4158-956a-4610180545e5/sportswear-heritage-86-futura-washed-cap-L0dL4X.png"
-            alt="Nike Cap"
-            className="w-full h-full object-cover"
-          />
-          <img
-            src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/8a4aa677-c9d0-45ec-ab01-d4fb3a59cd46/tech-crossbody-bag-KCq4mh.png"
-            alt="Nike Bag"
-            className="w-full h-full object-cover"
-          />
-          <img
-            src="https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/24eb8c29-d14f-4a39-8a8e-be6e3e4e0bd7/everyday-plus-cushioned-training-crew-socks-xQGhJv.png"
-            alt="Nike Socks"
-            className="w-full h-full object-cover"
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Stylish geometric background - CSS only for performance */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Gradient orbs */}
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-green-100 to-transparent rounded-full blur-3xl opacity-30" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-gradient-to-tr from-teal-100 to-transparent rounded-full blur-3xl opacity-30" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-cyan-100 to-transparent rounded-full blur-3xl opacity-20" />
+        
+        {/* Grid pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, #000 1px, transparent 1px),
+              linear-gradient(to bottom, #000 1px, transparent 1px)
+            `,
+            backgroundSize: '80px 80px'
+          }}
+        />
+        
+        {/* Diagonal accent lines */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-5">
+          <div 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `repeating-linear-gradient(
+                -45deg,
+                transparent,
+                transparent 100px,
+                #000 100px,
+                #000 102px
+              )`
+            }}
           />
         </div>
-        {/* Strong overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/80 to-black/90 backdrop-blur-sm" />
       </div>
 
       {/* Content Container */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-6">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* LEFT SIDE - Support Message */}
-          <div className="hidden lg:block" style={{ animation: 'slideRight 0.8s ease-out' }}>
-            {/* Nike Logo */}
+          <div className="hidden lg:flex flex-col animate-slideRight">
+            {/* Nike Swoosh */}
             <div className="mb-12">
-              <svg viewBox="0 0 1000 356.39" className="w-32 h-auto fill-white">
-                <path d="M245.8,212.6l130.6-129.7c7.4-7.4,11.4-17.3,11.4-27.6c0-10.4-4-20.2-11.4-27.6l0,0c-15.2-15.2-39.9-15.2-55.1,0
-                  L151.5,197.4l169.8,169.8c15.2,15.2,39.9,15.2,55.1,0c7.4-7.4,11.4-17.3,11.4-27.6c0-10.4-4-20.2-11.4-27.6L245.8,212.6z" />
-                <path d="M0,283.7c0,24.5,7.8,48.6,22.3,68.7l0,0c8.5,11.8,25.2,14.6,37,6.1c11.8-8.5,14.6-25.2,6.1-37
-                  c-8.8-12.2-13.5-26.8-13.5-41.8c0-39.6,32.1-71.7,71.7-71.7h270.4c21.7,0,39.3-17.6,39.3-39.3c0-21.7-17.6-39.3-39.3-39.3H123.6
-                  C55.4,129.4,0,184.8,0,253V283.7z" />
+              <svg 
+                width="78" 
+                height="78" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                className="transform -rotate-12"
+              >
+                <path 
+                  d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z" 
+                  fill="#000"
+                />
               </svg>
             </div>
 
-            <h1 className="text-7xl font-black text-white leading-none tracking-tighter mb-6">
+            <h1 className="text-7xl font-black text-black leading-[0.9] mb-8 tracking-tight">
               WE'VE<br />
               GOT<br />
               YOU.
             </h1>
-            <p className="text-xl text-gray-300 font-medium leading-relaxed mb-8">
+            
+            <p className="text-lg text-gray-600 max-w-md leading-relaxed mb-8">
               Forgot your password? No worries. Happens to the best athletes. Let's get you back in the game.
             </p>
 
             {/* Security Features */}
             <div className="space-y-4">
-              <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <Shield className="text-green-400 flex-shrink-0 mt-1" size={24} />
+              <div className="flex items-start gap-4 p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <Shield className="text-green-600" size={20} />
+                </div>
                 <div>
-                  <h3 className="text-white font-black text-base mb-1">Secure Process</h3>
-                  <p className="text-gray-400 text-sm">Your account security is our top priority</p>
+                  <h3 className="text-black font-bold text-sm mb-1">Secure Process</h3>
+                  <p className="text-gray-600 text-xs leading-relaxed">Your account security is our top priority</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <Mail className="text-blue-400 flex-shrink-0 mt-1" size={24} />
+              <div className="flex items-start gap-4 p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <Mail className="text-blue-600" size={20} />
+                </div>
                 <div>
-                  <h3 className="text-white font-black text-base mb-1">Email Verification</h3>
-                  <p className="text-gray-400 text-sm">We'll send a secure link to reset your password</p>
+                  <h3 className="text-black font-bold text-sm mb-1">Email Verification</h3>
+                  <p className="text-gray-600 text-xs leading-relaxed">We'll send a secure link to reset your password</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* RIGHT SIDE - Reset Form */}
-          <div className="w-full" style={{ animation: 'slideUp 0.8s ease-out 0.2s backwards' }}>
-            <Card className="bg-white border-0 shadow-2xl rounded-3xl overflow-hidden">
-              {/* Top Nike Swoosh Accent */}
-              <div className="h-2 bg-gradient-to-r from-green-500 via-teal-600 to-cyan-500" />
+          <div className="w-full max-w-md mx-auto lg:mx-0 animate-slideUp">
+            {/* Mobile logo */}
+            <div className="lg:hidden mb-8 flex justify-center">
+              <svg 
+                width="60" 
+                height="60" 
+                viewBox="0 0 24 24" 
+                fill="none"
+              >
+                <path 
+                  d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z" 
+                  fill="#000"
+                />
+              </svg>
+            </div>
+
+            {/* Floating card with backdrop */}
+            <div className="relative">
+              {/* Subtle shadow/glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-black/10 blur-xl transform translate-y-2" />
               
-              <CardHeader className="space-y-3 pt-8 pb-6 px-8">
-                <CardTitle className="text-4xl font-black text-black tracking-tight">
-                  RESET PASSWORD
-                </CardTitle>
-                <p className="text-gray-600 text-sm font-medium">
-                  Enter your email address and we'll send you instructions to reset your password.
-                </p>
-              </CardHeader>
+              <Card className="relative border-[1.5px] border-gray-200 shadow-2xl rounded-sm bg-white/95 backdrop-blur-sm">
+                <CardHeader className="px-8 pt-10 pb-6 space-y-3">
+                  <CardTitle className="text-2xl font-bold text-center">
+                    {emailSent ? "CHECK YOUR EMAIL" : "RESET YOUR PASSWORD"}
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 text-center leading-relaxed">
+                    {emailSent 
+                      ? `We've sent password reset instructions to ${formik.values.email}`
+                      : "Enter your email address and we'll send you instructions to reset your password."
+                    }
+                  </p>
+                </CardHeader>
 
-              <CardContent className="space-y-6 px-8 pb-6">
-                <form className="space-y-6">
-                  <div>
-                    <Label className="text-gray-700 font-bold text-sm mb-2 block">
-                      Email Address
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <Input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="pl-12 h-14 border-2 border-gray-200 focus:border-black text-base font-medium rounded-xl"
-                      />
+                <CardContent className="px-8 pb-8">
+                  {!emailSent ? (
+                    <form className="space-y-5" onSubmit={formik.handleSubmit}>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="email" className="sr-only">Email address</Label>
+                        <Input 
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={formik.values.email}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${
+                            formik.touched.email && formik.errors.email ? 'border-red-500 focus-visible:border-red-500' : ''
+                          }`}
+                          placeholder="Email address"
+                          disabled={formik.isSubmitting}
+                        />
+                        {formik.touched.email && formik.errors.email && (
+                          <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
+                            <AlertCircle size={14} />
+                            <span>{formik.errors.email}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <Button 
+                        type="submit"
+                        disabled={formik.isSubmitting}
+                        className="w-full h-12 bg-black hover:bg-black/80 text-white rounded-sm font-medium transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {formik.isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            SENDING...
+                          </div>
+                        ) : (
+                          <>
+                            SEND RESET LINK
+                            <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  ) : (
+                    <div className="space-y-5">
+                      {/* Success message */}
+                      <div className="rounded-sm bg-green-50 border border-green-200 p-4">
+                        <div className="flex gap-3">
+                          <div className="flex-shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                              <CheckCircle size={18} className="text-green-600" />
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-sm text-green-900 mb-1">Email sent successfully</h4>
+                            <p className="text-green-700 text-xs leading-relaxed">
+                              Please check your inbox and click the reset link. The link will expire in 1 hour.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Resend button */}
+                      <Button
+                        type="button"
+                        onClick={handleResend}
+                        disabled={isResending}
+                        variant="outline"
+                        className="w-full h-12 border-gray-300 hover:border-black hover:bg-gray-50 rounded-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isResending ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-gray-400/30 border-t-gray-600 rounded-full animate-spin" />
+                            RESENDING...
+                          </div>
+                        ) : (
+                          "RESEND EMAIL"
+                        )}
+                      </Button>
                     </div>
-                  </div>
+                  )}
 
-                  <Button
-                    type="submit"
-                    className="group w-full h-14 bg-black hover:bg-gray-800 text-white font-black text-base uppercase tracking-wider transition-all rounded-full"
-                  >
-                    Send Reset Link
-                    <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </form>
-
-                {/* Info box */}
-                <div className="rounded-2xl bg-gray-50 border-2 border-gray-100 p-5">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Mail size={18} className="text-blue-600" />
+                  {/* Info box - only show if email not sent */}
+                  {!emailSent && (
+                    <div className="mt-6 rounded-sm bg-gray-50 border border-gray-200 p-4">
+                      <div className="flex gap-3">
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <Mail size={16} className="text-blue-600" />
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-xs text-gray-900 mb-1">Check your inbox</h4>
+                          <p className="text-gray-600 text-xs leading-relaxed">
+                            The reset link will expire in 1 hour. If you don't see the email, check your spam folder.
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <h4 className="font-black text-sm text-gray-900 mb-1">Check your inbox</h4>
-                      <p className="text-gray-600 text-xs leading-relaxed">
-                        The reset link will expire in 1 hour. If you don't see the email, check your spam folder or request a new link.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
+                  )}
+                </CardContent>
 
-              <CardFooter className="flex flex-col space-y-3 text-sm px-8 pb-8">
-                <a 
-                  href="/login" 
-                  className="group flex items-center justify-center gap-2 text-gray-600 hover:text-black font-bold transition-colors"
-                >
-                  <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                  Back to Sign In
-                </a>
-                <p className="text-gray-600 text-center">
-                  Don't have an account?{" "}
-                  <a href="/register" className="font-black text-black hover:underline">
-                    Join Us
-                  </a>
-                </p>
-              </CardFooter>
-            </Card>
+                <CardFooter className="flex flex-col gap-3 px-8 pb-8">
+                  <button 
+                    onClick={() => router.push("/login")}
+                    disabled={formik.isSubmitting || isResending}
+                    className="group flex items-center justify-center gap-2 text-gray-600 hover:text-black font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+                    Back to Sign In
+                  </button>
+                  
+                  <p className="text-sm text-gray-600 text-center">
+                    Don't have an account?{" "}
+                    <button
+                      onClick={() => router.push("/register")}
+                      disabled={formik.isSubmitting || isResending}
+                      className="font-medium text-black underline hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Join Us.
+                    </button>
+                  </p>
+                </CardFooter>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style jsx>{`
         @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
+          from { 
+            opacity: 0; 
+            transform: translateY(20px); 
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
           }
         }
         
         @keyframes slideRight {
-          from {
-            opacity: 0;
-            transform: translateX(-30px);
+          from { 
+            opacity: 0; 
+            transform: translateX(-20px); 
           }
-          to {
-            opacity: 1;
-            transform: translateX(0);
+          to { 
+            opacity: 1; 
+            transform: translateX(0); 
           }
         }
-      ` }} />
+
+        .animate-slideUp {
+          animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .animate-slideRight {
+          animation: slideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+      `}</style>
     </div>
   )
 }

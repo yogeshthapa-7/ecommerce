@@ -36,13 +36,20 @@ const ProductsPage = () => {
   // Get unique categories
   const categories = ['All', ...new Set(products.map((p) => p.category))];
 
-  // Filter products
+  // Filter products with proper null/undefined checks
   const filteredProducts = products.filter((product) => {
+    // Check if product and required fields exist
+    if (!product || !product.name || !product.category) {
+      return false;
+    }
+
     const matchesCategory =
       selectedCategory === 'All' || product.category === selectedCategory;
+    
     const matchesSearch = product.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
+    
     return matchesCategory && matchesSearch;
   });
 
@@ -122,20 +129,29 @@ const ProductsPage = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {filteredProducts.map((product) => (
-                <div
+                <Link
                   key={product.id}
-                  className="group relative bg-gradient-to-b from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800 hover:border-red-500/50 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-red-500/20"
+                  href={`/nike/products/${product.id}`}
+                  className="group relative bg-gradient-to-b from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800 hover:border-red-500/50 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-red-500/20 cursor-pointer"
                 >
                   {/* Wishlist Button */}
-                  <button className="absolute top-4 right-4 z-10 p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-red-500 transition-colors group/heart">
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Add to wishlist logic here
+                      console.log('Added to wishlist:', product.id);
+                    }}
+                    className="absolute top-4 right-4 z-10 p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-red-500 transition-colors group/heart"
+                  >
                     <Heart className="w-5 h-5 group-hover/heart:fill-white" />
                   </button>
 
                   {/* Product Image */}
                   <div className="aspect-square overflow-hidden bg-gray-800">
                     <img
-                      src={product.image || 'https://via.placeholder.com/400'}
-                      alt={product.name}
+                      src={product.image_url || 'https://via.placeholder.com/400'}
+                      alt={product.name || 'Product'}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
@@ -144,70 +160,55 @@ const ProductsPage = () => {
                   <div className="p-6 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="text-lg font-bold line-clamp-2">
-                        {product.name}
+                        {product.name || 'Untitled Product'}
                       </h3>
-                      {product.badge && (
-                        <span className="text-xs font-bold text-red-500 px-2 py-1 bg-red-500/10 rounded-full whitespace-nowrap">
-                          {product.badge}
-                        </span>
-                      )}
                     </div>
 
-                    <p className="text-gray-400 text-sm line-clamp-2">
-                      {product.description}
+                    <p className="text-gray-400 text-sm">
+                      {product.category || 'Uncategorized'}
                     </p>
 
                     {/* Rating */}
-                    {product.rating && (
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < Math.floor(product.rating)
-                                ? 'fill-yellow-400 text-yellow-400'
-                                : 'text-gray-600'
-                            }`}
-                          />
-                        ))}
-                        <span className="text-sm text-gray-400 ml-1">
-                          ({product.rating})
-                        </span>
+                    {product.rating > 0 && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-bold text-white">{product.rating}</span>
+                        </div>
+                        <span className="text-xs text-gray-500">({product.reviews_count} reviews)</span>
                       </div>
                     )}
+
+                    {/* Stock Status */}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${product.in_stock ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <span className="text-xs text-gray-400">
+                        {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                      </span>
+                    </div>
 
                     {/* Price */}
                     <div className="flex items-center justify-between pt-2">
                       <div>
                         <span className="text-2xl font-black">
-                          ${product.price}
+                          {product.currency || '$'}{product.price ? product.price.toFixed(2) : '0.00'}
                         </span>
-                        {product.originalPrice && (
-                          <span className="text-sm text-gray-500 line-through ml-2">
-                            ${product.originalPrice}
-                          </span>
-                        )}
                       </div>
                     </div>
-
-                    {/* Add to Cart Button */}
-                    <Button className="w-full bg-white text-black font-bold hover:bg-red-500 rounded-full group-hover:bg-red-500 group-hover:text-white transition-colors cursor-pointer">
-                      Add to Cart
-                    </Button>
                   </div>
 
-                  {/* Sale/New Badge */}
-                  {product.isNew && (
-                    <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  {/* Status Badge */}
+                  {product.status === 'active' && product.in_stock && (
+                    <div className="absolute top-4 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                       NEW
                     </div>
                   )}
-                  {product.discount && (
-                    <div className="absolute top-4 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                      -{product.discount}%
+                  {!product.in_stock && (
+                    <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      SOLD OUT
                     </div>
                   )}
-                </div>
+                </Link>
               ))}
             </div>
           )}

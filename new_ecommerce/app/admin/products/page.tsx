@@ -4,14 +4,6 @@ import { Button } from "@/components/ui/button"
 import { Plus, Edit, Trash2, Eye, Package2, X, ZoomIn } from "lucide-react"
 import axios from "axios"
 
-// 1. MOCK DATA
-const MOCK_PRODUCTS = [
-  { id: 1, title: "Nike Air Jordan 1", category: "Shoes", price: 180.00, stock: 45, status: "Active", image: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/3396ee3c-08cc-4ada-baa9-655af12e3120/air-jordan-1-mid-shoes-X5pM09.png" },
-  { id: 2, title: "Nike Tech Fleece", category: "Apparel", price: 110.00, stock: 120, status: "Active", image: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/e6d5e56e-c15c-4394-8255-06d914d3f3f7/sportswear-tech-fleece-windrunner-mens-full-zip-hoodie-tour-Pml8P0.png" },
-  { id: 3, title: "Nike Air Max 90", category: "Shoes", price: 140.00, stock: 0, status: "Out of Stock", image: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/wzitsrb4oucx9xlfz0uy/air-max-90-mens-shoes-6n3vKB.png" },
-  { id: 4, title: "Nike Pro Dri-FIT", category: "Apparel", price: 35.00, stock: 200, status: "Active", image: "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/c26a798b-7359-4672-8820-2139d486241b/pro-dri-fit-mens-tight-fit-sleeveless-top-VNzZ7v.png" },
-]
-
 const ProductsPage = () => {
   const [products, setProducts] = useState([])
   
@@ -22,21 +14,24 @@ const ProductsPage = () => {
   
   // Form State
   const [formData, setFormData] = useState({
-    title: "",
+    name: "",
     category: "Shoes",
     price: "",
-    stock: "",
-    status: "Active",
-    image: ""
+    stock: 0,
+    status: "active",
+    image_url: "",
+    description: "",
+    colors: [],
+    sizes: [],
+    rating: 0,
+    reviews_count: 0
   })
 
   // Initialize Data
   useEffect(() => {
-    if (products.length === 0) {
-      setProducts(MOCK_PRODUCTS)
-      
-    }
-    axios.get("/api/products").then(res => setProducts(res.data))
+    axios.get("/api/products")
+      .then(res => setProducts(res.data))
+      .catch(err => console.error("Error fetching products:", err))
   }, [])
 
   // Handlers
@@ -48,44 +43,76 @@ const ProductsPage = () => {
 
   const handleOpenAdd = () => {
     setEditingId(null)
-    setFormData({ title: "", category: "Shoes", price: "", stock: "", status: "Active", image: "" })
+    setFormData({ 
+      name: "", 
+      category: "Shoes", 
+      price: "", 
+      stock: 0, 
+      status: "active", 
+      image_url: "",
+      description: "",
+      colors: [],
+      sizes: [],
+      rating: 0,
+      reviews_count: 0
+    })
     setIsModalOpen(true)
   }
 
   const handleOpenEdit = (product) => {
     setEditingId(product.id)
     setFormData({
-      title: product.title,
+      name: product.name,
       category: product.category,
       price: product.price,
-      stock: product.stock,
+      stock: product.sizes?.length || 0,
       status: product.status,
-      image: product.image
+      image_url: product.image_url,
+      description: product.description || "",
+      colors: product.colors || [],
+      sizes: product.sizes || [],
+      rating: product.rating || 0,
+      reviews_count: product.reviews_count || 0
     })
     setIsModalOpen(true)
   }
 
   const handleSave = (e) => {
     e.preventDefault()
-    const displayImage = formData.image || "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b1bcbca4-e853-4df7-b329-5be3c61ee057/dunk-low-retro-mens-shoes-bc160F.png"
+    const displayImage = formData.image_url || "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b1bcbca4-e853-4df7-b329-5be3c61ee057/dunk-low-retro-mens-shoes-bc160F.png"
     let finalStatus = formData.status
-    if (parseInt(formData.stock) === 0) finalStatus = "Out of Stock"
+    if (!formData.in_stock) finalStatus = "inactive"
 
     if (editingId) {
       setProducts(prev => prev.map(p => p.id === editingId ? {
-        ...p, ...formData,
+        ...p, 
+        name: formData.name,
+        category: formData.category,
         price: parseFloat(formData.price),
-        stock: parseInt(formData.stock),
         status: finalStatus,
-        image: displayImage
+        image_url: displayImage,
+        description: formData.description,
+        in_stock: formData.stock > 0,
+        sizes: formData.sizes,
+        colors: formData.colors,
+        rating: formData.rating,
+        reviews_count: formData.reviews_count
       } : p))
     } else {
       const newProduct = {
-        id: Date.now(), ...formData,
+        id: `nk-${String(Date.now()).slice(-3)}`,
+        name: formData.name,
+        category: formData.category,
         price: parseFloat(formData.price),
-        stock: parseInt(formData.stock),
         status: finalStatus,
-        image: displayImage
+        currency: "$",
+        rating: parseFloat(formData.rating) || 0,
+        reviews_count: parseInt(formData.reviews_count) || 0,
+        colors: formData.colors,
+        description: formData.description,
+        image_url: displayImage,
+        in_stock: formData.stock > 0,
+        sizes: formData.sizes
       }
       setProducts(prev => [newProduct, ...prev])
     }
@@ -141,7 +168,7 @@ const ProductsPage = () => {
                       <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Product</th>
                       <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider hidden md:table-cell">Category</th>
                       <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Price</th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Stock</th>
+                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Rating</th>
                       <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Status</th>
                       <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -159,33 +186,32 @@ const ProductsPage = () => {
                           <div className="flex items-center gap-3">
                             <div 
                               className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0 cursor-pointer"
-                              onClick={() => setViewingImage(product.image)} // Click image to view
+                              onClick={() => setViewingImage(product.image_url)}
                             >
-                              <img src={product.image} alt={product.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                             </div>
-                            <span className="text-white font-bold text-sm">{product.title}</span>
+                            <span className="text-white font-bold text-sm">{product.name}</span>
                           </div>
                         </td>
                         <td className="px-4 py-4 hidden md:table-cell"><span className="text-gray-400 text-sm">{product.category}</span></td>
-                        <td className="px-4 py-4"><span className="text-white font-bold text-sm">${product.price}</span></td>
+                        <td className="px-4 py-4"><span className="text-white font-bold text-sm">${product.price.toFixed(2)}</span></td>
                         <td className="px-4 py-4">
-                          <div className="flex items-center gap-2">
-                            <Package2 size={14} className="text-gray-500" />
-                            <span className={`text-sm font-bold ${product.stock === 0 ? 'text-red-400' : 'text-white'}`}>{product.stock}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-yellow-400 text-sm font-bold">{product.rating}</span>
+                            <span className="text-gray-500 text-xs">({product.reviews_count})</span>
                           </div>
                         </td>
                         <td className="px-4 py-4">
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-                            product.status === "Active" ? "bg-green-500/20 text-green-400 border border-green-500/50" :
-                            product.status === "Out of Stock" ? "bg-red-500/20 text-red-400 border border-red-500/50" :
+                            product.status === "active" && product.in_stock ? "bg-green-500/20 text-green-400 border border-green-500/50" :
+                            !product.in_stock ? "bg-red-500/20 text-red-400 border border-red-500/50" :
                             "bg-gray-500/20 text-gray-400 border border-gray-500/50"
-                          }`}>{product.status}</span>
+                          }`}>{product.in_stock ? "Active" : "Out of Stock"}</span>
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex gap-2">
-                            {/* EYE / VIEW BUTTON */}
                             <button 
-                              onClick={() => setViewingImage(product.image)}
+                              onClick={() => setViewingImage(product.image_url)}
                               className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors group/eye relative"
                               title="View Image"
                             >
@@ -225,42 +251,49 @@ const ProductsPage = () => {
       {/* FORM MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl animate-in fade-in zoom-in duration-200">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
             <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-tight">{editingId ? "Edit Product" : "New Product"}</h2>
             <form onSubmit={handleSave} className="space-y-4">
-              {/* Form fields same as before... */}
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Product Name</label>
-                <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
+                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Category</label>
                   <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors appearance-none">
-                    <option value="Shoes">Shoes</option><option value="Apparel">Apparel</option><option value="Accessories">Accessories</option>
+                    <option value="Shoes">Shoes</option>
+                    <option value="Bags">Bags</option>
+                    <option value="Hoodies">Hoodies</option>
+                    <option value="Accessories">Accessories</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status</label>
                   <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors appearance-none">
-                    <option value="Active">Active</option><option value="Inactive">Inactive</option><option value="Out of Stock">Out of Stock</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Price ($)</label>
-                  <input type="number" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
+                  <input type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Stock Qty</label>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Stock Available</label>
                   <input type="number" required value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Image URL</label>
-                <input type="text" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
+                <input type="text" value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Description</label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors" rows="3" />
               </div>
               <div className="pt-4 flex gap-3">
                 <Button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 bg-gray-800 text-white hover:bg-gray-700 font-bold py-6 rounded-xl transition-colors">Cancel</Button>
@@ -279,7 +312,6 @@ const ProductsPage = () => {
         >
           <div className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center p-2">
             
-            {/* Close Button */}
             <button 
               onClick={() => setViewingImage(null)}
               className="absolute -top-12 right-0 md:top-4 md:right-4 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-all"
@@ -287,10 +319,9 @@ const ProductsPage = () => {
               <X size={24} />
             </button>
 
-            {/* Image Container */}
             <div 
               className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10"
-              onClick={(e) => e.stopPropagation()} // Prevent close on image click
+              onClick={(e) => e.stopPropagation()}
             >
               <img 
                 src={viewingImage} 
