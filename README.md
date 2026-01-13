@@ -1,7 +1,9 @@
 👟 Nike E-Commerce Store
+
 A modern, high-performance e-commerce storefront inspired by Nike, built with Next.js, Tailwind CSS, and Shadcn UI. This project demonstrates a complete shopping flow, from product discovery to form-validated checkout.
 
 🚀 Features
+
 Dynamic Product Listing: Fetches and displays products via a REST API.
 
 Modern UI/UX: Built with Shadcn UI components for a sleek, premium feel.
@@ -16,6 +18,7 @@ Fast Performance: Leveraging Next.js Server Components and optimized image loadi
 
 
 🛠️ Tech Stack: Technology and their	Purpose
+
 Next.js----------------->	Framework for SSR & routing
 React------------------->	UI library
 Tailwind CSS------------>	Styling
