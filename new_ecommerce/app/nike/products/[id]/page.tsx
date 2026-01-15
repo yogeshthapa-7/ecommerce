@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Star, ArrowLeft, Check, ShoppingCart } from 'lucide-react';
+import { Star, ArrowLeft, Check, ShoppingCart, Heart } from 'lucide-react';
 import EcomNavbar from '@/components/ecomnavbar';
 import EcomFooter from '@/components/ecomfooter';
 import Link from 'next/link';
@@ -21,6 +21,7 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [currentImage, setCurrentImage] = useState('');
   const [addedToCart, setAddedToCart] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   // Fetch product logic
   useEffect(() => {
@@ -41,6 +42,10 @@ const ProductDetailPage = () => {
               setCurrentImage(foundProduct.colors[0].image_url);
             }
           }
+
+          // Check if product is in wishlist
+          const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+          setIsWishlisted(wishlist.some(item => item.id === foundProduct.id));
         } else {
           setProduct(null);
         }
@@ -72,6 +77,28 @@ const ProductDetailPage = () => {
     setSelectedColor(color);
     if (color.image_url) {
       setCurrentImage(color.image_url);
+    }
+  };
+
+  const toggleWishlist = () => {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    
+    if (isWishlisted) {
+      // Remove from wishlist
+      const updatedWishlist = wishlist.filter(item => item.id !== product.id);
+      localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+      setIsWishlisted(false);
+    } else {
+      // Add to wishlist
+      wishlist.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image_url: product.image_url,
+        currency: product.currency
+      });
+      localStorage.setItem('wishlist', JSON.stringify(wishlist));
+      setIsWishlisted(true);
     }
   };
 
@@ -121,6 +148,30 @@ const ProductDetailPage = () => {
           {/* LEFT SIDE: Visuals (Red Gradient) */}
           <div className="relative bg-gray-100 p-8 flex flex-col justify-between items-center text-white">
             
+            {/* Wishlist Icon - Only shown when out of stock */}
+            {!product.in_stock && (
+              <button
+                onClick={toggleWishlist}
+                className="absolute top-6 left-6 z-20 group"
+                aria-label="Add to wishlist"
+              >
+                <div className="relative">
+                  <Heart 
+                    className={`w-7 h-7 transition-all duration-300 ${
+                      isWishlisted 
+                        ? 'fill-[#FA1E3F] text-[#FA1E3F] scale-110' 
+                        : 'fill-blue-800 text-blue stroke-2 hover:fill-[#FA1E3F] hover:text-[#FA1E3F] hover:scale-110'
+                    }`}
+                  />
+                  {isWishlisted && (
+                    <div className="absolute inset-0 animate-ping">
+                      <Heart className="w-7 h-7 fill-[#FA1E3F] text-[#FA1E3F] opacity-75" />
+                    </div>
+                  )}
+                </div>
+              </button>
+            )}
+
             {/* Nike Logo */}
             <div className="self-start mb-8">
               <svg className="w-16 h-8 fill-current text-white" viewBox="0 0 24 24">
@@ -201,6 +252,12 @@ const ProductDetailPage = () => {
                   {product.in_stock ? 'In Stock' : 'Out of Stock'}
                 </span>
               </div>
+              {!product.in_stock && isWishlisted && (
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <Check className="w-3 h-3 text-[#FA1E3F]" />
+                  Added to wishlist - we'll notify you when back in stock
+                </p>
+              )}
             </div>
 
             {/* Description */}
@@ -266,28 +323,44 @@ const ProductDetailPage = () => {
               </div>
             )}
 
-            {/* Add to Cart Button */}
-            <Button 
-              onClick={handleAddToCart}
-              disabled={!selectedSize || !product.in_stock}
-              className={`w-full md:w-auto px-12 h-14 text-white text-sm font-bold uppercase tracking-widest rounded-md shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-                addedToCart 
-                  ? 'bg-green-600 hover:bg-green-700' 
-                  : 'bg-[#111] hover:bg-black'
-              }`}
-            >
-              {addedToCart ? (
+            {/* Add to Cart or Wishlist Button */}
+            {product.in_stock ? (
+              <Button 
+                onClick={handleAddToCart}
+                disabled={!selectedSize}
+                className={`w-full md:w-auto px-12 h-14 text-white text-sm font-bold uppercase tracking-widest rounded-md shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  addedToCart 
+                    ? 'bg-green-600 hover:bg-green-700' 
+                    : 'bg-[#111] hover:bg-black'
+                }`}
+              >
+                {addedToCart ? (
+                  <span className="flex items-center gap-2">
+                    <Check className="w-5 h-5" />
+                    Added to Cart!
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5" />
+                    Add to Cart
+                  </span>
+                )}
+              </Button>
+            ) : (
+              <Button 
+                onClick={toggleWishlist}
+                className={`w-full md:w-auto px-12 h-14 text-sm font-bold uppercase tracking-widest rounded-md shadow-lg transition-all active:scale-95 ${
+                  isWishlisted
+                    ? 'bg-[#FA1E3F] hover:bg-[#d91a37] text-white'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                }`}
+              >
                 <span className="flex items-center gap-2">
-                  <Check className="w-5 h-5" />
-                  Added to Cart!
+                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-white' : ''}`} />
+                  {isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
                 </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <ShoppingCart className="w-5 h-5" />
-                  {product.in_stock ? 'Add to Cart' : 'Out of Stock'}
-                </span>
-              )}
-            </Button>
+              </Button>
+            )}
 
           </div>
         </div>
