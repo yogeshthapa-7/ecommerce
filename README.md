@@ -1,92 +1,181 @@
-👟 Nike E-Commerce Store
+<div align="center">
 
-A modern, high-performance e-commerce storefront inspired by Nike, built with Next.js, Tailwind CSS, and Shadcn UI. This project demonstrates a complete shopping flow, from product discovery to form-validated checkout.
+<h1>👟 Nike E-Commerce Store</h1>
 
-🚀 Features
+<p>
+A modern, high-performance e-commerce storefront inspired by <strong>Nike</strong>, built with
+<strong>Next.js</strong>, <strong>Tailwind CSS</strong>, and <strong>Shadcn UI</strong>.
+</p>
 
-Dynamic Product Listing: Fetches and displays products via a REST API.
+<p>
+This project demonstrates a complete shopping flow — from product discovery to
+form-validated checkout — with a premium, responsive UI.
+</p>
 
-Modern UI/UX: Built with Shadcn UI components for a sleek, premium feel.
+</div>
 
-Robust Form Handling: Login and Checkout forms powered by Formik and validated with Yup.
+<hr />
 
-Responsive Design: Fully optimized for mobile, tablet, and desktop using Tailwind CSS.
+<h2>🚀 Features</h2>
 
-Iconography: Beautiful, consistent UI icons provided by Lucide-React.
+<ul>
+  <li><strong>Dynamic Product Listing</strong> — Fetches and displays products using a REST API</li>
+  <li><strong>Modern UI / UX</strong> — Clean, premium interface powered by Shadcn UI</li>
+  <li><strong>Robust Form Handling</strong> — Login & checkout forms built with Formik and Yup validation</li>
+  <li><strong>Responsive Design</strong> — Optimized for mobile, tablet, and desktop using Tailwind CSS</li>
+  <li><strong>Iconography</strong> — Consistent icons provided by Lucide-React</li>
+  <li><strong>Fast Performance</strong> — Leveraging Next.js server components and optimized images</li>
+</ul>
 
-Fast Performance: Leveraging Next.js Server Components and optimized image loading.
+<hr />
 
+<h2>🛠️ Tech Stack</h2>
 
-🛠️ Tech Stack: Technology and their	Purpose
+<table>
+  <thead>
+    <tr>
+      <th align="left">Technology</th>
+      <th align="left">Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Next.js</td>
+      <td>Framework for SSR, routing, and performance optimization</td>
+    </tr>
+    <tr>
+      <td>React</td>
+      <td>UI library for building reusable components</td>
+    </tr>
+    <tr>
+      <td>Tailwind CSS</td>
+      <td>Utility-first styling and responsive design</td>
+    </tr>
+    <tr>
+      <td>Shadcn UI</td>
+      <td>Accessible, modern UI components</td>
+    </tr>
+    <tr>
+      <td>Formik</td>
+      <td>Form state management</td>
+    </tr>
+    <tr>
+      <td>Yup</td>
+      <td>Schema-based form validation</td>
+    </tr>
+    <tr>
+      <td>Lucide-React</td>
+      <td>Lightweight, consistent icon library</td>
+    </tr>
+    <tr>
+      <td>REST API</td>
+      <td>Dynamic product data fetching</td>
+    </tr>
+  </tbody>
+</table>
 
-Next.js----------------->	Framework for SSR & routing,
+<hr />
 
-React------------------->	UI library,
+<h2>🖥️ Run the Project Locally</h2>
 
-Tailwind CSS------------>	Styling,
+<h3>1️⃣ Clone the Repository</h3>
 
-Shadcn UI--------------->	Accessible UI components,
+<pre>
+git clone https://github.com/your-username/ecommerce.git
+</pre>
 
-Formik------------------>	Form state management,
+<h3>2️⃣ Navigate to the Project Folder</h3>
 
-Yup--------------------->	Schema validation,
+<pre>
+cd new_ecommerce
+</pre>
 
-Lucide-react------------>	Icon library,
+<h3>3️⃣ Install Dependencies</h3>
 
-API--------------------->	Dynamic product data
+<p>
+Make sure you have <strong>Node.js (>= 18)</strong> installed.
+</p>
 
-🖥️ Run the Project Locally
-1. Clone the Repository
-   git clone https://github.com/your-username/ecommerce.git
-2. Navigate into the Project Folder
-   cd new_ecommerce
-3. Install Dependencies
-    Make sure you have Node.js  (>= 18) installed. Then run:
-   npm install
+<pre>
+npm install
+</pre>
 
-This will install all required packages, including:
-Next.js (framework)
-React (UI library)
-Tailwind CSS (styling)
-Shadcn UI (prebuilt components)
-Formik + Yup (form handling & validation)
-Lucide-react (icons)
-Any other dependencies listed in package.json
+<p>This will install all required packages including:</p>
 
-⚙️ Installing All Components
-If you want to explicitly install each major component (in case someone wants to add them individually):
+<ul>
+  <li>Next.js</li>
+  <li>React</li>
+  <li>Tailwind CSS</li>
+  <li>Shadcn UI</li>
+  <li>Formik & Yup</li>
+  <li>Lucide-React</li>
+  <li>Other dependencies listed in <code>package.json</code></li>
+</ul>
 
-# Next.js & React
+<hr />
+
+<h2>⚙️ Manual Installation (Optional)</h2>
+
+<p>
+If you want to install each major component individually:
+</p>
+
+<h4>Next.js & React</h4>
+<pre>
 npm install next react react-dom
+</pre>
 
-# Tailwind CSS
+<h4>Tailwind CSS</h4>
+<pre>
 npm install -D tailwindcss postcss autoprefixer
 npx tailwindcss init -p
+</pre>
 
-# Shadcn UI
+<h4>Shadcn UI</h4>
+<pre>
 npx shadcn-ui init
+</pre>
 
-# Formik & Yup
+<h4>Formik & Yup</h4>
+<pre>
 npm install formik yup
+</pre>
 
-# Lucide-react (icons)
+<h4>Lucide-React</h4>
+<pre>
 npm install lucide-react
+</pre>
 
-📸 Screenshots
-Here is a glimpse of the website:
-<img width="1853" height="947" alt="Screenshot 2026-01-13 201304" src="https://github.com/user-attachments/assets/d9f9ffaf-ddc3-4c71-956f-7a2d91896a5c" />
-<img width="1878" height="970" alt="Screenshot 2026-01-13 201323" src="https://github.com/user-attachments/assets/69b07fee-d7d3-4840-a50e-0f2f347df004" />
-<img width="1866" height="959" alt="Screenshot 2026-01-13 201401" src="https://github.com/user-attachments/assets/12de807e-a264-4f76-a002-f3d329760138" />
-<img width="1878" height="964" alt="Screenshot 2026-01-13 201418" src="https://github.com/user-attachments/assets/bf594aac-e009-47ab-b6cc-0ba649728cff" />
-<img width="1853" height="953" alt="Screenshot 2026-01-13 201448" src="https://github.com/user-attachments/assets/0c2e05b4-a0a1-4fcd-8e84-f8cbbd36bc2e" />
-<img width="1866" height="978" alt="Screenshot 2026-01-13 201503" src="https://github.com/user-attachments/assets/1cb8393a-7610-4432-be3b-3fd6d651dc35" />
-<img width="1869" height="973" alt="Screenshot 2026-01-13 201605" src="https://github.com/user-attachments/assets/03c3aaed-65af-48ee-bca2-9cac65517745" />
+<hr />
 
+<h2>📸 Screenshots</h2>
 
+<p>Here is a glimpse of the website:</p>
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/d9f9ffaf-ddc3-4c71-956f-7a2d91896a5c" width="90%" />
+  <br /><br />
+  <img src="https://github.com/user-attachments/assets/69b07fee-d7d3-4840-a50e-0f2f347df004" width="90%" />
+  <br /><br />
+  <img src="https://github.com/user-attachments/assets/12de807e-a264-4f76-a002-f3d329760138" width="90%" />
+  <br /><br />
+  <img src="https://github.com/user-attachments/assets/bf594aac-e009-47ab-b6cc-0ba649728cff" width="90%" />
+  <br /><br />
+  <img src="https://github.com/user-attachments/assets/0c2e05b4-a0a1-4fcd-8e84-f8cbbd36bc2e" width="90%" />
+  <br /><br />
+  <img src="https://github.com/user-attachments/assets/1cb8393a-7610-4432-be3b-3fd6d651dc35" width="90%" />
+  <br /><br />
+  <img src="https://github.com/user-attachments/assets/03c3aaed-65af-48ee-bca2-9cac65517745" width="90%" />
+</div>
 
+<hr />
 
+<h2>📄 License</h2>
 
+<p>
+This project is for learning and demonstration purposes.
+</p>
 
-
-
+<div align="center">
+  <strong>⭐ If you like this project, consider giving it a star!</strong>
+</div>
