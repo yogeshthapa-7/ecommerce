@@ -176,9 +176,9 @@ const ProductDetailPage = () => {
               )}
             </div>
 
-            {/* Subtitle */}
+            {/* Subtitle - Category and Gender */}
             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4">
-              {product.category || "Men's Running Shoe"}
+              {product.category || "Category"}{product.gender && ` • ${product.gender}`}
             </p>
 
             {/* Price */}

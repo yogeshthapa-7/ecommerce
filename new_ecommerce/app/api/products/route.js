@@ -5,6 +5,7 @@ const products = [
       "id": "nk-001",
       "name": "Nike Air Max 270",
       "category": "Shoes",
+      "gender": "Men",
       "price": 160.00,
       "status": "active",
       "currency": "$",
@@ -12,14 +13,17 @@ const products = [
       "reviews_count": 1240,
       "colors": [
          {"name":"White",
-          "image_url":"https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/awjogtdnqxniqqk0wpgf/AIR+MAX+270.png"
+          "image_url":"https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/awjogtdnqxniqqk0wpgf/AIR+MAX+270.png",
+         
         }, 
         {"name":"Black",
-          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/gorfwjchoasrrzr1fggt/AIR+MAX+270.png"
+          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/gorfwjchoasrrzr1fggt/AIR+MAX+270.png",
+          
         }
         , 
         {"name":"Multi-Color",
-          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/c79654db-d568-4e5e-b0d7-90b6df387d7e/AIR+MAX+270.png"
+          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/c79654db-d568-4e5e-b0d7-90b6df387d7e/AIR+MAX+270.png",
+          
         }
       ],
       "description": "Nike's first lifestyle Air Max brings you style, comfort and big attitude. The design draws inspiration from Air Max icons, showcasing Nike's greatest innovation with its large window and fresh array of colors.",
@@ -32,6 +36,7 @@ const products = [
       "id": "nk-002",
       "name": "Nike Air Max Plus",
       "category": "Shoes",
+      "gender": "Men",
       "status": "active",
       "price": 115.00,
       "currency": "$",
@@ -58,6 +63,7 @@ const products = [
       "id": "nk-003",
       "name": "Nike Pegasus 41",
       "category": "Shoes",
+      "gender": "Women",
       "status": "active",
       "price": 130.00,
       "currency": "$",
@@ -88,6 +94,7 @@ const products = [
       "id": "nk-004",
       "name": "Nike Blazer",
       "category": "Shoes",
+      "gender": "Unisex",
       "status": "active",
       "price": 150.00,
       "currency": "$",
@@ -118,6 +125,7 @@ const products = [
       "id": "nk-005",
       "name": "Nike Huarache",
       "category": "Shoes",
+      "gender": "Kids",
       "status": "active",
       "price": 100.00,
       "currency": "$",
@@ -148,6 +156,7 @@ const products = [
       "id": "nk-006",
       "name": "Nike Run Defy",
       "category": "Shoes",
+      "gender": "Women",
       "status": "active",
       "price": 200.00,
       "currency": "$",
@@ -174,6 +183,7 @@ const products = [
       "id": "nk-007",
       "name": "Jordan Spizike Low",
       "category": "Shoes",
+      "gender": "Men",
       "status": "active",
       "price": 250.00,
       "currency": "$",
@@ -204,6 +214,7 @@ const products = [
       "id": "nk-008",
       "name": "Nike Metcon 10",
       "category": "Shoes",
+      "gender": "Men",
       "status": "active",
       "price": 180.00,
       "currency": "$",
@@ -234,6 +245,7 @@ const products = [
       "id": "nk-009",
       "name": "Nike Gym Bag",
       "category": "Bags",
+      "gender": "Unisex",
       "status": "active",
       "price": 180.00,
       "currency": "$",
@@ -264,6 +276,7 @@ const products = [
       "id": "nk-010",
       "name": "Nike Academy",
       "category": "Bags",
+      "gender": "Unisex",
       "status": "active",
       "price": 144.00,
       "currency": "$",
@@ -294,6 +307,7 @@ const products = [
       "id": "nk-011",
       "name": "Nike Heritage",
       "category": "Bags",
+      "gender": "Unisex",
       "status": "active",
       "price": 130.00,
       "currency": "$",
@@ -320,6 +334,7 @@ const products = [
       "id": "nk-012",
       "name": "Nike Varsity Elite",
       "category": "Bags",
+      "gender": "Unisex",
       "status": "active",
       "price": 110.00,
       "currency": "$",
@@ -346,6 +361,7 @@ const products = [
       "id": "nk-013",
       "name": "Nike Tech",
       "category": "Hoodies",
+      "gender": "Men",
       "status": "active",
       "price": 97.00,
       "currency": "$",
@@ -376,6 +392,7 @@ const products = [
       "id": "nk-014",
       "name": "Nike Club Fleece",
       "category": "Hoodies",
+      "gender": "Men",
       "status": "active",
       "price": 100.00,
       "currency": "$",
@@ -406,6 +423,7 @@ const products = [
       "id": "nk-015",
       "name": "Nike 24.7 ImpossiblySoft-Women",
       "category": "Hoodies",
+      "gender": "Women",
       "price": 87.00,
       "status": "active",
       "currency": "$",
@@ -436,6 +454,7 @@ const products = [
       "id": "nk-016",
       "name": "Fleece Full-Zip Hoodie",
       "category": "Hoodies",
+      "gender": "Men",
       "status": "active",
       "price": 95.00,
       "currency": "$",
@@ -451,6 +470,29 @@ const products = [
       ],
       "description": "A versatile full-zip hoodie made from soft fleece fabric, perfect for layering. It features a full-length zipper, adjustable drawstring hood, and front pockets for convenience. The ribbed cuffs and hem provide a snug fit, making it ideal for workouts or casual wear.",
       "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/590c1fd6-0af1-4312-862a-530b9c3b10a0/AS+M+NK+TECH+FLC+PRO+WR+FZ+JKT.png",
+      "in_stock": true,
+      "sizes": ['S', 'M', 'L', 'XL']
+    },
+     {
+      "id": "nk-017",
+      "name": "Nike Sportswear Essentials",
+      "category": "Bags",
+      "gender": "Women",
+      "status": "active",
+      "price": 90.00,
+      "currency": "$",
+      "rating": 4.7,
+      "reviews_count": 890,
+      "colors": [
+         {"name":"Light Bone/Sail",
+          "image_url":"https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/0672b208-0685-4f3d-aeca-e851cd13b503/NK+NSW+ESSENTIALS+CROSSBODY.png"
+        }, 
+        {"name":"Black",
+          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/05bff0c8-42fa-4b40-9c7a-da0d0a0c4110/NK+NSW+ESSENTIALS+CROSSBODY.png"
+        }
+      ],
+      "description": "A versatile full-zip hoodie made from soft fleece fabric, perfect for layering. It features a full-length zipper, adjustable drawstring hood, and front pockets for convenience. The ribbed cuffs and hem provide a snug fit, making it ideal for workouts or casual wear.",
+      "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/281ff75b-f3cd-49ea-ae1e-b580f93cc1b2/NK+NSW+ESSENTIALS+CROSSBODY.png",
       "in_stock": true,
       "sizes": ['S', 'M', 'L', 'XL']
     }

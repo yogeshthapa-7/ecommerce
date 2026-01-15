@@ -13,6 +13,8 @@ import {
   Users,
 } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 const EcomNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -41,10 +43,12 @@ const EcomNavbar = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-12">
+              <Link href= '/nike'>
               <h1 className="text-2xl font-black tracking-tight">
-                <span className="text-white">NIKE</span>
+                
+                <span className="text-white cursor-pointer">NIKE</span>
               </h1>
-
+</Link>
               <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium">
                 <a
                   href="#"
