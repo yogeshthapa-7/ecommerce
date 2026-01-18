@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"
+import BarGraph from "@/components/bargraph"
 
 const AdminDashboardPage = () => {
   // --- STATE ---
@@ -205,6 +206,10 @@ const AdminDashboardPage = () => {
               </table>
             </div>
           </div>
+          
+        </div>
+        <div className="m-3 p-3">
+        <BarGraph/>
         </div>
       </div>
 

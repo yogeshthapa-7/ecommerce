@@ -495,6 +495,61 @@ const products = [
       "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/281ff75b-f3cd-49ea-ae1e-b580f93cc1b2/NK+NSW+ESSENTIALS+CROSSBODY.png",
       "in_stock": true,
       "sizes": ['S', 'M', 'L', 'XL']
+    },
+     {
+      "id": "nk-018",
+      "name": "Nike Mind 001",
+      "category": "Slippers",
+      "gender": "Men",
+      "status": "active",
+      "price": 80.00,
+      "currency": "$",
+      "rating": 4.7,
+      "reviews_count": 890,
+      "colors": [
+         {"name":"Black/Hyper",
+          "image_url":"https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/9e731ef9-e141-4b41-84c0-adc38c00d960/NIKE+MIND+001.png"
+        }, 
+        {"name":"Light Smoke Grey",
+          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/c351135b-3bb7-4357-8a12-0dea0efc678a/NIKE+MIND+001.png"
+        }, 
+        {"name":"Solar Red/Hyper Crimson",
+          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/e328afc7-0923-4933-9b97-3133ad367d46/NIKE+MIND+001.png"
+        }
+      ],
+      "description": "Step into effortless comfort with the Nike Mind 001 Slipper. Designed with a sleek, modern silhouette, it features soft cushioning, lightweight materials, and a durable sole for everyday wear. Perfect for relaxed moments at home or casual outings, this slipper blends style and ease in every step.",
+      "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/483c0cf3-5015-48ff-ba73-37905288ecc6/NIKE+MIND+001.png",
+      "in_stock": true,
+      "sizes": [8,9,10,11]
+    },
+     {
+      "id": "nk-019",
+      "name": "Nike Offcourt Adjust",
+      "category": "Slippers",
+      "gender": "Men",
+      "status": "active",
+      "price": 40.00,
+      "currency": "$",
+      "rating": 4.7,
+      "reviews_count": 890,
+      "colors": [
+         {"name":"Summit White/Black",
+          "image_url":"https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/f2ba156d-7913-4431-ba7b-4a93d6e525ef/NIKE+OFFCOURT+ADJUST+SLIDE.png"
+        }, 
+        {"name":" Black",
+          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/c125be2d-52c3-4dcb-9f70-268993ffcdf2/NIKE+OFFCOURT+ADJUST+SLIDE.png"
+        }, 
+        {"name":"University Red/Black",
+          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/0c25dd7a-7e84-4bb3-871c-76a1cb8dd699/NIKE+OFFCOURT+ADJUST+SLIDE.png"
+        }, 
+        {"name":"Lapis/Dark Smoke Grey",
+          "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/44c53491-16a1-4ae9-80ee-7cee6eabff48/NIKE+OFFCOURT+ADJUST+SLIDE.png"
+        }
+      ],
+      "description": "Slide into all-day comfort with the Nike Offcourt Adjust. Featuring a plush foam midsole, adjustable strap for a personalized fit, and a soft lining that feels great against your foot, this slide is built for recovery and relaxation. The bold Nike branding and versatile design make it perfect for both casual wear and post-game downtime.",
+      "image_url": "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/7a34da35-6642-44cb-9db6-37e3163db552/NIKE+OFFCOURT+ADJUST+SLIDE.png",
+      "in_stock": true,
+      "sizes": [8,9,10,11]
     }
   ];
 

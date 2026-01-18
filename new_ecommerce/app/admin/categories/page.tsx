@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Edit, Trash2, Eye, EyeOff, X, Save, Image as ImageIcon } from "lucide-react"
 import axios from "axios"
+import BarGraph from "@/components/bargraph"
 
 // Mock data to initialize (so the page isn't empty if the API fails)
 const INITIAL_DATA = [
@@ -121,7 +122,7 @@ const Categories = () => {
           <div className="inline-block mb-3 px-4 py-1 bg-white text-black text-xs font-black tracking-widest uppercase rounded-full">
             Product Management
           </div>
-          
+
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
               <h1 className="text-6xl md:text-7xl font-black text-white leading-none tracking-tighter mb-3">
