@@ -15,12 +15,17 @@ import {
 } from 'lucide-react';
 import EcomNavbar from '@/components/ecomnavbar';
 import EcomFooter from '@/components/ecomfooter';
+import ChatBubble from '@/components/ui/chatbubble';
+import AssistantChat from '@/components/ui/assistantchat';
 
 const NikeHomePage = () => {
 
   return (
+
     <div className="relative min-h-screen bg-black text-white font-sans overflow-x-hidden">
-     <EcomNavbar/>
+
+      <EcomNavbar />
+
       {/* HERO SECTION */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <img
@@ -164,7 +169,7 @@ const NikeHomePage = () => {
                     <span className="text-xl font-black">{product.price}</span>
                   </div>
                   <p className="text-gray-400 text-sm">{product.desc}</p>
-            
+
                 </div>
                 <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
                   NEW
@@ -242,7 +247,7 @@ const NikeHomePage = () => {
                 img: 'https://images.footballfanatics.com/baltimore-orioles/mens-nike-black-baltimore-orioles-authentic-collection-performance-pullover-hoodie_ss5_p-201716071+pv-2+u-acaphcqvjxaw2kddtql6+v-gckyjeqlagznvrbrphbt.jpg?_hv=2&w=600',
               },
             ].map((product, idx) => (
-              
+
               <div
                 key={idx}
                 className="group relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-red-500/20 transition-all hover:-translate-y-2"
@@ -262,7 +267,7 @@ const NikeHomePage = () => {
                     </span>
                   </div>
                   <p className="text-gray-400 text-sm">{product.desc}</p>
-                 
+
                 </div>
               </div>
             ))}
@@ -333,25 +338,29 @@ const NikeHomePage = () => {
           <p className="text-xl text-gray-400 mb-8">
             Get the latest drops, exclusive offers, and insider news
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
-            <Button
-              size="lg"
-              className="bg-red-500 text-white m-auto font-bold hover:bg-red-600 px-8 py-4 rounded-full whitespace-nowrap cursor-pointer"
-            >
-              Sign In
-            </Button>
-            
-             <Button
-              size="lg"
-              className="bg-red-500 text-white m-auto font-bold hover:bg-red-600 px-8 py-4 rounded-full whitespace-nowrap cursor-pointer"
-            >
-              Join Us
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto justify-center items-center">
+            <Link href="/login">
+              <Button
+                size="lg"
+                className="bg-red-500 text-white m-auto font-bold hover:bg-red-600 px-8 py-4 rounded-full whitespace-nowrap cursor-pointer"
+              >
+                Sign In
+              </Button>
+            </Link>
+
+            <Link href="/register">
+              <Button
+                size="lg"
+                className="bg-red-500 text-white m-auto font-bold hover:bg-red-600 px-8 py-4 rounded-full whitespace-nowrap cursor-pointer"
+              >
+                Join Us
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
-<EcomFooter/>
-    
+      <EcomFooter />
+
     </div>
   );
 };

@@ -4,6 +4,7 @@ import "./globals.css";
 
 import CartSidebar from "@/components/ecomsidebar";
 import { CartProvider } from "./context/CartContext";
+import ChatBubble from "@/components/ui/chatbubble";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,8 +31,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        
         <CartProvider>
           {children}
+          <ChatBubble/>
           <CartSidebar />
         </CartProvider>
       </body>
