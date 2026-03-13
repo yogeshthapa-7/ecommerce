@@ -11,20 +11,36 @@ import {
   TrendingUp,
   Award,
   Users,
+  User,
+  LogOut,
 } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const EcomNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  
+  const [user, setUser] = useState<{ firstName?: string; lastName?: string; role?: string } | null>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const router = useRouter();
+
   // Cart functionality
   const { setIsCartOpen, getCartCount } = useCart();
   const cartCount = getCartCount();
 
   useEffect(() => {
+    // Check for logged in user
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+      } catch (e) {
+        console.error("Error parsing user data", e);
+      }
+    }
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
@@ -32,23 +48,41 @@ const EcomNavbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    setShowUserMenu(false);
+    router.push("/login");
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user) return "?";
+    const first = user.firstName?.charAt(0) || "";
+    const last = user.lastName?.charAt(0) || "";
+    return (first + last).toUpperCase() || user.firstName?.charAt(0)?.toUpperCase() || "U";
+  };
+
+  // Check if user is regular user (not admin)
+  const isRegularUser = user && user.role === "user";
+
   return (
     <div>
       {/* NAVBAR */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-black/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-black/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
+          }`}
       >
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-12">
-              <Link href= '/nike'>
-              <h1 className="text-2xl font-black tracking-tight">
-                
-                <span className="text-white cursor-pointer">NIKE</span>
-              </h1>
-</Link>
+              <Link href='/nike'>
+                <h1 className="text-2xl font-black tracking-tight">
+
+                  <span className="text-white cursor-pointer">NIKE</span>
+                </h1>
+              </Link>
               <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium">
                 <a
                   href="#"
@@ -97,7 +131,7 @@ const EcomNavbar = () => {
                   className="bg-transparent border-none outline-none text-sm w-32 placeholder:text-gray-500"
                 />
               </div>
-              
+
               {/* Cart Button with Counter */}
               <Button
                 variant="ghost"
@@ -112,6 +146,52 @@ const EcomNavbar = () => {
                   </span>
                 )}
               </Button>
+
+              {/* User Profile - Only show for regular users */}
+              {isRegularUser ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 bg-gray-800/50 hover:bg-gray-800 rounded-full px-3 py-2 transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {getUserInitials()}
+                    </div>
+                    <span className="hidden md:block text-sm text-white">
+                      {user?.firstName || "User"}
+                    </span>
+                  </button>
+
+                  {/* User Dropdown Menu */}
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden">
+                      <div className="px-4 py-3 border-b border-gray-800">
+                        <p className="text-sm font-medium text-white">
+                          {user?.firstName} {user?.lastName}
+                        </p>
+                        <p className="text-xs text-gray-400">Member</p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Show Sign In button for non-logged-in users */
+                !user && (
+                  <Link href="/login">
+                    <Button variant="ghost" className="text-white hover:bg-red-500">
+                      <User className="w-4 h-4 mr-2" />
+                      Sign In
+                    </Button>
+                  </Link>
+                )
+              )}
 
               <Button
                 variant="ghost"
@@ -150,7 +230,7 @@ const EcomNavbar = () => {
               >
                 Sale
               </a>
-              
+
               {/* Mobile Cart Button */}
               <button
                 onClick={() => {
