@@ -21,9 +21,13 @@ form-validated checkout — with a premium, responsive UI.
 <ul>
   <li><strong>Dynamic Product Listing</strong> — Fetches and displays products using a REST API</li>
   <li><strong>Modern UI / UX</strong> — Clean, premium interface powered by Shadcn UI</li>
+  <li><strong>Robust Backend</strong> — Node.js and Express server with MongoDB database</li>
+  <li><strong>Powerful Admin Dashboard</strong> — Comprehensive panel for managing products, orders, users, and store settings</li>
+  <li><strong>AI Chat Assistant</strong> — Intelligent customer support powered by OpenAI</li>
+  <li><strong>Authentication & Security</strong> — Secure login and session management using JWT</li>
+  <li><strong>Order & Email Notifications</strong> — Integrated email automation for order confirmations</li>
+  <li><strong>Interactive Maps</strong> — Custom Mapbox/MapLibre integration with custom markers</li>
   <li><strong>Robust Form Handling</strong> — Login & checkout forms built with Formik and Yup validation</li>
-  <li><strong>Responsive Design</strong> — Optimized for mobile, tablet, and desktop using Tailwind CSS</li>
-  <li><strong>Iconography</strong> — Consistent icons provided by Lucide-React</li>
   <li><strong>Fast Performance</strong> — Leveraging Next.js server components and optimized images</li>
 </ul>
 
@@ -48,6 +52,14 @@ form-validated checkout — with a premium, responsive UI.
       <td>UI library for building reusable components</td>
     </tr>
     <tr>
+      <td>Node.js & Express</td>
+      <td>Backend server and RESTful API architecture</td>
+    </tr>
+    <tr>
+      <td>MongoDB</td>
+      <td>NoSQL database for flexible data modeling</td>
+    </tr>
+    <tr>
       <td>Tailwind CSS</td>
       <td>Utility-first styling and responsive design</td>
     </tr>
@@ -56,20 +68,16 @@ form-validated checkout — with a premium, responsive UI.
       <td>Accessible, modern UI components</td>
     </tr>
     <tr>
-      <td>Formik</td>
-      <td>Form state management</td>
+      <td>OpenAI (gpt-4o-mini / gpt-5-nano)</td>
+      <td>Powers the intelligent chat assistant</td>
     </tr>
     <tr>
-      <td>Yup</td>
-      <td>Schema-based form validation</td>
+      <td>Formik & Yup</td>
+      <td>Form state management and validation</td>
     </tr>
     <tr>
-      <td>Lucide-React</td>
-      <td>Lightweight, consistent icon library</td>
-    </tr>
-    <tr>
-      <td>REST API</td>
-      <td>Dynamic product data fetching</td>
+      <td>JWT & bcrypt</td>
+      <td>Authentication and password security</td>
     </tr>
   </tbody>
 </table>
