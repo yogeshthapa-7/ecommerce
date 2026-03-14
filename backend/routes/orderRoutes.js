@@ -3,6 +3,7 @@ const router = express.Router();
 const {
     getOrders,
     getOrder,
+    getOrdersByUser,
     createOrder,
     updateOrder,
     deleteOrder,
@@ -10,6 +11,7 @@ const {
 } = require('../controllers/orderController');
 
 router.get('/stats', getStats);
+router.get('/user/:userId', getOrdersByUser);
 router.get('/', getOrders);
 router.get('/:id', getOrder);
 router.post('/', createOrder);

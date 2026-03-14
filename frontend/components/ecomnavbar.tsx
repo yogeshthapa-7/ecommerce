@@ -17,6 +17,7 @@ import {
 import { useCart } from '@/app/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const EcomNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -164,13 +165,21 @@ const EcomNavbar = () => {
 
                   {/* User Dropdown Menu */}
                   {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-56 bg-gray-900 border border-gray-800 rounded-lg shadow-xl overflow-hidden z-50">
                       <div className="px-4 py-3 border-b border-gray-800">
                         <p className="text-sm font-medium text-white">
                           {user?.firstName} {user?.lastName}
                         </p>
                         <p className="text-xs text-gray-400">Member</p>
                       </div>
+                      <Link
+                        href="/nike/profile"
+                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                        onClick={() => setShowUserMenu(false)}
+                      >
+                        <User className="w-4 h-4" />
+                        My Profile
+                      </Link>
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"

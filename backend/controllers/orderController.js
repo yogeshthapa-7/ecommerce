@@ -1,6 +1,17 @@
 const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 
+// GET orders by user ID
+exports.getOrdersByUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // GET all orders
 exports.getOrders = async (req, res) => {
     try {
