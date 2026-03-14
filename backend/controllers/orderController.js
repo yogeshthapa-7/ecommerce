@@ -5,7 +5,19 @@ const Customer = require('../models/Customer');
 exports.getOrdersByUser = async (req, res) => {
     try {
         const { userId } = req.params;
-        const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+        // First try to find by userId
+        let orders = await Order.find({ userId }).sort({ createdAt: -1 });
+
+        // If no orders found by userId, try to find by customer email from user data
+        if (orders.length === 0 && userId) {
+            // Try to find user and get their email
+            const User = require('../models/User');
+            const user = await User.findById(userId);
+            if (user) {
+                orders = await Order.find({ customerEmail: user.email }).sort({ createdAt: -1 });
+            }
+        }
+
         res.json(orders);
     } catch (error) {
         res.status(500).json({ message: error.message });
