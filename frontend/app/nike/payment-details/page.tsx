@@ -1,7 +1,7 @@
 "use client";
 import { useCart } from '@/app/context/CartContext';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Package, CreditCard, Lock, CheckCircle, Shield, Smartphone, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ import EcomFooter from '@/components/ecomfooter';
 const PaymentDetailsPage = () => {
   const router = useRouter();
   const { cartItems, getCartTotal, clearCart } = useCart();
+  const [user, setUser] = useState<{ _id?: string; firstName?: string; lastName?: string; email?: string } | null>(null);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -33,6 +34,27 @@ const PaymentDetailsPage = () => {
 
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [orderPlaced, setOrderPlaced] = useState(false);
+
+  // Pre-fill form with logged-in user data
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+        // Pre-fill form with user data if available
+        if (userData.firstName || userData.lastName) {
+          setFormData(prev => ({
+            ...prev,
+            fullName: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+            email: userData.email || prev.email
+          }));
+        }
+      } catch (e) {
+        console.error("Error parsing user data", e);
+      }
+    }
+  }, []);
 
   if (cartItems.length === 0 && !orderPlaced) {
     return (
@@ -76,22 +98,48 @@ const PaymentDetailsPage = () => {
     }
 
     try {
+      // Get logged in user info
+      const userStr = localStorage.getItem("user");
+      let userId = null;
+      if (userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+          userId = userData._id || userData.id || null;
+        } catch (e) {
+          console.error("Error parsing user data", e);
+        }
+      }
+
       // 1. Prepare Order Data
       const orderData = {
+        userId: userId,
         customer: {
           name: formData.fullName,
           email: formData.email,
           phone: formData.phone
         },
         items: cartItems.map(item => ({
-          product: item.id || item._id, // Support different id naming
-          productName: item.name,
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
           quantity: item.quantity,
-          price: item.price
+          color: item.color || '',
+          size: item.size || '',
+          image: item.image || ''
         })),
         total: total,
-        status: "Paid", // Simplified for demo
-        paymentMethod: paymentMethod
+        paymentStatus: "Paid",
+        paymentMethod: paymentMethod,
+        shippingInfo: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country
+        }
       }
 
       // 2. Save to Backend
@@ -101,7 +149,11 @@ const PaymentDetailsPage = () => {
         body: JSON.stringify(orderData),
       });
 
-      if (!res.ok) throw new Error("Failed to create order");
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Order creation error:', errorText);
+        throw new Error(`Failed to create order: ${errorText}`);
+      }
 
       setOrderPlaced(true);
 

@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Customer = require('../models/Customer');
 
 // GET all orders
 exports.getOrders = async (req, res) => {
@@ -25,8 +26,67 @@ exports.getOrder = async (req, res) => {
 exports.createOrder = async (req, res) => {
     try {
         const orderId = `ORD-${Date.now().toString().slice(-6)}`;
-        const order = new Order({ ...req.body, orderId });
+
+        // Extract customer info from the request body
+        const { customer, items, total, paymentMethod, shippingInfo, userId } = req.body;
+
+        // Determine customer name and email
+        let customerName = '';
+        let customerEmail = '';
+
+        if (typeof customer === 'object' && customer !== null) {
+            customerName = customer.name || '';
+            customerEmail = customer.email || '';
+        } else if (typeof customer === 'string') {
+            customerName = customer;
+        }
+
+        // If shippingInfo exists, use that as fallback
+        if (shippingInfo) {
+            if (!customerName && shippingInfo.fullName) customerName = shippingInfo.fullName;
+            if (!customerEmail && shippingInfo.email) customerEmail = shippingInfo.email;
+        }
+
+        // Create the order
+        const order = new Order({
+            orderId,
+            userId: userId || null,
+            customer: customerName,
+            customerEmail: customerEmail,
+            items: items || [],
+            total: total || 0,
+            paymentStatus: 'Paid', // Payment is successful when order is created
+            deliveryStatus: 'Processing',
+            paymentMethod: paymentMethod || 'card',
+            shippingInfo: shippingInfo || {},
+            date: new Date().toISOString().split('T')[0]
+        });
+
         const saved = await order.save();
+
+        // Update or create customer record
+        if (customerEmail) {
+            const existingCustomer = await Customer.findOne({ email: customerEmail });
+
+            if (existingCustomer) {
+                // Update existing customer
+                existingCustomer.orders = (existingCustomer.orders || 0) + 1;
+                existingCustomer.totalSpent = (existingCustomer.totalSpent || 0) + (total || 0);
+                existingCustomer.name = customerName || existingCustomer.name;
+                await existingCustomer.save();
+            } else {
+                // Create new customer
+                await Customer.create({
+                    name: customerName || 'Unknown',
+                    email: customerEmail,
+                    phone: shippingInfo?.phone || '',
+                    orders: 1,
+                    totalSpent: total || 0,
+                    status: 'Active'
+                });
+            }
+        }
+
         res.status(201).json(saved);
     } catch (error) {
         res.status(400).json({ message: error.message });

@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Edit, Trash2, UserCheck, UserX, Plus, TrendingUp, Award, X } from "lucide-react"
 import axios from "axios"
 
-// 1. MOCK DATA (To make the app usable immediately)
 const CustomersPage = () => {
-  const [customers, setCustomers] = useState([])
+  const [customers, setCustomers] = useState<any[]>([])
 
   // State for Modal handling
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -170,7 +169,7 @@ const CustomersPage = () => {
                   <tbody>
                     {customers.length === 0 ? (
                       <tr key="empty-customers">
-                        <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                           No customers found. Add one to get started.
                         </td>
                       </tr>

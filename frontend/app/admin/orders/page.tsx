@@ -6,7 +6,7 @@ import axios from "axios"
 
 /* ================= ORDERS PAGE ================= */
 const OrdersPage = () => {
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
 
@@ -180,7 +180,7 @@ const OrdersPage = () => {
                     <tr className="border-b border-gray-800">
                       <TableHeader label="Order ID" />
                       <TableHeader label="Customer" />
-                      <TableHeader label="Date" />
+                      <TableHeader label="Items" />
                       <TableHeader label="Total" />
                       <TableHeader label="Payment" />
                       <TableHeader label="Delivery" hidden="lg" />
@@ -190,7 +190,7 @@ const OrdersPage = () => {
                   <tbody>
                     {orders.length === 0 ? (
                       <tr key="empty-orders">
-                        <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                           No orders found. Create one to get started.
                         </td>
                       </tr>
@@ -200,8 +200,30 @@ const OrdersPage = () => {
                         className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
                       >
                         <td className="px-4 py-4 text-white font-bold text-sm">{order.orderId || order._id || order.id}</td>
-                        <td className="px-4 py-4 text-gray-300 text-sm">{order.customer}</td>
-                        <td className="px-4 py-4 text-gray-400 text-sm">{order.date}</td>
+                        <td className="px-4 py-4">
+                          <div>
+                            <p className="text-gray-300 text-sm font-medium">{order.customer || 'N/A'}</p>
+                            <p className="text-gray-500 text-xs">{order.customerEmail || 'No email'}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="max-w-xs">
+                            {order.items && order.items.length > 0 ? (
+                              <div className="text-xs text-gray-400">
+                                {order.items.slice(0, 2).map((item, i) => (
+                                  <p key={i} className="truncate">
+                                    {item.quantity}x {item.name || 'Product'}
+                                  </p>
+                                ))}
+                                {order.items.length > 2 && (
+                                  <p className="text-gray-500">+{order.items.length - 2} more items</p>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500 text-xs">No items</span>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-4 py-4 text-white font-bold text-sm">${(order?.total ?? 0).toLocaleString()}</td>
                         <td className="px-4 py-4">
                           <StatusBadge status={order.paymentStatus} />

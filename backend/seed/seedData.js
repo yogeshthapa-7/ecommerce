@@ -398,29 +398,7 @@ const categories = [
     { name: "Gym-Bra", image: "https://www.nikys-sports.com/cdn/shop/files/AURORA_DJ8523-010_PHSFH001-2000.jpg?v=1686777182", products: 10, status: "Active" }
 ];
 
-const customers = [
-    { name: "John Doe", email: "john@example.com", phone: "+1 555-1234", orders: 5, totalSpent: 450, status: "Active" },
-    { name: "Jane Smith", email: "jane@example.com", phone: "+1 555-5678", orders: 2, totalSpent: 120, status: "Inactive" },
-    { name: "Mike Johnson", email: "mike@example.com", phone: "+1 555-9012", orders: 10, totalSpent: 980, status: "Active" },
-    { name: "Alice Brown", email: "alice@example.com", phone: "+1 555-3456", orders: 0, totalSpent: 0, status: "Banned" },
-    { name: "Chris Wilson", email: "chris@example.com", phone: "+1 555-7890", orders: 3, totalSpent: 230, status: "Active" },
-    { name: "Sara Davis", email: "sara@example.com", phone: "+1 555-2468", orders: 1, totalSpent: 75, status: "Inactive" },
-    { name: "David Lee", email: "david@example.com", phone: "+1 555-1357", orders: 8, totalSpent: 670, status: "Active" },
-    { name: "Emma Clark", email: "emma@example.com", phone: "+1 555-9753", orders: 0, totalSpent: 0, status: "Banned" },
-    { name: "Brian Martinez", email: "brian@example.com", phone: "+1 555-8642", orders: 6, totalSpent: 520, status: "Active" },
-    { name: "Olivia Taylor", email: "olivia@example.com", phone: "+1 555-3698", orders: 4, totalSpent: 310, status: "Active" }
-];
-
-const orders = [
-    { orderId: "ORD001", customer: "John Doe", date: "2026-01-05", total: 450, paymentStatus: "Paid", deliveryStatus: "Processing" },
-    { orderId: "ORD002", customer: "Jane Smith", date: "2026-01-04", total: 120, paymentStatus: "Pending", deliveryStatus: "Processing" },
-    { orderId: "ORD003", customer: "Mike Johnson", date: "2026-01-03", total: 980, paymentStatus: "Paid", deliveryStatus: "Shipped" },
-    { orderId: "ORD004", customer: "Alice Brown", date: "2026-01-02", total: 0, paymentStatus: "Failed", deliveryStatus: "Cancelled" },
-    { orderId: "ORD005", customer: "Chris Wilson", date: "2026-01-01", total: 230, paymentStatus: "Paid", deliveryStatus: "Delivered" },
-    { orderId: "ORD006", customer: "Aloj Khadka", date: "2026-01-05", total: 230, paymentStatus: "Pending", deliveryStatus: "Processing" }
-];
-
-// ==================== SEED FUNCTION ====================
+const categories = [
 
 const seedDB = async () => {
     try {
@@ -442,14 +420,6 @@ const seedDB = async () => {
         // Seed categories
         await Category.insertMany(categories);
         console.log(`Seeded ${categories.length} categories`);
-
-        // Seed customers
-        await Customer.insertMany(customers);
-        console.log(`Seeded ${customers.length} customers`);
-
-        // Seed orders
-        await Order.insertMany(orders);
-        console.log(`Seeded ${orders.length} orders`);
 
         // Seed admin user
         const adminUser = new User({
