@@ -1,5 +1,8 @@
 const Order = require('../models/Order');
 const Customer = require('../models/Customer');
+const Product = require('../models/Product');
+
+// GET orders by user ID
 
 // GET orders by user ID
 exports.getOrdersByUser = async (req, res) => {
@@ -146,17 +149,26 @@ exports.deleteOrder = async (req, res) => {
 exports.getStats = async (req, res) => {
     try {
         const orders = await Order.find();
+        
+        // Total revenue from paid orders
         const totalRevenue = orders
             .filter(o => o.paymentStatus === 'Paid')
             .reduce((sum, o) => sum + o.total, 0);
+        
         const totalOrders = orders.length;
         const paidOrders = orders.filter(o => o.paymentStatus === 'Paid').length;
         const pendingOrders = orders.filter(o => o.paymentStatus === 'Pending').length;
         const cancelledOrders = orders.filter(o => o.deliveryStatus === 'Cancelled').length;
 
+        // Count customers and products
+        const totalCustomers = await Customer.countDocuments();
+        const totalProducts = await Product.countDocuments();
+
         res.json({
             totalRevenue,
             totalOrders,
+            totalCustomers,
+            totalProducts,
             paidOrders,
             pendingOrders,
             cancelledOrders,
