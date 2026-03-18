@@ -178,10 +178,27 @@ npm install lucide-react
 
 <hr />
 
-<h2>📄 License</h2>
+<h2>🔮 Future Updates</h2>
+
+<p>This project is continuously evolving. Here are some planned features and improvements:</p>
+
+<ul>
+  <li><strong>Enhanced Search Functionality</strong> — Advanced product search with filters, sorting, and real-time suggestions</li>
+  <li><strong>Wishlist & Favorites</strong> — Allow users to save products for later</li>
+  <li><strong>Product Reviews & Ratings</strong> — Customer reviews and star ratings system</li>
+  <li><strong>Inventory Management</strong> — Stock tracking and low-stock alerts</li>
+  <li><strong>Coupon & Discount Codes</strong> — Promo code functionality for discounts</li>
+  <li><strong>Multi-payment Gateway Integration</strong> — Support for Stripe, PayPal, and other payment methods</li>
+  <li><strong>Order Tracking</strong> — Real-time order status and shipping tracking</li>
+  <li><strong>Advanced Analytics Dashboard</strong> — Sales analytics, revenue reports, and customer insights</li>
+  <li><strong>Blog / Content Management</strong> — News, announcements, and SEO content</li>
+  <li><strong>Multi-language Support</strong> — Internationalization (i18n) for global audience</li>
+  <li><strong>PWA (Progressive Web App)</strong> — Offline support and app-like experience</li>
+  <li><strong>Social Media Integration</strong> — Share products and login via social accounts</li>
+</ul>
 
 <p>
-This project is for learning and demonstration purposes.
+  <em>Contributions and suggestions are welcome! Feel free to fork this project and add your own features.</em>
 </p>
 
 <div align="center">
