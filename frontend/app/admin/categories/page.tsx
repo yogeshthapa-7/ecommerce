@@ -41,7 +41,7 @@ const Categories = () => {
   // --- HANDLERS ---
 
   // 1. Handle Delete
-  const handleDelete = async (id, e) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
@@ -61,7 +61,7 @@ const Categories = () => {
   }
 
   // 3. Open Edit Modal
-  const openEditModal = (cat, e) => {
+  const openEditModal = (cat: any, e: React.MouseEvent) => {
     e.stopPropagation()
     setIsEditing(true)
     setCurrentId(cat._id || cat.id)
@@ -76,7 +76,7 @@ const Categories = () => {
   }
 
   // 4. Handle Form Submit
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!formData.name) return alert("Name is required")

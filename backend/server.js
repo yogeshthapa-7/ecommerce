@@ -12,8 +12,21 @@ connectDB();
 const app = express();
 
 // Middleware
+// CORS - allow requests from both localhost and production
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://your-frontend.vercel.app' // Replace with actual Vercel URL after deployment
+];
+
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            return callback(new Error('Not allowed by CORS'), false);
+        }
+        return callback(null, true);
+    },
     credentials: true
 }));
 app.use(express.json());
