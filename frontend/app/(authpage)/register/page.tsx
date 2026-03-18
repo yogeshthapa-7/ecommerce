@@ -156,8 +156,8 @@ export default function RegisterPage() {
       {/* Stylish geometric background - CSS only for performance */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Gradient orbs */}
-        <div className="absolute top-20 right-20 w-80 h-80 bg-gradient-to-br from-orange-100 to-transparent rounded-full blur-3xl opacity-30" />
-        <div className="absolute bottom-20 left-20 w-80 h-80 bg-gradient-to-tr from-purple-100 to-transparent rounded-full blur-3xl opacity-30" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-orange-100 to-transparent rounded-full blur-3xl opacity-30" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-100 to-transparent rounded-full blur-3xl opacity-30" />
 
         {/* Grid pattern */}
         <div
@@ -190,9 +190,43 @@ export default function RegisterPage() {
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-6">
-        <div className="w-full max-w-md animate-slideUp">
-          {/* Nike logo */}
-          <div className="mb-8 flex justify-center">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+
+          {/* Left branding */}
+          <div className="hidden lg:flex flex-col animate-slideRight">
+            {/* Nike Swoosh */}
+            <div className="mb-12">
+              <svg
+                width="78"
+                height="78"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="transform -rotate-12"
+              >
+                <path
+                  d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z"
+                  fill="#000"
+                />
+              </svg>
+            </div>
+
+            <h1 className="text-7xl font-black text-black leading-[0.9] mb-8 tracking-tight">
+              JOIN<br />
+              THE<br />
+              CLUB.<br />
+              GET<br />
+              REWARDED.
+            </h1>
+
+            <p className="text-lg text-gray-600 max-w-md leading-relaxed">
+              Create your Nike Member profile and get first access to the very best of Nike products, inspiration and community.
+            </p>
+          </div>
+
+          {/* Register form */}
+          <div className="w-full max-w-md mx-auto lg:mx-0 animate-slideUp">
+          {/* Mobile logo */}
+          <div className="lg:hidden mb-8 flex justify-center">
             <svg
               width="60"
               height="60"
@@ -429,6 +463,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
+      </div>
 
       <style jsx>{`
         @keyframes slideUp {
@@ -442,8 +477,23 @@ export default function RegisterPage() {
           }
         }
 
+        @keyframes slideRight {
+          from { 
+            opacity: 0; 
+            transform: translateX(-20px); 
+          }
+          to { 
+            opacity: 1; 
+            transform: translateX(0); 
+          }
+        }
+
         .animate-slideUp {
           animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .animate-slideRight {
+          animation: slideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
       `}</style>
     </div>

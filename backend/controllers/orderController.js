@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const Customer = require('../models/Customer');
 const Product = require('../models/Product');
+const mongoose = require('mongoose');
 
 // GET orders by user ID
 
@@ -8,17 +9,38 @@ const Product = require('../models/Product');
 exports.getOrdersByUser = async (req, res) => {
     try {
         const { userId } = req.params;
-        // First try to find by userId
-        let orders = await Order.find({ userId }).sort({ createdAt: -1 });
+        const User = require('../models/User');
 
-        // If no orders found by userId, try to find by customer email from user data
-        if (orders.length === 0 && userId) {
-            // Try to find user and get their email
-            const User = require('../models/User');
+        let orders = [];
+        let userEmail = null;
+
+        // First, try to get user's email for fallback matching
+        try {
             const user = await User.findById(userId);
-            if (user) {
-                orders = await Order.find({ customerEmail: user.email }).sort({ createdAt: -1 });
+            if (user && user.email) {
+                userEmail = user.email;
             }
+        } catch (e) {
+            // User lookup failed
+        }
+
+        // Check if userId is a valid MongoDB ObjectId format
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
+
+        if (isValidObjectId && userEmail) {
+            // Query: match userId OR customerEmail
+            orders = await Order.find({
+                $or: [
+                    { userId: new mongoose.Types.ObjectId(userId) },
+                    { customerEmail: userEmail }
+                ]
+            }).sort({ createdAt: -1 });
+        } else if (isValidObjectId) {
+            // If valid ObjectId but no email found, match by userId
+            orders = await Order.find({ userId: new mongoose.Types.ObjectId(userId) }).sort({ createdAt: -1 });
+        } else if (userEmail) {
+            // If invalid ObjectId, just match by email
+            orders = await Order.find({ customerEmail: userEmail }).sort({ createdAt: -1 });
         }
 
         res.json(orders);
@@ -149,12 +171,12 @@ exports.deleteOrder = async (req, res) => {
 exports.getStats = async (req, res) => {
     try {
         const orders = await Order.find();
-        
+
         // Total revenue from paid orders
         const totalRevenue = orders
             .filter(o => o.paymentStatus === 'Paid')
             .reduce((sum, o) => sum + o.total, 0);
-        
+
         const totalOrders = orders.length;
         const paidOrders = orders.filter(o => o.paymentStatus === 'Paid').length;
         const pendingOrders = orders.filter(o => o.paymentStatus === 'Pending').length;

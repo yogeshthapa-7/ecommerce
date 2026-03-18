@@ -34,7 +34,7 @@ const CustomersPage = () => {
   // 3. HANDLERS
 
   // Delete Customer
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string | number) => {
     if (confirm("Are you sure you want to delete this customer?")) {
       try {
         await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}`)
@@ -46,7 +46,7 @@ const CustomersPage = () => {
   }
 
   // Toggle Ban/Active Status
-  const handleStatusToggle = async (id, currentStatus) => {
+  const handleStatusToggle = async (id: string | number, currentStatus: string) => {
     try {
       const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}/status`)
       setCustomers(prev => prev.map(c => (c._id || c.id) === id ? res.data : c))
@@ -63,7 +63,7 @@ const CustomersPage = () => {
   }
 
   // Open Modal for Editing
-  const handleOpenEdit = (customer) => {
+  const handleOpenEdit = (customer: any) => {
     setEditingId(customer._id || customer.id)
     setFormData({
       name: customer.name,
@@ -75,7 +75,7 @@ const CustomersPage = () => {
   }
 
   // Save (Add or Edit)
-  const handleSave = async (e) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
 
     try {
@@ -181,18 +181,18 @@ const CustomersPage = () => {
                           animation: `fadeIn 0.4s ease-out ${idx * 0.05}s backwards`,
                         }}
                       >
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-4 max-w-[150px] sm:max-w-[200px]">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white font-black text-sm">
-                              {customer.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                            <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white font-black text-sm">
+                              {customer.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                             </div>
-                            <span className="text-white font-bold text-sm">
+                            <span className="text-white font-bold text-sm truncate" title={customer.name}>
                               {customer.name}
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-4 hidden md:table-cell">
-                          <span className="text-gray-400 text-sm">
+                        <td className="px-4 py-4 hidden md:table-cell max-w-[150px] lg:max-w-[200px]">
+                          <span className="text-gray-400 text-sm truncate block" title={customer.email}>
                             {customer.email}
                           </span>
                         </td>

@@ -170,9 +170,9 @@ const OrdersPage = () => {
         </div>
 
         {/* TABLE + SIDEBAR */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* TABLE */}
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-2">
             <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -183,7 +183,7 @@ const OrdersPage = () => {
                       <TableHeader label="Items" />
                       <TableHeader label="Total" />
                       <TableHeader label="Payment" />
-                      <TableHeader label="Delivery" hidden="lg" />
+                      <TableHeader label="Delivery" hidden="xl" />
                       <TableHeader label="Actions" />
                     </tr>
                   </thead>
@@ -199,11 +199,13 @@ const OrdersPage = () => {
                         key={order._id || order.id || index}
                         className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
                       >
-                        <td className="px-4 py-4 text-white font-bold text-sm">{order.orderId || order._id || order.id}</td>
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-4 text-white font-bold text-sm max-w-[120px] truncate" title={order.orderId || order._id || order.id}>
+                          {order.orderId || order._id || order.id}
+                        </td>
+                        <td className="px-4 py-4 max-w-[150px]">
                           <div>
-                            <p className="text-gray-300 text-sm font-medium">{order.customer || 'N/A'}</p>
-                            <p className="text-gray-500 text-xs">{order.customerEmail || 'No email'}</p>
+                            <p className="text-gray-300 text-sm font-medium truncate" title={order.customer || 'N/A'}>{order.customer || 'N/A'}</p>
+                            <p className="text-gray-500 text-xs truncate" title={order.customerEmail || 'No email'}>{order.customerEmail || 'No email'}</p>
                           </div>
                         </td>
                         <td className="px-4 py-4">
@@ -211,7 +213,7 @@ const OrdersPage = () => {
                             {order.items && order.items.length > 0 ? (
                               <div className="text-xs text-gray-400">
                                 {order.items.slice(0, 2).map((item, i) => (
-                                  <p key={i} className="truncate">
+                                  <p key={i} className="truncate" title={`${item.quantity}x ${item.name || 'Product'}`}>
                                     {item.quantity}x {item.name || 'Product'}
                                   </p>
                                 ))}
@@ -228,7 +230,7 @@ const OrdersPage = () => {
                         <td className="px-4 py-4">
                           <StatusBadge status={order.paymentStatus} />
                         </td>
-                        <td className="px-4 py-4 hidden lg:table-cell">
+                        <td className="px-4 py-4 hidden xl:table-cell">
                           <StatusBadge status={order.deliveryStatus} />
                         </td>
                         <td className="px-4 py-4">
@@ -256,7 +258,7 @@ const OrdersPage = () => {
           </div>
 
           {/* SIDEBAR */}
-          <div className="relative overflow-hidden rounded-2xl hidden lg:block">
+          <div className="relative overflow-hidden rounded-2xl hidden xl:block">
             <img
               src="https://wallpapercave.com/wp/wp8592792.jpg"
               alt="Nike Background"

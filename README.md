@@ -161,19 +161,46 @@ npm install lucide-react
 <p>Here is a glimpse of the website:</p>
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/d9f9ffaf-ddc3-4c71-956f-7a2d91896a5c" width="90%" />
+  <h3>🏠 Home Page</h3>
+  <img src="frontend/public/assets/homepage.png" width="90%" alt="Home Page" />
   <br /><br />
-  <img src="https://github.com/user-attachments/assets/69b07fee-d7d3-4840-a50e-0f2f347df004" width="90%" />
+
+  <h3>🛍️ Products Collection</h3>
+  <img src="frontend/public/assets/products.png" width="90%" alt="Products" />
   <br /><br />
-  <img src="https://github.com/user-attachments/assets/12de807e-a264-4f76-a002-f3d329760138" width="90%" />
+
+  <h3>👟 Product Details</h3>
+  <img src="frontend/public/assets/product_details.png" width="90%" alt="Product Details" />
   <br /><br />
-  <img src="https://github.com/user-attachments/assets/bf594aac-e009-47ab-b6cc-0ba649728cff" width="90%" />
+
+  <h3>🛒 Shopping Cart & Checkout</h3>
+  <img src="frontend/public/assets/cart.png" width="45%" alt="Cart" />
+  <img src="frontend/public/assets/checkout.png" width="45%" alt="Checkout" />
   <br /><br />
-  <img src="https://github.com/user-attachments/assets/0c2e05b4-a0a1-4fcd-8e84-f8cbbd36bc2e" width="90%" />
+
+  <h3>💳 Payment & Success</h3>
+  <img src="frontend/public/assets/payment.png" width="45%" alt="Payment" />
+  <img src="frontend/public/assets/successful.png" width="45%" alt="Order Success" />
   <br /><br />
-  <img src="https://github.com/user-attachments/assets/1cb8393a-7610-4432-be3b-3fd6d651dc35" width="90%" />
+
+  <h3>👤 User Profile & Email Notification</h3>
+  <img src="frontend/public/assets/userprofile.png" width="45%" alt="User Profile" />
+  <img src="frontend/public/assets/email.png" width="45%" alt="Email Notification" />
   <br /><br />
-  <img src="https://github.com/user-attachments/assets/03c3aaed-65af-48ee-bca2-9cac65517745" width="90%" />
+
+  <h3>🔐 Authentication (Login & Sign Up)</h3>
+  <img src="frontend/public/assets/login.png" width="45%" alt="Login" />
+  <img src="frontend/public/assets/signup.png" width="45%" alt="Sign Up" />
+  <br /><br />
+
+  <h3>🛠️ Admin Dashboard</h3>
+  <img src="frontend/public/assets/admin_dashboard.png" width="90%" alt="Admin Dashboard" />
+  <br /><br />
+  
+  <h3>📦 Admin Orders & Settings</h3>
+  <img src="frontend/public/assets/admin_orders.png" width="45%" alt="Admin Orders" />
+  <img src="frontend/public/assets/admin_settings.png" width="45%" alt="Admin Settings" />
+  <br /><br />
 </div>
 
 <hr />
