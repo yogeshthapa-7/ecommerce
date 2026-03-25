@@ -3,7 +3,11 @@ const Product = require('../models/Product');
 // GET all products
 exports.getProducts = async (req, res) => {
     try {
-        const products = await Product.find().sort({ createdAt: -1 });
+        // Filter to only show in-stock products by default for user-facing pages
+        // Admin can pass inStock=false to see all products
+        const showAll = req.query.showAll === 'true';
+        const filter = showAll ? {} : { in_stock: true };
+        const products = await Product.find(filter).sort({ createdAt: -1 });
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -25,9 +29,17 @@ exports.getProduct = async (req, res) => {
 exports.getProductsByCategory = async (req, res) => {
     try {
         const category = req.params.category;
-        const products = await Product.find({
+        // Filter to only show in-stock products by default
+        const inStockOnly = req.query.inStock !== 'false';
+        const filter = {
             category: { $regex: new RegExp(`^${category}$`, 'i') }
-        });
+        };
+
+        if (inStockOnly) {
+            filter.in_stock = true;
+        }
+
+        const products = await Product.find(filter);
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: error.message });

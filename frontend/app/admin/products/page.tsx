@@ -28,7 +28,8 @@ const ProductsPage = () => {
     description: "",
     colors: [],
     sizes: [],
-    reviews_count: 0
+    reviews_count: 0,
+    in_stock: true
   })
 
   // Initialize Data
@@ -38,7 +39,7 @@ const ProductsPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products`)
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products?showAll=true`)
       // Map _id to id for frontend compatibility if needed, or just use as is
       setProducts(res.data)
     } catch (err) {
@@ -106,7 +107,8 @@ const ProductsPage = () => {
       description: product.description || "",
       colors: product.colors || [],
       sizes: product.sizes || [],
-      reviews_count: product.reviews_count || 0
+      reviews_count: product.reviews_count || 0,
+      in_stock: product.in_stock !== undefined ? product.in_stock : true
     })
     setIsModalOpen(true)
   }
@@ -130,7 +132,7 @@ const ProductsPage = () => {
       status: formData.status,
       image_url: displayImage,
       description: formData.description,
-      in_stock: parseInt(formData.stock) > 0,
+      in_stock: formData.in_stock,
       sizes: formData.sizes,
       colors: formData.colors,
       reviews_count: parseInt(formData.reviews_count) || 0
@@ -419,7 +421,7 @@ const ProductsPage = () => {
                 </div>
               </div>
 
-              {/* Price and Stock */}
+              {/* Price and In Stock Toggle */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Price ($) *</label>
@@ -432,15 +434,20 @@ const ProductsPage = () => {
                     className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Stock Available *</label>
-                  <input
-                    type="number"
-                    required
-                    value={formData.stock}
-                    onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                    className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
-                  />
+                <div className="flex flex-col justify-center">
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">In Stock</label>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, in_stock: !formData.in_stock })}
+                    className={`relative inline-flex h-10 w-full items-center rounded-full transition-colors focus:outline-none ${formData.in_stock ? 'bg-green-500' : 'bg-red-500'}`}
+                  >
+                    <span
+                      className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${formData.in_stock ? 'translate-x-10' : 'translate-x-1'}`}
+                    />
+                    <span className={`absolute left-3 text-xs font-bold ${formData.in_stock ? 'text-white' : 'text-white'}`}>
+                      {formData.in_stock ? 'YES' : 'NO'}
+                    </span>
+                  </button>
                 </div>
               </div>
 

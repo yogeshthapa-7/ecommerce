@@ -324,7 +324,7 @@ const ProfilePage = () => {
                                         <div key={index} className="flex gap-4 items-center">
                                             <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
                                                 {item.image ? (
-                                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center">
                                                         <Package className="w-8 h-8 text-gray-300" />

@@ -70,7 +70,7 @@ const products = [
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
         image_url: "https://www.nike.sa/dw/image/v2/BDVB_PRD/on/demandware.static/-/Sites-akeneo-master-catalog/default/dw51c9c38a/nk/39b/c/2/d/9/2/39bc2d92_446a_4c28_a3d4_a75726ee8499.jpg?sw=520&sh=520&sm=fit",
-        in_stock: false,
+        in_stock: true,
         sizes: [8, 9, 10]
     },
     {
@@ -90,7 +90,7 @@ const products = [
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
         image_url: "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/8371a7ff-046d-4d7c-a89c-4d84434b2d42/BLAZER+LOW+%2777+VNTG.png",
-        in_stock: false,
+        in_stock: true,
         sizes: [8, 9, 10]
     },
     {
@@ -129,7 +129,7 @@ const products = [
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
         image_url: "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto/9de5f0c3-b628-40fa-b322-20ae0d0e7794/NIKE+RUN+DEFY.png",
-        in_stock: false,
+        in_stock: true,
         sizes: [8, 10, 12]
     },
     {
@@ -149,7 +149,7 @@ const products = [
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
         image_url: "https://static.nike.com/a/images/t_web_pdp_535_v2/f_auto,u_126ab356-44d8-4a06-89b4-fcdcc8df0245,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/25b161c1-f857-4d59-8439-ac8406eab533/JORDAN+SPIZIKE+LOW.png",
-        in_stock: false,
+        in_stock: true,
         sizes: [9, 10, 11]
     },
     {

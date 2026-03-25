@@ -85,41 +85,41 @@ const EcomNavbar = () => {
                 </h1>
               </Link>
               <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium">
-                <a
-                  href="#"
+                <Link
+                  href="/nike/products"
                   className="hover:text-gray-300 transition-colors relative group"
                 >
                   New Releases
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all group-hover:w-full"></span>
-                </a>
-                <a
-                  href="#"
+                </Link>
+                <Link
+                  href="/nike/products/category/Men"
                   className="hover:text-gray-300 transition-colors relative group"
                 >
                   Men
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all group-hover:w-full"></span>
-                </a>
-                <a
-                  href="#"
+                </Link>
+                <Link
+                  href="/nike/products/category/Women"
                   className="hover:text-gray-300 transition-colors relative group"
                 >
                   Women
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all group-hover:w-full"></span>
-                </a>
-                <a
-                  href="#"
+                </Link>
+                <Link
+                  href="/nike/products/category/Kids"
                   className="hover:text-gray-300 transition-colors relative group"
                 >
                   Kids
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all group-hover:w-full"></span>
-                </a>
-                <a
-                  href="#"
+                </Link>
+                <Link
+                  href="/nike/products"
                   className="text-red-500 hover:text-red-400 transition-colors relative group font-semibold"
                 >
                   Sale
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full"></span>
-                </a>
+                </Link>
               </nav>
             </div>
 
@@ -221,24 +221,24 @@ const EcomNavbar = () => {
         {mobileMenuOpen && (
           <div className="lg:hidden bg-black/95 backdrop-blur-lg border-t border-gray-800">
             <nav className="flex flex-col space-y-4 px-6 py-6 text-sm font-medium">
-              <a href="#" className="hover:text-gray-300 transition-colors">
+              <Link href="/nike/products" className="hover:text-gray-300 transition-colors">
                 New Releases
-              </a>
-              <a href="#" className="hover:text-gray-300 transition-colors">
+              </Link>
+              <Link href="/nike/products/category/Men" className="hover:text-gray-300 transition-colors">
                 Men
-              </a>
-              <a href="#" className="hover:text-gray-300 transition-colors">
+              </Link>
+              <Link href="/nike/products/category/Women" className="hover:text-gray-300 transition-colors">
                 Women
-              </a>
-              <a href="#" className="hover:text-gray-300 transition-colors">
+              </Link>
+              <Link href="/nike/products/category/Kids" className="hover:text-gray-300 transition-colors">
                 Kids
-              </a>
-              <a
-                href="#"
+              </Link>
+              <Link
+                href="/nike/products"
                 className="text-red-500 hover:text-red-400 transition-colors font-semibold"
               >
                 Sale
-              </a>
+              </Link>
 
               {/* Mobile Cart Button */}
               <button

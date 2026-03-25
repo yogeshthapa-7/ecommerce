@@ -73,13 +73,29 @@ exports.createCategory = async (req, res) => {
 // PUT update category
 exports.updateCategory = async (req, res) => {
     try {
-        const category = await Category.findByIdAndUpdate(
+        const category = await Category.findById(req.params.id);
+        if (!category) return res.status(404).json({ message: 'Category not found' });
+
+        // Check if inStock is being changed
+        const oldInStock = category.inStock;
+        const newInStock = req.body.inStock;
+
+        // Update the category
+        const updatedCategory = await Category.findByIdAndUpdate(
             req.params.id,
             req.body,
             { new: true, runValidators: true }
         );
-        if (!category) return res.status(404).json({ message: 'Category not found' });
-        res.json(category);
+
+        // If inStock status changed, update all products in this category
+        if (newInStock !== undefined && oldInStock !== newInStock) {
+            await Product.updateMany(
+                { category: category.name },
+                { in_stock: newInStock }
+            );
+        }
+
+        res.json(updatedCategory);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }

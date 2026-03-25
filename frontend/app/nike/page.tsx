@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import {
   Menu,
@@ -28,10 +28,13 @@ const NikeHomePage = () => {
 
       {/* HERO SECTION */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <img
+        <Image
           src="https://img3.wallspic.com/crops/5/5/2/6/4/146255/146255-shoe-black-darkness-nike-graphic_design-3840x2160.jpg"
           alt="Nike Background"
-          className="absolute inset-0 h-full w-full object-cover scale-105"
+          fill
+          className="object-cover scale-105"
+          priority
+          loading="eager"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/90 via-black/70 to-black" />
 
@@ -156,11 +159,13 @@ const NikeHomePage = () => {
                 key={idx}
                 className="group relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-red-500/20 transition-all hover:-translate-y-2"
               >
-                <div className="aspect-[4/3] overflow-hidden bg-gray-800">
-                  <img
+                <div className="aspect-[4/3] overflow-hidden bg-gray-800 relative">
+                  <Image
                     src={product.img}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 </div>
                 <div className="p-6 space-y-3 cursor-pointer">
@@ -210,11 +215,15 @@ const NikeHomePage = () => {
             </div>
             <div className="relative">
               <div className="aspect-square bg-gradient-to-br from-red-500/30 to-transparent rounded-full absolute -top-20 -right-20 blur-3xl"></div>
-              <img
-                src="https://www.sneakerfiles.com/wp-content/uploads/2024/11/nike-air-max-muse-black-metallic-silver-FV1920-001.jpg"
-                alt="Featured Product"
-                className="relative z-10 w-full h-auto transform hover:scale-105 transition-transform duration-500"
-              />
+              <div className="relative z-10 w-full aspect-square">
+                <Image
+                  src="https://www.sneakerfiles.com/wp-content/uploads/2024/11/nike-air-max-muse-black-metallic-silver-FV1920-001.jpg"
+                  alt="Featured Product"
+                  fill
+                  className="object-contain transform hover:scale-105 transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -252,11 +261,13 @@ const NikeHomePage = () => {
                 key={idx}
                 className="group relative bg-gradient-to-b from-gray-800 to-gray-900 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-red-500/20 transition-all hover:-translate-y-2"
               >
-                <div className="aspect-[16/10] overflow-hidden bg-gray-800 flex items-center justify-center">
-                  <img
+                <div className="aspect-[16/10] overflow-hidden bg-gray-800 flex items-center justify-center relative">
+                  <Image
                     src={product.img}
                     alt={product.name}
+                    fill
                     className="w-4/5 h-4/5 object-contain group-hover:scale-110 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
                 <div className="p-6 space-y-3 cursor-pointer">
@@ -312,11 +323,13 @@ const NikeHomePage = () => {
                 key={idx}
                 className="group relative bg-gradient-to-b from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800 hover:border-red-500/50 transition-all hover:-translate-y-2"
               >
-                <div className="aspect-[3/4] overflow-hidden bg-gray-900">
-                  <img
+                <div className="aspect-[3/4] overflow-hidden bg-gray-900 relative">
+                  <Image
                     src={product.img}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                   />
                 </div>
                 <div className="p-4 space-y-2">

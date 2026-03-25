@@ -197,16 +197,18 @@ export default function NikeLanding() {
         overflow: "hidden", display: "flex",
         alignItems: "center", justifyContent: "center",
       }}>
-        {/* BG video */}
-        <video
-          autoPlay muted loop playsInline
+        {/* BG image */}
+        <img
+          src="https://img3.wallspic.com/crops/5/5/2/6/4/146255/146255-shoe-black-darkness-nike-graphic_design-3840x2160.jpg"
+          alt="Nike Background"
+          loading="eager"
+          decoding="async"
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover",
             filter: "brightness(0.25) contrast(1.1) saturate(0.55)",
             transform: `scale(1.08) translateY(${heroFade * 55}px)`,
           }}
-          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
         />
 
         {/* Layered overlays */}
@@ -326,7 +328,7 @@ export default function NikeLanding() {
       }}>
         <div style={{ display: "flex", width: "max-content", animation: "ticker 32s linear infinite" }}>
           {[...Array(2)].map((_, r) =>
-            ["JUST DO IT","·","AIR MAX","·","PEGASUS","·","AIR FORCE 1","·","JORDAN","·","DUNK LOW","·","REACT","·","ZOOM","·","FLYKNIT","·"].map((t, i) => (
+            ["JUST DO IT", "·", "AIR MAX", "·", "PEGASUS", "·", "AIR FORCE 1", "·", "JORDAN", "·", "DUNK LOW", "·", "REACT", "·", "ZOOM", "·", "FLYKNIT", "·"].map((t, i) => (
               <span key={`${r}-${i}`} style={{
                 fontFamily: t === "·" ? "Georgia, serif" : "'Bebas Neue', sans-serif",
                 fontSize: t === "·" ? 14 : 12,
@@ -402,6 +404,8 @@ export default function NikeLanding() {
           <img
             src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80&auto=format"
             alt="Nike apparel"
+            loading="lazy"
+            decoding="async"
             style={{
               width: "100%", height: "100%", objectFit: "cover",
               filter: "brightness(0.4) saturate(0.6)",
@@ -424,6 +428,8 @@ export default function NikeLanding() {
           <img
             src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80&auto=format"
             alt="Nike running"
+            loading="lazy"
+            decoding="async"
             style={{
               width: "100%", height: "100%", objectFit: "cover",
               filter: "brightness(0.38) saturate(0.65)",
@@ -437,17 +443,19 @@ export default function NikeLanding() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════ CINEMATIC VIDEO ══ */}
+      {/* ══════════════════════════════════ CINEMATIC IMAGE ══ */}
       <section style={{ position: "relative", height: "82vh", overflow: "hidden" }}>
-        <video
-          autoPlay muted loop playsInline
+        <img
+          src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1920&q=80&auto=format"
+          alt="Nike Shoe"
+          loading="lazy"
+          decoding="async"
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
             objectFit: "cover",
             filter: "brightness(0.2) contrast(1.18) saturate(0.45)",
             transform: `scale(1.06) translateY(${(scrollY - 1600) * 0.04}px)`,
           }}
-          src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
         />
         <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.88) 100%)" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, #000 0%, transparent 18%, transparent 82%, #000 100%)" }} />
@@ -574,7 +582,7 @@ export default function NikeLanding() {
       }}>
         {/* Rotating rings */}
         {[["62vw", "62vw", 700, "rotateSlow 45s linear infinite", 0.035],
-          ["44vw", "44vw", 510, "rotateSlow2 28s linear infinite", 0.055]].map(([w, h, max, anim, op], i) => (
+        ["44vw", "44vw", 510, "rotateSlow2 28s linear infinite", 0.055]].map(([w, h, max, anim, op], i) => (
           <div key={i} style={{
             position: "absolute", top: "50%", left: "50%",
             width: w, height: h, maxWidth: max, maxHeight: max,

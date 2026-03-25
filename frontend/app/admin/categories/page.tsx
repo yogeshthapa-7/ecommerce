@@ -21,7 +21,8 @@ const Categories = () => {
     image: "",
     status: "Active",
     products: 0,
-    isGhost: false
+    isGhost: false,
+    inStock: true
   })
 
   // Fetch data
@@ -70,7 +71,8 @@ const Categories = () => {
       image: cat.image || "",
       status: cat.status || "Active",
       products: cat.products || 0,
-      isGhost: !!cat.isGhost
+      isGhost: !!cat.isGhost,
+      inStock: cat.inStock !== undefined ? cat.inStock : true
     })
     setIsModalOpen(true)
   }
@@ -281,6 +283,25 @@ const Categories = () => {
                     className="w-full bg-black border border-gray-800 rounded-lg p-3 text-white focus:outline-none focus:border-white transition-colors text-sm"
                   />
                 </div>
+              </div>
+
+              {/* In Stock Toggle */}
+              <div className="flex items-center justify-between p-4 bg-black border border-gray-800 rounded-lg">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">In Stock</label>
+                  <p className="text-sm text-gray-500">
+                    {formData.inStock ? "Products are available" : "Products are out of stock"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, inStock: !formData.inStock })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.inStock ? 'bg-green-500' : 'bg-red-500'}`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.inStock ? 'translate-x-6' : 'translate-x-1'}`}
+                  />
+                </button>
               </div>
 
               <div className="pt-4 flex gap-3">

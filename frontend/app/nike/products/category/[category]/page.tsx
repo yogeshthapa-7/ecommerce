@@ -45,10 +45,21 @@ const CategoryPage = () => {
   const categoryProducts = products.filter((product) => {
     if (!product || !product.category) return false;
 
-    // Match category (case-insensitive)
-    const matchesCategory = product.category.toLowerCase() === categoryParam?.toLowerCase();
+    // Check if we're filtering by gender (Men, Women, Kids) instead of category
+    const genderCategories = ['Men', 'Women', 'Kids'];
+    const isGenderFilter = genderCategories.includes(categoryParam?.charAt(0).toUpperCase() + categoryParam?.slice(1).toLowerCase());
 
-    // Match gender
+    let matchesCategory = true;
+    if (isGenderFilter) {
+      // Filter by gender
+      const gender = categoryParam?.charAt(0).toUpperCase() + categoryParam?.slice(1).toLowerCase();
+      matchesCategory = product.gender === gender;
+    } else {
+      // Match category (case-insensitive)
+      matchesCategory = product.category.toLowerCase() === categoryParam?.toLowerCase();
+    }
+
+    // Match gender (only for category filters, not gender filters)
     const matchesGender = selectedGender === 'All' || product.gender === selectedGender;
 
     // Match search
