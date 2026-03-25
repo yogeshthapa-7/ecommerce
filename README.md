@@ -89,7 +89,7 @@ form-validated checkout — with a premium, responsive UI.
 <h3>1️⃣ Clone the Repository</h3>
 
 <pre>
-git clone https://github.com/your-username/ecommerce.git
+git clone https://github.com/yogeshthapa-7/ecommerce.git
 </pre>
 
 <h3>2️⃣ Navigate to the Project Folder</h3>
