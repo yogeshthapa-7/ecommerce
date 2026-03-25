@@ -61,7 +61,10 @@ const ProductsPage = () => {
   const confirmDelete = async () => {
     try {
       const id = deleteConfirm._id || deleteConfirm.id;
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`)
+      const token = localStorage.getItem("token")
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
       setProducts(prev => prev.filter(p => (p._id || p.id) !== id))
       showToast("Product deleted successfully", "success")
     } catch (err) {
@@ -133,13 +136,16 @@ const ProductsPage = () => {
       reviews_count: parseInt(formData.reviews_count) || 0
     }
 
+    const token = localStorage.getItem("token")
+    const config = { headers: { Authorization: `Bearer ${token}` } }
+
     try {
       if (editingId) {
-        const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/products/${editingId}`, productData)
+        const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/products/${editingId}`, productData, config)
         setProducts(prev => prev.map(p => (p._id || p.id) === editingId ? res.data : p))
         showToast("Product updated successfully", "success")
       } else {
-        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/products`, productData)
+        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/products`, productData, config)
         setProducts(prev => [res.data, ...prev])
         showToast("Product added successfully", "success")
       }

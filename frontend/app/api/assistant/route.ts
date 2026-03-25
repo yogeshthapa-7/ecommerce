@@ -36,11 +36,12 @@ export async function POST(req: NextRequest) {
     // Prepare a concise summary of the catalog
     const catalogSummary = products.map((p: any) => ({
       name: p.name,
-      price: `$${p.price}`,
+      price: `${p.price}`,
       category: p.category,
       gender: p.gender,
       stock: p.in_stock ? 'In Stock' : 'Out of Stock',
-      colors: p.colors?.map((c: any) => c.name).join(', ')
+      colors: p.colors?.map((c: any) => c.name).join(', '),
+      sizes: p.sizes || []
     }));
 
     const categorySummary = categories.map((c: any) => c.name);
@@ -59,9 +60,10 @@ CORE DIRECTIVES:
 1. Only answer questions based on the provided store inventory.
 2. If a customer asks about a product we don't have, politely inform them we don't carry it but suggest related items from our catalog.
 3. If asked about prices, give the exact price from the provided data.
-4. If asked about stock/colors/sizes/genders, refer to the provided data.
+4. If asked about stock/colors/sizes/genders, refer to the provided data. When customers ask about specific sizes (like US Men's size 9), check the sizes array for that product.
 5. Do not answer non-shopping/non-Nike related queries. If asked about politics, coding, etc., steer them back to shopping.
-6. For out-of-stock items, mention they are currently unavailable.`;
+6. For out-of-stock items, mention they are currently unavailable.
+7. When a customer asks about a specific size for a product, confirm availability if that size exists in the product's sizes array.`;
 
     const response = await openai.responses.create({
       model: "gpt-5-nano",

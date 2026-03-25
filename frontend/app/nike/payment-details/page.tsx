@@ -35,9 +35,17 @@ const PaymentDetailsPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  // Pre-fill form with logged-in user data
+  // Check auth and pre-fill form with logged-in user data
   useEffect(() => {
     const userStr = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
+
+    // Redirect to login if not authenticated
+    if (!userStr || !token) {
+      router.push("/login?redirect=/nike/payment-details");
+      return;
+    }
+
     if (userStr) {
       try {
         const userData = JSON.parse(userStr);
@@ -54,7 +62,7 @@ const PaymentDetailsPage = () => {
         console.error("Error parsing user data", e);
       }
     }
-  }, []);
+  }, [router]);
 
   if (cartItems.length === 0 && !orderPlaced) {
     return (
@@ -143,9 +151,13 @@ const PaymentDetailsPage = () => {
       }
 
       // 2. Save to Backend
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(orderData),
       });
 

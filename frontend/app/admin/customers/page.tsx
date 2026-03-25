@@ -36,8 +36,11 @@ const CustomersPage = () => {
   // Delete Customer
   const handleDelete = async (id: string | number) => {
     if (confirm("Are you sure you want to delete this customer?")) {
+      const token = localStorage.getItem("token")
       try {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}`)
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
         setCustomers(prev => prev.filter(c => (c._id || c.id) !== id))
       } catch (err) {
         console.error("Error deleting customer:", err)
@@ -47,8 +50,11 @@ const CustomersPage = () => {
 
   // Toggle Ban/Active Status
   const handleStatusToggle = async (id: string | number, currentStatus: string) => {
+    const token = localStorage.getItem("token")
     try {
-      const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}/status`)
+      const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}/status`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
       setCustomers(prev => prev.map(c => (c._id || c.id) === id ? res.data : c))
     } catch (err) {
       console.error("Error toggling customer status:", err)
@@ -78,12 +84,15 @@ const CustomersPage = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    const token = localStorage.getItem("token")
+    const config = { headers: { Authorization: `Bearer ${token}` } }
+
     try {
       if (editingId) {
-        const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/customers/${editingId}`, formData)
+        const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/customers/${editingId}`, formData, config)
         setCustomers(prev => prev.map(c => (c._id || c.id) === editingId ? res.data : c))
       } else {
-        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/customers`, formData)
+        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/customers`, formData, config)
         setCustomers(prev => [res.data, ...prev])
       }
       setIsModalOpen(false)

@@ -109,9 +109,13 @@ const ProfilePage = () => {
         if (apiBaseUrl.endsWith('/api')) {
             apiBaseUrl = apiBaseUrl.slice(0, -4);
         }
+        const token = localStorage.getItem("token");
         try {
-            let response = await fetch(`${apiBaseUrl}/api/orders/user/${userId}`);
-            if (response.status === 404 || response.status === 500) {
+            let response = await fetch(`${apiBaseUrl}/api/orders/user/${userId}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            });
+            if (response.status === 404 || response.status === 500 || response.status === 401) {
+                // Fallback: fetch all orders and filter by email
                 const allOrdersResponse = await fetch(`${apiBaseUrl}/api/orders`);
                 if (allOrdersResponse.ok) {
                     const allOrders = await allOrdersResponse.json();
@@ -216,8 +220,8 @@ const ProfilePage = () => {
                         key={filter}
                         onClick={() => setOrderFilter(filter)}
                         className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${orderFilter === filter
-                                ? 'bg-black text-white shadow-lg'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-black text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                     >
                         {filter.charAt(0).toUpperCase() + filter.slice(1)}

@@ -38,9 +38,12 @@ const OrdersPage = () => {
   const handleDelete = async (order) => {
     const id = order._id || order.id;
     const orderDisplayId = order.orderId || order.id;
+    const token = localStorage.getItem("token")
     if (confirm(`Delete order ${orderDisplayId}? This cannot be undone.`)) {
       try {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/orders/${id}`)
+        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/orders/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
         setOrders(prev => prev.filter(o => (o._id || o.id) !== id))
       } catch (err) {
         console.error("Error deleting order:", err)
@@ -83,12 +86,15 @@ const OrdersPage = () => {
       date: formData.date
     }
 
+    const token = localStorage.getItem("token")
+    const config = { headers: { Authorization: `Bearer ${token}` } }
+
     try {
       if (editingId) {
-        const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/orders/${editingId}`, orderData)
+        const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/orders/${editingId}`, orderData, config)
         setOrders(prev => prev.map(o => (o._id || o.id) === editingId ? res.data : o))
       } else {
-        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/orders`, orderData)
+        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/orders`, orderData, config)
         setOrders(prev => [res.data, ...prev])
       }
       setIsModalOpen(false)

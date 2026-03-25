@@ -93,7 +93,7 @@ exports.updatePassword = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Incorrect current password' });
         }
 
-        user.password = newPassword; // Pre-save hook will hash it
+        user.password = newPassword; // Will be hashed by pre-save hook
         await user.save();
 
         res.json({ success: true, message: 'Password updated successfully' });

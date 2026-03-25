@@ -8,12 +8,19 @@ const {
     toggleStatus,
     deleteCustomer
 } = require('../controllers/customerController');
+const auth = require('../middleware/authMiddleware');
+const adminAuth = require('../middleware/adminMiddleware');
 
+// Public readable
 router.get('/', getCustomers);
 router.get('/:id', getCustomer);
+
+// User registration (no auth needed)
 router.post('/', createCustomer);
-router.put('/:id', updateCustomer);
-router.patch('/:id/status', toggleStatus);
-router.delete('/:id', deleteCustomer);
+
+// Protected routes
+router.put('/:id', auth, adminAuth, updateCustomer);
+router.patch('/:id/status', auth, adminAuth, toggleStatus);
+router.delete('/:id', auth, adminAuth, deleteCustomer);
 
 module.exports = router;

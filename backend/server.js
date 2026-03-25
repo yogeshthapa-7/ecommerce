@@ -11,10 +11,25 @@ connectDB();
 
 const app = express();
 
-app.use(cors({
-    origin: 'http://localhost:3000',
+// CORS configuration - allow localhost and production domains
+const corsOptions = {
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'https://your-production-domain.vercel.app',
+            'https://your-production-domain.com'
+        ];
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
-}));
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -24,6 +39,7 @@ app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/password-reset', require('./routes/passwordResetRoutes'));
 
 // Health check
 app.get('/', (req, res) => {

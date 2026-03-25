@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useFormik } from "formik"
 import * as Yup from "yup"
 import { Button } from "@/components/ui/button"
@@ -44,6 +44,8 @@ const validationSchema = Yup.object({
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get("redirect") || null
   const toastrInitialized = useRef(false)
 
   const showToast = (type: 'success' | 'error', message: string, title?: string) => {
@@ -63,7 +65,7 @@ export default function LoginPage() {
     if (!toastrInitialized.current) {
       toastrInitialized.current = true
     }
-    
+
     const saved = localStorage.getItem("registeredUser");
     if (saved) {
       const { email, password } = JSON.parse(saved);
@@ -107,10 +109,12 @@ export default function LoginPage() {
 
         showToast('success', 'Login successful! Redirecting...', 'Welcome');
 
-        // Redirect based on user role
+        // Redirect based on user role or redirect param
         setTimeout(() => {
           if (data.user.role === "admin") {
             router.push("/admin");
+          } else if (redirectTo) {
+            router.push(redirectTo);
           } else {
             router.push("/nike");
           }

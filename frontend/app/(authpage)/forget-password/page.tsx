@@ -35,16 +35,24 @@ export default function ForgotPasswordPage() {
     validationSchema,
     onSubmit: async (values, { setSubmitting, setFieldError }) => {
       try {
-        // Replace this with your actual API call
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        
-        setEmailSent(true)
-        console.log("Password reset email sent to:", values.email)
-        
+        const res = await fetch("/api/password-reset/request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: values.email })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setEmailSent(true);
+        } else {
+          setFieldError("email", data.message || "Unable to send reset email. Please try again.");
+        }
+
       } catch (error) {
-        setFieldError("email", "Unable to send reset email. Please try again.")
+        setFieldError("email", "Unable to send reset email. Please try again.");
       } finally {
-        setSubmitting(false)
+        setSubmitting(false);
       }
     }
   })
@@ -52,8 +60,17 @@ export default function ForgotPasswordPage() {
   const handleResend = async () => {
     setIsResending(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log("Reset email resent to:", formik.values.email)
+      const res = await fetch("/api/password-reset/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formik.values.email })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        formik.setFieldError("email", data.message || "Unable to resend email. Please try again.");
+      }
     } catch (error) {
       formik.setFieldError("email", "Unable to resend email. Please try again.")
     } finally {
@@ -69,9 +86,9 @@ export default function ForgotPasswordPage() {
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-green-100 to-transparent rounded-full blur-3xl opacity-30" />
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-gradient-to-tr from-teal-100 to-transparent rounded-full blur-3xl opacity-30" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-cyan-100 to-transparent rounded-full blur-3xl opacity-20" />
-        
+
         {/* Grid pattern */}
-        <div 
+        <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `
@@ -81,10 +98,10 @@ export default function ForgotPasswordPage() {
             backgroundSize: '80px 80px'
           }}
         />
-        
+
         {/* Diagonal accent lines */}
         <div className="absolute top-0 left-0 w-full h-full opacity-5">
-          <div 
+          <div
             className="absolute inset-0"
             style={{
               backgroundImage: `repeating-linear-gradient(
@@ -102,20 +119,20 @@ export default function ForgotPasswordPage() {
       {/* Content Container */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-6">
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-          
+
           {/* LEFT SIDE - Support Message */}
           <div className="hidden lg:flex flex-col animate-slideRight">
             {/* Nike Swoosh */}
             <div className="mb-12">
-              <svg 
-                width="78" 
-                height="78" 
-                viewBox="0 0 24 24" 
-                fill="none" 
+              <svg
+                width="78"
+                height="78"
+                viewBox="0 0 24 24"
+                fill="none"
                 className="transform -rotate-12"
               >
-                <path 
-                  d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z" 
+                <path
+                  d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z"
                   fill="#000"
                 />
               </svg>
@@ -126,7 +143,7 @@ export default function ForgotPasswordPage() {
               GOT<br />
               YOU.
             </h1>
-            
+
             <p className="text-lg text-gray-600 max-w-md leading-relaxed mb-8">
               Forgot your password? No worries. Happens to the best athletes. Let's get you back in the game.
             </p>
@@ -159,14 +176,14 @@ export default function ForgotPasswordPage() {
           <div className="w-full max-w-md mx-auto lg:mx-0 animate-slideUp">
             {/* Mobile logo */}
             <div className="lg:hidden mb-8 flex justify-center">
-              <svg 
-                width="60" 
-                height="60" 
-                viewBox="0 0 24 24" 
+              <svg
+                width="60"
+                height="60"
+                viewBox="0 0 24 24"
                 fill="none"
               >
-                <path 
-                  d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z" 
+                <path
+                  d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z"
                   fill="#000"
                 />
               </svg>
@@ -176,14 +193,14 @@ export default function ForgotPasswordPage() {
             <div className="relative">
               {/* Subtle shadow/glow effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-black/10 blur-xl transform translate-y-2" />
-              
+
               <Card className="relative border-[1.5px] border-gray-200 shadow-2xl rounded-sm bg-white/95 backdrop-blur-sm">
                 <CardHeader className="px-8 pt-10 pb-6 space-y-3">
                   <CardTitle className="text-2xl font-bold text-center">
                     {emailSent ? "CHECK YOUR EMAIL" : "RESET YOUR PASSWORD"}
                   </CardTitle>
                   <p className="text-sm text-gray-600 text-center leading-relaxed">
-                    {emailSent 
+                    {emailSent
                       ? `We've sent password reset instructions to ${formik.values.email}`
                       : "Enter your email address and we'll send you instructions to reset your password."
                     }
@@ -195,16 +212,15 @@ export default function ForgotPasswordPage() {
                     <form className="space-y-5" onSubmit={formik.handleSubmit}>
                       <div className="space-y-1.5">
                         <Label htmlFor="email" className="sr-only">Email address</Label>
-                        <Input 
+                        <Input
                           id="email"
                           name="email"
                           type="email"
                           value={formik.values.email}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
-                          className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${
-                            formik.touched.email && formik.errors.email ? 'border-red-500 focus-visible:border-red-500' : ''
-                          }`}
+                          className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${formik.touched.email && formik.errors.email ? 'border-red-500 focus-visible:border-red-500' : ''
+                            }`}
                           placeholder="Email address"
                           disabled={formik.isSubmitting}
                         />
@@ -216,7 +232,7 @@ export default function ForgotPasswordPage() {
                         )}
                       </div>
 
-                      <Button 
+                      <Button
                         type="submit"
                         disabled={formik.isSubmitting}
                         className="w-full h-12 bg-black hover:bg-black/80 text-white rounded-sm font-medium transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
@@ -294,7 +310,7 @@ export default function ForgotPasswordPage() {
                 </CardContent>
 
                 <CardFooter className="flex flex-col gap-3 px-8 pb-8">
-                  <button 
+                  <button
                     onClick={() => router.push("/login")}
                     disabled={formik.isSubmitting || isResending}
                     className="group flex items-center justify-center gap-2 text-gray-600 hover:text-black font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -302,7 +318,7 @@ export default function ForgotPasswordPage() {
                     <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
                     Back to Sign In
                   </button>
-                  
+
                   <p className="text-sm text-gray-600 text-center">
                     Don't have an account?{" "}
                     <button

@@ -60,6 +60,14 @@ const ProductDetailPage = () => {
   }, [id]);
 
   const handleAddToCart = () => {
+    // Check if user is logged in
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // Redirect to login with return URL
+      router.push("/login?redirect=/nike/products/" + id);
+      return;
+    }
+
     if (!selectedSize) {
       alert('Please select a size');
       return;
@@ -159,8 +167,8 @@ const ProductDetailPage = () => {
                 <div className="relative">
                   <Heart
                     className={`w-7 h-7 transition-all duration-300 ${isWishlisted
-                        ? 'fill-[#FA1E3F] text-[#FA1E3F] scale-110'
-                        : 'fill-blue-800 text-blue stroke-2 hover:fill-[#FA1E3F] hover:text-[#FA1E3F] hover:scale-110'
+                      ? 'fill-[#FA1E3F] text-[#FA1E3F] scale-110'
+                      : 'fill-blue-800 text-blue stroke-2 hover:fill-[#FA1E3F] hover:text-[#FA1E3F] hover:scale-110'
                       }`}
                   />
                   {isWishlisted && (
@@ -276,8 +284,8 @@ const ProductDetailPage = () => {
                       key={idx}
                       onClick={() => handleColorChange(color)}
                       className={`group relative px-4 py-2 rounded-lg border-2 transition-all ${selectedColor === color
-                          ? 'border-[#FA1E3F] bg-[#FA1E3F]/10'
-                          : 'border-gray-300 hover:border-gray-400'
+                        ? 'border-[#FA1E3F] bg-[#FA1E3F]/10'
+                        : 'border-gray-300 hover:border-gray-400'
                         }`}
                     >
                       <span className={`text-sm font-bold ${selectedColor === color ? 'text-[#FA1E3F]' : 'text-gray-600'
@@ -305,8 +313,8 @@ const ProductDetailPage = () => {
                       key={size}
                       onClick={() => setSelectedSize(size)}
                       className={`px-4 py-2 min-w-[50px] text-center rounded-lg border-2 font-bold transition-all ${selectedSize === size
-                          ? 'border-[#FA1E3F] bg-[#FA1E3F] text-white'
-                          : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                        ? 'border-[#FA1E3F] bg-[#FA1E3F] text-white'
+                        : 'border-gray-300 text-gray-600 hover:border-gray-400'
                         }`}
                     >
                       {size}
@@ -325,8 +333,8 @@ const ProductDetailPage = () => {
                 onClick={handleAddToCart}
                 disabled={!selectedSize}
                 className={`w-full md:w-auto px-12 h-14 text-white text-sm font-bold uppercase tracking-widest rounded-md shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${addedToCart
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-[#111] hover:bg-black'
+                  ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-[#111] hover:bg-black'
                   }`}
               >
                 {addedToCart ? (
@@ -345,8 +353,8 @@ const ProductDetailPage = () => {
               <Button
                 onClick={toggleWishlist}
                 className={`w-full md:w-auto px-12 h-14 text-sm font-bold uppercase tracking-widest rounded-md shadow-lg transition-all active:scale-95 ${isWishlisted
-                    ? 'bg-[#FA1E3F] hover:bg-[#d91a37] text-white'
-                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  ? 'bg-[#FA1E3F] hover:bg-[#d91a37] text-white'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                   }`}
               >
                 <span className="flex items-center gap-2">

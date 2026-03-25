@@ -17,9 +17,11 @@ import axios from "axios"
 import { Card, CardContent } from "@/components/ui/card"
 import BarGraph from "@/components/bargraph"
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
 const AdminDashboardPage = () => {
   // --- STATE ---
+  const router = useRouter()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState(null)
 
@@ -37,18 +39,18 @@ const AdminDashboardPage = () => {
     // Admin access check
     const userStr = localStorage.getItem("user")
     if (!userStr) {
-      window.location.href = "/login"
+      router.push("/login")
       return
     }
 
     try {
       const user = JSON.parse(userStr)
       if (user.role !== "admin") {
-        window.location.href = "/nike/products"
+        router.push("/nike/products")
         return
       }
     } catch (e) {
-      window.location.href = "/login"
+      router.push("/login")
       return
     }
 
