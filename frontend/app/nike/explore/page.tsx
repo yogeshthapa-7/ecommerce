@@ -133,6 +133,50 @@ return (
     </div>
   </section>
 
+    {/* Video/Interactive Section */}
+<section className="py-20 bg-gray-900">
+  <div className="max-w-7xl mx-auto px-6">
+    <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="space-y-6">
+        <div className="inline-block px-4 py-2 bg-red-500/10 border border-red-500 rounded-full text-sm font-bold text-red-500">
+          Watch Now
+        </div>
+        <h2 className="text-4xl md:text-5xl font-black leading-tight">
+          The Science of
+          <br />
+          <span className="text-red-500">Performance</span>
+        </h2>
+        <p className="text-xl text-gray-400 leading-relaxed">
+          Go behind the scenes at the Nike Sport Research Lab where innovation
+          meets human performance. Discover how we test, iterate, and perfect
+          every product.
+        </p>
+        <Button
+          size="lg"
+          className="bg-red-500 text-white font-bold hover:bg-red-600 px-8 py-6 rounded-full group cursor-pointer"
+        >
+          <Play className="mr-2 w-5 h-5" />
+          Watch Documentary
+        </Button>
+      </div>
+
+      {/* Video Player */}
+      <div className="relative">
+        <div className="aspect-video rounded-2xl overflow-hidden border border-gray-700 hover:border-red-500 transition-all">
+          <video
+            className="w-full h-full object-cover"
+            controls
+            poster="https://img3.wallspic.com/crops/5/5/2/6/4/146255/146255-shoe-black-darkness-nike-graphic_design-3840x2160.jpg"
+          >
+            <source src="/Documentary.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
   {/* Featured Collections */}
   <section className="py-20 bg-gradient-to-b from-black to-gray-900">
     <div className="max-w-7xl mx-auto px-6">
@@ -180,50 +224,6 @@ return (
             </div>
           </div>
         ))}
-      </div>
-    </div>
-  </section>
-
-  {/* Video/Interactive Section */}
-  <section className="py-20 bg-gray-900">
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="grid md:grid-cols-2 gap-12 items-center">
-        <div className="space-y-6">
-          <div className="inline-block px-4 py-2 bg-red-500/10 border border-red-500 rounded-full text-sm font-bold text-red-500">
-            Watch Now
-          </div>
-          <h2 className="text-4xl md:text-5xl font-black leading-tight">
-            The Science of
-            <br />
-            <span className="text-red-500">Performance</span>
-          </h2>
-          <p className="text-xl text-gray-400 leading-relaxed">
-            Go behind the scenes at the Nike Sport Research Lab where innovation
-            meets human performance. Discover how we test, iterate, and perfect
-            every product.
-          </p>
-          <Button
-            size="lg"
-            className="bg-red-500 text-white font-bold hover:bg-red-600 px-8 py-6 rounded-full group cursor-pointer"
-          >
-            <Play className="mr-2 w-5 h-5" />
-            Watch Documentary
-          </Button>
-        </div>
-        <div className="relative">
-          <div className="aspect-video bg-gradient-to-br from-red-500/30 to-gray-800 rounded-2xl overflow-hidden border border-gray-700 flex items-center justify-center group cursor-pointer hover:border-red-500 transition-all">
-            <img
-              src="https://img3.wallspic.com/crops/5/5/2/6/4/146255/146255-shoe-black-darkness-nike-graphic_design-3840x2160.jpg"
-              alt="Video Thumbnail"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Play className="w-8 h-8 text-black ml-1" fill="black" />
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </section>
