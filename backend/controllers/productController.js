@@ -1,14 +1,44 @@
 const Product = require('../models/Product');
 
+// GET product count
+exports.getProductCount = async (req, res) => {
+    try {
+        const count = await Product.countDocuments();
+        res.json({ count });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // GET all products
 exports.getProducts = async (req, res) => {
     try {
-        // Filter to only show in-stock products by default for user-facing pages
-        // Admin can pass inStock=false to see all products
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
         const showAll = req.query.showAll === 'true';
-        const filter = showAll ? {} : { in_stock: true };
-        const products = await Product.find(filter).sort({ createdAt: -1 });
-        res.json(products);
+        const includeOutOfStock = req.query.includeOutOfStock === 'true';
+
+        const filter = showAll
+            ? {}
+            : includeOutOfStock
+                ? { status: 'active' }
+                : { status: 'active', in_stock: true };
+
+        const total = await Product.countDocuments(filter);
+        const products = await Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);
+
+        res.json({
+            products,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalItems: total,
+                hasNextPage: page < Math.ceil(total / limit),
+                hasPrevPage: page > 1
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -63,7 +93,7 @@ exports.updateProduct = async (req, res) => {
         const product = await Product.findByIdAndUpdate(
             req.params.id,
             req.body,
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
         if (!product) return res.status(404).json({ message: 'Product not found' });
         res.json(product);

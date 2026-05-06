@@ -398,7 +398,7 @@ const categories = [
     { name: "Gym-Bra", image: "https://www.nikys-sports.com/cdn/shop/files/AURORA_DJ8523-010_PHSFH001-2000.jpg?v=1686777182", products: 10, status: "Active" }
 ];
 
-const categories = [
+
 
 const seedDB = async () => {
     try {

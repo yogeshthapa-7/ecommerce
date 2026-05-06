@@ -3,6 +3,16 @@ import { NikeOrderEmail } from '@/emails/NikeOrderEmail';
 import { NextResponse } from 'next/server';
 import { render } from '@react-email/render';
 
+type OrderEmailItem = {
+    name: string;
+    price: number;
+    quantity: number;
+    color?: string;
+    size?: string;
+    image?: string;
+    currency?: string;
+};
+
 export async function POST(request: Request) {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
         console.error('GMAIL credentials missing in environment variables');
@@ -10,15 +20,40 @@ export async function POST(request: Request) {
     }
 
     try {
-        const { email, customerName, totalAmount, cartItems } = await request.json();
+        const {
+            email,
+            customerName,
+            orderId,
+            orderDate,
+            paymentMethod,
+            subtotal,
+            tax,
+            shipping,
+            discount,
+            totalAmount,
+            items,
+            cartItems,
+        } = await request.json();
         console.log('Attempting to send email via Gmail to:', email);
+
+        const resolvedItems: OrderEmailItem[] = Array.isArray(items)
+            ? items
+            : Array.isArray(cartItems)
+              ? cartItems
+              : [];
 
         const emailHtml = await render(
             NikeOrderEmail({
                 customerName,
-                orderId: `NX-${Math.floor(100000 + Math.random() * 900000)}`,
+                orderId: orderId || `NX-${Math.floor(100000 + Math.random() * 900000)}`,
+                orderDate,
+                paymentMethod,
+                subtotal,
+                tax,
+                shipping,
+                discount,
                 totalAmount,
-                items: cartItems,
+                items: resolvedItems,
             })
         );
 
@@ -41,8 +76,9 @@ export async function POST(request: Request) {
         console.log('Email sent successfully:', info.messageId);
 
         return NextResponse.json({ success: true, messageId: info.messageId });
-    } catch (err: any) {
-        console.error('Nodemailer Error:', err.message);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : 'Unknown email error';
+        console.error('Nodemailer Error:', message);
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

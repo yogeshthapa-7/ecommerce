@@ -52,8 +52,23 @@ exports.getOrdersByUser = async (req, res) => {
 // GET all orders
 exports.getOrders = async (req, res) => {
     try {
-        const orders = await Order.find().sort({ createdAt: -1 });
-        res.json(orders);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const total = await Order.countDocuments();
+        const orders = await Order.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+
+        res.json({
+            orders,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalItems: total,
+                hasNextPage: page < Math.ceil(total / limit),
+                hasPrevPage: page > 1
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -147,7 +162,7 @@ exports.updateOrder = async (req, res) => {
         const order = await Order.findByIdAndUpdate(
             req.params.id,
             req.body,
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
         if (!order) return res.status(404).json({ message: 'Order not found' });
         res.json(order);
@@ -175,7 +190,7 @@ exports.getStats = async (req, res) => {
         // Total revenue from paid orders
         const totalRevenue = orders
             .filter(o => o.paymentStatus === 'Paid')
-            .reduce((sum, o) => sum + o.total, 0);
+            .reduce((sum, o) => sum + Number(o.total), 0);
 
         const totalOrders = orders.length;
         const paidOrders = orders.filter(o => o.paymentStatus === 'Paid').length;

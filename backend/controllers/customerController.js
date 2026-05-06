@@ -3,8 +3,23 @@ const Customer = require('../models/Customer');
 // GET all customers
 exports.getCustomers = async (req, res) => {
     try {
-        const customers = await Customer.find().sort({ createdAt: -1 });
-        res.json(customers);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const total = await Customer.countDocuments();
+        const customers = await Customer.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+
+        res.json({
+            customers,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalItems: total,
+                hasNextPage: page < Math.ceil(total / limit),
+                hasPrevPage: page > 1
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -38,7 +53,7 @@ exports.updateCustomer = async (req, res) => {
         const customer = await Customer.findByIdAndUpdate(
             req.params.id,
             req.body,
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
         if (!customer) return res.status(404).json({ message: 'Customer not found' });
         res.json(customer);

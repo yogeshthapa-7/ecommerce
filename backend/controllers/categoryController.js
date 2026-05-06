@@ -84,7 +84,7 @@ exports.updateCategory = async (req, res) => {
         const updatedCategory = await Category.findByIdAndUpdate(
             req.params.id,
             req.body,
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
 
         // If inStock status changed, update all products in this category

@@ -2,12 +2,14 @@
 import React, { useEffect, useState } from "react"
 import { Edit, Trash2, Package, DollarSign, XCircle, TrendingUp, Plus, X } from "lucide-react"
 import axios from "axios"
+import Pagination from "@/components/ui/pagination"
 
 
 /* ================= ORDERS PAGE ================= */
 const OrdersPage = () => {
   const [orders, setOrders] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1); const [pagination, setPagination] = useState(null);
   const [editingId, setEditingId] = useState(null)
 
   // Form State
@@ -22,12 +24,13 @@ const OrdersPage = () => {
   // Initialize Data
   useEffect(() => {
     fetchOrders()
-  }, [])
+  }, [currentPage])
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/orders`)
-      setOrders(res.data)
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/orders?page=${currentPage}&limit=10`)
+      setOrders(res.data.orders)
+      setPagination(res.data.pagination)
     } catch (err) {
       console.error("Error fetching orders:", err)
     }
@@ -176,9 +179,9 @@ const OrdersPage = () => {
         </div>
 
         {/* TABLE + SIDEBAR */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="relative">
           {/* TABLE */}
-          <div className="xl:col-span-2">
+          <div className="relative z-10">
             <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -190,7 +193,10 @@ const OrdersPage = () => {
                       <TableHeader label="Total" />
                       <TableHeader label="Payment" />
                       <TableHeader label="Delivery" hidden="xl" />
-                      <TableHeader label="Actions" />
+                      <TableHeader
+                        label="Actions"
+                        className="sticky right-0 z-20 bg-black/95 shadow-[-12px_0_20px_rgba(0,0,0,0.35)]"
+                      />
                     </tr>
                   </thead>
                   <tbody>
@@ -239,7 +245,7 @@ const OrdersPage = () => {
                         <td className="px-4 py-4 hidden xl:table-cell">
                           <StatusBadge status={order.deliveryStatus} />
                         </td>
-                        <td className="px-4 py-4">
+                        <td className="px-4 py-4 sticky right-0 z-10 bg-black/95 shadow-[-12px_0_20px_rgba(0,0,0,0.35)]">
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleOpenEdit(order)}
@@ -262,25 +268,15 @@ const OrdersPage = () => {
               </div>
             </div>
           </div>
-
-          {/* SIDEBAR */}
-          <div className="relative overflow-hidden rounded-2xl hidden xl:block">
-            <img
-              src="https://wallpapercave.com/wp/wp8592792.jpg"
-              alt="Nike Background"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
-            <div className="relative z-10 p-6 min-h-[400px] flex flex-col justify-end">
-              <h2 className="text-4xl font-black text-white leading-tight tracking-tighter mb-2">
-                JUST<br />DO IT.
-              </h2>
-              <p className="text-gray-300 text-sm font-medium">
-                Track all Nike orders and manage fulfillment efficiently.
-              </p>
-            </div>
-          </div>
         </div>
+
+        {pagination && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        )}
       </div>
 
       {/* MODAL */}
@@ -394,14 +390,22 @@ const SummaryCard = ({ icon, label, value, gradient, trend }) => (
   </div>
 )
 
-const TableHeader = ({ label, hidden }) => (
+const TableHeader = ({
+  label,
+  hidden,
+  className = "",
+}: {
+  label: string;
+  hidden?: string;
+  className?: string;
+}) => (
   <th
-    className={`px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider ${hidden ? `hidden ${hidden}:table-cell` : ""
-      }`}
+    className={`px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider ${hidden ? `hidden ${hidden}:table-cell` : ""} ${className}`}
   >
     {label}
   </th>
 )
+
 
 const StatusBadge = ({ status }) => {
   const base =

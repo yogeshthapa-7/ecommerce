@@ -15,13 +15,13 @@ const app = express();
 const corsOptions = {
     origin: function (origin, callback) {
         const allowedOrigins = [
-            'http://localhost:3000',
-            'http://localhost:3001',
             'https://your-production-domain.vercel.app',
             'https://your-production-domain.com'
         ];
+        const isLocalhostOrigin = typeof origin === 'string'
+            && /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
         // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin || isLocalhostOrigin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));

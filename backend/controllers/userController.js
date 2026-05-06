@@ -1,6 +1,16 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 
+// GET user count
+exports.getUserCount = async (req, res) => {
+    try {
+        const count = await User.countDocuments();
+        res.json({ count });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // GET all users
 exports.getUsers = async (req, res) => {
     try {

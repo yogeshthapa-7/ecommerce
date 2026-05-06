@@ -12,13 +12,18 @@ import {
 } from 'lucide-react';
 import EcomNavbar from '@/components/ecomnavbar';
 import EcomFooter from '@/components/ecomfooter';
+import useSWR from 'swr';
 
 const CategoryPage = () => {
   const params = useParams();
   const categoryParam = params?.category;
 
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch products');
+  return res.json();
+};
+
   const [selectedGender, setSelectedGender] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -27,19 +32,16 @@ const CategoryPage = () => {
     ? String(categoryParam).charAt(0).toUpperCase() + String(categoryParam).slice(1)
     : '';
 
-  useEffect(() => {
-    // Fetch products from API
-    fetch('/api/products')
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Error fetching products:', error);
-        setLoading(false);
-      });
-  }, []);
+const {
+  data: products = [],
+  isLoading: loading,
+  error,
+} = useSWR('/api/products', fetcher, {
+  refreshInterval: 10000,
+  revalidateOnFocus: true,
+  revalidateOnReconnect: true,
+});
+
 
   // Filter products by category and other filters
   const categoryProducts = products.filter((product) => {

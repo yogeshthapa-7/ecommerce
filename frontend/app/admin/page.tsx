@@ -72,7 +72,7 @@ const AdminDashboardPage = () => {
         { title: "Products", value: totalProducts, prefix: "", icon: Package, change: "+2 new", bg: "from-green-500 to-emerald-600" },
       ])
 
-      setRecentOrders(ordersRes.data)
+      setRecentOrders(ordersRes.data.orders)
     } catch (error) {
       console.error("Error fetching dashboard data:", error)
     } finally {

@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { getProducts, getProduct, getProductsByCategory, createProduct, updateProduct, deleteProduct, searchProducts } = require('../controllers/productController');
+const { getProducts, getProduct, getProductsByCategory, createProduct, updateProduct, deleteProduct, searchProducts, getProductCount } = require('../controllers/productController');
 const auth = require('../middleware/authMiddleware');
 const adminAuth = require('../middleware/adminMiddleware');
 
 // Public routes - readable by anyone
 router.get('/search', searchProducts);
+router.get('/count', getProductCount);
 router.get('/category/:category', getProductsByCategory);
 router.get('/', getProducts);
 router.get('/:id', getProduct);

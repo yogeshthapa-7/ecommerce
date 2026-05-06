@@ -25,9 +25,10 @@ const CustomersPage = () => {
   const fetchCustomers = async () => {
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/customers`)
-      setCustomers(res.data)
+      setCustomers(res.data.customers || [])
     } catch (err) {
       console.error("Error fetching customers:", err)
+      setCustomers([])
     }
   }
 
@@ -101,7 +102,7 @@ const CustomersPage = () => {
     }
   }
 
-  const topCustomers = customers
+  const topCustomers = (Array.isArray(customers) ? customers : [])
     .filter(c => c.status === "Active")
     .sort((a, b) => b.totalSpent - a.totalSpent)
     .slice(0, 3)
@@ -126,9 +127,9 @@ const CustomersPage = () => {
               <h1 className="text-6xl md:text-7xl font-black text-white leading-none tracking-tighter mb-3">
                 CUSTOMERS
               </h1>
-              <p className="text-xl text-gray-400 font-medium">
-                {customers.length} Total Members
-              </p>
+          <p className="text-xl text-gray-400 font-medium">
+            {Array.isArray(customers) ? customers.length : 0} Total Members
+          </p>
             </div>
 
             <Button
@@ -144,9 +145,102 @@ const CustomersPage = () => {
 
       {/* MAIN CONTENT */}
       <div className="px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          {/* CUSTOMER INSIGHTS */}
+<div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+  {/* Top Customers Card */}
+  <div className="relative overflow-hidden bg-gradient-to-br from-orange-600 via-red-600 to-pink-600 rounded-2xl p-6 text-white">
+    <div className="relative z-10">
+      <div className="flex items-center gap-2 mb-4">
+        <Award size={24} className="text-white" />
+        <h2 className="text-xl font-black uppercase tracking-tight">
+          Top Performers
+        </h2>
+      </div>
+
+      <div className="space-y-3">
+        {topCustomers.length > 0 ? topCustomers.map((customer, idx) => (
+          <div
+            key={customer._id || customer.id}
+            className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20"
+            style={{
+              animation: `slideRight 0.5s ease-out ${idx * 0.1}s backwards`,
+            }}
+          >
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white text-orange-600 font-black text-sm">
+              {idx + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm truncate">{customer.name}</p>
+              <p className="text-xs text-white/70">{customer.orders} orders</p>
+            </div>
+            <div className="text-right">
+              <p className="font-black text-lg">${(customer.totalSpent ?? 0).toLocaleString()}</p>
+            </div>
+          </div>
+        )) : (
+          <p className="text-white/70 text-sm">No active customers yet.</p>
+        )}
+      </div>
+    </div>
+    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+  </div>
+
+  {/* Stats Card */}
+  <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-6 border border-gray-800">
+    <h3 className="text-lg font-black text-white uppercase tracking-tight mb-4">
+      Quick Stats
+    </h3>
+
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-gray-400 text-sm font-medium">Active</span>
+        <div className="flex items-center gap-2">
+          <span className="text-white font-black text-lg">
+            {(Array.isArray(customers) ? customers : []).filter(c => c.status === "Active").length}
+          </span>
+          <TrendingUp size={16} className="text-green-400" />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="text-gray-400 text-sm font-medium">Inactive</span>
+        <span className="text-white font-black text-lg">
+          {(Array.isArray(customers) ? customers : []).filter(c => c.status === "Inactive").length}
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span className="text-gray-400 text-sm font-medium">Banned</span>
+        <span className="text-white font-black text-lg">
+          {(Array.isArray(customers) ? customers : []).filter(c => c.status === "Banned").length}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {/* CTA Card */}
+  <div className="relative overflow-hidden rounded-2xl hidden md:block min-h-[220px]">
+    <img
+      src="https://wallpapers-clan.com/wp-content/uploads/2025/11/nike-logo-neon-gradient-sneaker-wallpaper-preview.jpg"
+      alt="Nike Background"
+      className="absolute inset-0 w-full h-full object-cover"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+
+    <div className="relative z-10 p-6 h-full flex flex-col justify-end">
+      <h3 className="text-3xl font-black text-white leading-tight tracking-tighter mb-2">
+        JUST<br />DO IT.
+      </h3>
+      <p className="text-gray-300 text-sm font-medium">
+        Build lasting relationships with your customers.
+      </p>
+    </div>
+  </div>
+</div>
+
           {/* CUSTOMERS TABLE */}
-          <div className="lg:col-span-2">
+          <div>
             <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -176,13 +270,13 @@ const CustomersPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {customers.length === 0 ? (
+                    {(!Array.isArray(customers) || customers.length === 0) ? (
                       <tr key="empty-customers">
                         <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                           No customers found. Add one to get started.
                         </td>
                       </tr>
-                    ) : customers.map((customer, idx) => (
+                    ) : (Array.isArray(customers) ? customers.map((customer, idx) => (
                       <tr
                         key={customer._id || customer.id || idx}
                         className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors group"
@@ -261,105 +355,13 @@ const CustomersPage = () => {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    )) : null)}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
 
-          {/* SIDEBAR - TOP CUSTOMERS */}
-          <div className="space-y-6">
-            {/* Top Customers Card */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-orange-600 via-red-600 to-pink-600 rounded-2xl p-6 text-white">
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <Award size={24} className="text-white" />
-                  <h2 className="text-xl font-black uppercase tracking-tight">
-                    Top Performers
-                  </h2>
-                </div>
-
-                <div className="space-y-4">
-                  {topCustomers.length > 0 ? topCustomers.map((customer, idx) => (
-                    <div
-                      key={customer._id || customer.id}
-                      className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20"
-                      style={{
-                        animation: `slideRight 0.5s ease-out ${idx * 0.1}s backwards`,
-                      }}
-                    >
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white text-orange-600 font-black text-sm">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-sm">{customer.name}</p>
-                        <p className="text-xs text-white/70">{customer.orders} orders</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-black text-lg">${(customer.totalSpent ?? 0).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  )) : (
-                    <p className="text-white/70 text-sm">No active customers yet.</p>
-                  )}
-                </div>
-              </div>
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-            </div>
-
-            {/* Stats Card */}
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-6 border border-gray-800">
-              <h3 className="text-lg font-black text-white uppercase tracking-tight mb-4">
-                Quick Stats
-              </h3>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400 text-sm font-medium">Active</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-black text-lg">
-                      {customers.filter(c => c.status === "Active").length}
-                    </span>
-                    <TrendingUp size={16} className="text-green-400" />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400 text-sm font-medium">Inactive</span>
-                  <span className="text-white font-black text-lg">
-                    {customers.filter(c => c.status === "Inactive").length}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400 text-sm font-medium">Banned</span>
-                  <span className="text-white font-black text-lg">
-                    {customers.filter(c => c.status === "Banned").length}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Card */}
-            <div className="relative overflow-hidden rounded-2xl hidden md:block">
-              <img
-                src="https://wallpapers-clan.com/wp-content/uploads/2025/11/nike-logo-neon-gradient-sneaker-wallpaper-preview.jpg"
-                alt="Nike Background"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
-
-              <div className="relative z-10 p-6 min-h-[200px] flex flex-col justify-end">
-                <h3 className="text-3xl font-black text-white leading-tight tracking-tighter mb-2">
-                  JUST<br />DO IT.
-                </h3>
-                <p className="text-gray-300 text-sm font-medium">
-                  Build lasting relationships with your customers.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

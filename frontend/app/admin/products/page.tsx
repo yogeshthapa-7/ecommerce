@@ -1,22 +1,26 @@
 "use client"
 import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Edit, Trash2, Eye, Package2, X, ZoomIn, CheckCircle, AlertCircle } from "lucide-react"
+import Pagination from "@/components/ui/pagination"
+import { 
+  Plus, Edit, Trash2, Eye, Package2, X, ZoomIn, 
+  CheckCircle, AlertCircle, ChevronDown, ChevronUp,
+  Tag, Info, Layers, Globe, DollarSign
+} from "lucide-react"
 import axios from "axios"
-
 const ProductsPage = () => {
   const [products, setProducts] = useState([])
-
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState(null)
+  const [expandedId, setExpandedId] = useState(null) // Added for expansion logic
   // Modals State
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [viewingImage, setViewingImage] = useState(null)
-  const [deleteConfirm, setDeleteConfirm] = useState(null) // For delete confirmation popup
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [editingId, setEditingId] = useState(null)
-
   // Toast State
   const [toast, setToast] = useState({ show: false, message: "", type: "success" })
-
-  // Form State with all fields
+  // Form State
   const [formData, setFormData] = useState({
     name: "",
     category: "Shoes",
@@ -31,34 +35,35 @@ const ProductsPage = () => {
     reviews_count: 0,
     in_stock: true
   })
-
-  // Initialize Data
+  const [sizesInput, setSizesInput] = useState("")
+  const [newColor, setNewColor] = useState({ name: "", image_url: "" })
   useEffect(() => {
     fetchProducts()
-  }, [])
-
-  const fetchProducts = async () => {
+  }, [currentPage])
+  const fetchProducts = async (page = currentPage) => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products?showAll=true`)
-      // Map _id to id for frontend compatibility if needed, or just use as is
-      setProducts(res.data)
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products?showAll=true&page=${page}&limit=10`)
+      setProducts(res.data.products || [])
+      setPagination(res.data.pagination || null)
     } catch (err) {
       console.error("Error fetching products:", err)
+      setProducts([])
+      setPagination(null)
       showToast("Failed to fetch products", "error")
     }
   }
 
-  // Toast function
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type })
     setTimeout(() => setToast({ show: false, message: "", type: "success" }), 3000)
   }
-
-  // Handlers
-  const handleDelete = (product) => {
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id)
+  }
+  const handleDelete = (e, product) => {
+    e.stopPropagation() // Prevent row expansion when clicking delete
     setDeleteConfirm(product)
   }
-
   const confirmDelete = async () => {
     try {
       const id = deleteConfirm._id || deleteConfirm.id;
@@ -66,7 +71,7 @@ const ProductsPage = () => {
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      setProducts(prev => prev.filter(p => (p._id || p.id) !== id))
+      await fetchProducts(currentPage)
       showToast("Product deleted successfully", "success")
     } catch (err) {
       console.error("Error deleting product:", err)
@@ -75,27 +80,22 @@ const ProductsPage = () => {
       setDeleteConfirm(null)
     }
   }
-
   const handleOpenAdd = () => {
     setEditingId(null)
+    setSizesInput("")
+    setNewColor({ name: "", image_url: "" })
     setFormData({
-      name: "",
-      category: "Shoes",
-      gender: "Unisex",
-      price: "",
-      stock: 0,
-      status: "active",
-      image_url: "",
-      description: "",
-      colors: [],
-      sizes: [],
-      reviews_count: 0
+      name: "", category: "Shoes", gender: "Unisex", price: "", stock: 0,
+      status: "active", image_url: "", description: "", colors: [],
+      sizes: [], reviews_count: 0, in_stock: true
     })
     setIsModalOpen(true)
   }
-
-  const handleOpenEdit = (product) => {
+  const handleOpenEdit = (e, product) => {
+    e.stopPropagation() // Prevent row expansion when clicking edit
     setEditingId(product._id || product.id)
+    setSizesInput((product.sizes || []).join(", "))
+    setNewColor({ name: "", image_url: "" })
     setFormData({
       name: product.name,
       category: product.category,
@@ -112,18 +112,37 @@ const ProductsPage = () => {
     })
     setIsModalOpen(true)
   }
-
-  // Helper function to parse comma-separated values
-  const parseCommaSeparated = (str) => {
-    if (!str || str.trim() === "") return []
-    if (Array.isArray(str)) return str
-    return str.split(",").map(item => item.trim()).filter(item => item !== "")
+  const handleSizesChange = (value) => {
+    setSizesInput(value)
+    setFormData(prev => ({
+      ...prev,
+      sizes: value.split(",").map(size => size.trim()).filter(Boolean)
+    }))
   }
+  const addColor = () => {
+    const colorName = newColor.name.trim()
+    const imageUrl = newColor.image_url.trim()
 
+    if (!colorName || !imageUrl) {
+      showToast("Add both color name and image URL", "error")
+      return
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      colors: [...prev.colors, { name: colorName, image_url: imageUrl }]
+    }))
+    setNewColor({ name: "", image_url: "" })
+  }
+  const removeColor = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      colors: prev.colors.filter((_, i) => i !== index)
+    }))
+  }
   const handleSave = async (e) => {
     e.preventDefault()
     const displayImage = formData.image_url || "https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/b1bcbca4-e853-4df7-b329-5be3c61ee057/dunk-low-retro-mens-shoes-bc160F.png"
-
     const productData = {
       name: formData.name,
       category: formData.category,
@@ -137,18 +156,20 @@ const ProductsPage = () => {
       colors: formData.colors,
       reviews_count: parseInt(formData.reviews_count) || 0
     }
-
     const token = localStorage.getItem("token")
     const config = { headers: { Authorization: `Bearer ${token}` } }
-
     try {
       if (editingId) {
-        const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/products/${editingId}`, productData, config)
-        setProducts(prev => prev.map(p => (p._id || p.id) === editingId ? res.data : p))
+        await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/products/${editingId}`, productData, config)
+        await fetchProducts(currentPage)
         showToast("Product updated successfully", "success")
       } else {
-        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/products`, productData, config)
-        setProducts(prev => [res.data, ...prev])
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/products`, productData, config)
+        if (currentPage === 1) {
+          await fetchProducts(1)
+        } else {
+          setCurrentPage(1)
+        }
         showToast("Product added successfully", "success")
       }
       setIsModalOpen(false)
@@ -157,83 +178,28 @@ const ProductsPage = () => {
       showToast("Failed to save product", "error")
     }
   }
-
-  // Helper for adding color
-  const [newColor, setNewColor] = useState({ name: "", image_url: "" })
-  const addColor = () => {
-    if (newColor.name && newColor.image_url) {
-      setFormData({ ...formData, colors: [...formData.colors, newColor] })
-      setNewColor({ name: "", image_url: "" })
-    }
-  }
-
-  const removeColor = (index) => {
-    setFormData({ ...formData, colors: formData.colors.filter((_, i) => i !== index) })
-  }
-
-  // Helper for sizes
-  const [sizesInput, setSizesInput] = useState("")
-
-  useEffect(() => {
-    if (formData.sizes.length > 0) {
-      setSizesInput(formData.sizes.join(", "))
-    }
-  }, [isModalOpen])
-
-  const handleSizesChange = (value) => {
-    setSizesInput(value)
-    const sizesArray = parseCommaSeparated(value)
-    setFormData({ ...formData, sizes: sizesArray })
-  }
-
   return (
-    <div className="min-h-screen bg-black">
-      {/* TOAST NOTIFICATION */}
+    <div className="min-h-screen bg-black text-white font-sans">
+      {/* TOAST */}
       {toast.show && (
         <div className="fixed top-4 right-4 z-[100] animate-in slide-in-from-top-2 fade-in duration-300">
-          <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl border ${toast.type === "success"
-            ? "bg-green-500/90 border-green-400 text-white"
-            : "bg-red-500/90 border-red-400 text-white"
-            } backdrop-blur-sm`}>
-            {toast.type === "success" ? (
-              <CheckCircle className="w-5 h-5" />
-            ) : (
-              <AlertCircle className="w-5 h-5" />
-            )}
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl border ${toast.type === "success" ? "bg-green-500/90 border-green-400" : "bg-red-500/90 border-red-400"} backdrop-blur-sm text-white`}>
+            {toast.type === "success" ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
             <span className="font-bold">{toast.message}</span>
           </div>
         </div>
       )}
-
-      {/* HEADER SECTION */}
+      {/* HEADER */}
       <div className="relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black px-6 pt-12 pb-8">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-          }} />
-        </div>
-
         <div className="relative z-10">
-          <div className="inline-block mb-3 px-4 py-1 bg-white text-black text-xs font-black tracking-widest uppercase rounded-full">
-            Inventory Management
-          </div>
-
+          <div className="inline-block mb-3 px-4 py-1 bg-white text-black text-xs font-black tracking-widest uppercase rounded-full">Inventory Management</div>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
-              <h1 className="text-6xl md:text-7xl font-black text-white leading-none tracking-tighter mb-3">
-                PRODUCTS
-              </h1>
-              <p className="text-xl text-gray-400 font-medium">
-                Manage your Nike product catalog
-              </p>
+              <h1 className="text-6xl md:text-7xl font-black text-white leading-none tracking-tighter mb-3">PRODUCTS</h1>
+              <p className="text-xl text-gray-400 font-medium">Manage your Nike product catalog</p>
             </div>
-
-            <Button
-              onClick={handleOpenAdd}
-              className="group bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider px-8 py-6 rounded-full transition-all hover:scale-105"
-            >
-              <Plus size={20} className="mr-2" />
-              Add Product
+            <Button onClick={handleOpenAdd} className="group bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider px-8 py-6 rounded-full transition-all hover:scale-105">
+              <Plus size={20} className="mr-2" /> Add Product
             </Button>
           </div>
         </div>
@@ -241,91 +207,155 @@ const ProductsPage = () => {
 
       {/* MAIN CONTENT */}
       <div className="px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          {/* FEATURE IMAGE */}
+          <div className="relative overflow-hidden rounded-2xl min-h-[240px] border border-gray-800">
+            <img src="https://w0.peakpx.com/wallpaper/142/362/HD-wallpaper-nike-brand-logo-cool-cloud.jpg" alt="Nike Background" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+            <div className="relative z-10 p-6 sm:p-8 min-h-[240px] flex flex-col justify-end">
+              <h2 className="text-5xl sm:text-6xl font-black text-white leading-tight tracking-tighter mb-3">
+                JUST <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">DO IT.</span>
+              </h2>
+              <p className="text-gray-300 text-base font-medium max-w-lg">Sleek control of your Nike inventory.</p>
+            </div>
+          </div>
+
           {/* PRODUCTS TABLE */}
-          <div className="lg:col-span-2">
+          <div className="w-full">
             <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-800">
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Product</th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider hidden md:table-cell">Category</th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Price</th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Status</th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Actions</th>
+                    <tr className="border-b border-gray-800 bg-black/40">
+                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Product</th>
+                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider hidden md:table-cell">Category</th>
+                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Price</th>
+                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {products.length === 0 ? (
-                      <tr key="empty-products"><td colSpan="5" className="px-4 py-8 text-center text-gray-500">No products.</td></tr>
-                    ) : products.map((product, idx) => (
-                      <tr
-                        key={product._id || product.id || idx}
-                        className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors group"
-                        style={{ animation: `fadeIn 0.4s ease-out ${idx * 0.05}s backwards` }}
-                      >
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0 cursor-pointer"
-                              onClick={() => setViewingImage(product.image_url)}
-                            >
-                              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                            </div>
-                            <div>
-                              <span className="text-white font-bold text-sm block">{product.name}</span>
-                              <span className="text-gray-500 text-xs">{product.gender}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 hidden md:table-cell"><span className="text-gray-400 text-sm">{product.category}</span></td>
-                        <td className="px-4 py-4"><span className="text-white font-bold text-sm">${product.price.toFixed(2)}</span></td>
-                        <td className="px-4 py-4">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider ${product.status === "active" && product.in_stock ? "bg-green-500/20 text-green-400 border border-green-500/50" :
-                            !product.in_stock ? "bg-red-500/20 text-red-400 border border-red-500/50" :
-                              "bg-gray-500/20 text-gray-400 border border-gray-500/50"
-                            }`}>{product.in_stock ? "Active" : "Out of Stock"}</span>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setViewingImage(product.image_url)}
-                              className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors group/eye relative"
-                              title="View Image"
-                            >
-                              <Eye size={14} />
-                            </button>
+                    {(!Array.isArray(products) || products.length === 0) ? (
+                      <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500 font-medium">No products available in the catalog.</td></tr>
+                    ) : (
+                    products.map((product, idx) => {
+                      const pId = product._id || product.id;
+                      const isExpanded = expandedId === pId;
 
-                            <button onClick={() => handleOpenEdit(product)} className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors">
-                              <Edit size={14} />
-                            </button>
-                            <button onClick={() => handleDelete(product)} className="p-2 bg-gray-800 hover:bg-red-600 text-white rounded-lg transition-colors">
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                      return (
+                        <React.Fragment key={pId || idx}>
+                          {/* MAIN ROW */}
+                          <tr 
+                            onClick={() => toggleExpand(pId)}
+                            className={`border-b border-gray-800 hover:bg-gray-800/30 transition-all cursor-pointer group ${isExpanded ? 'bg-gray-800/20' : ''}`}
+                          >
+                            <td className="px-6 py-5">
+                              <div className="flex items-center gap-4">
+                                <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0 border border-gray-700">
+                                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                </div>
+                                <div>
+                                  <span className="text-white font-bold text-base block mb-0.5">{product.name}</span>
+                                  <span className="text-gray-500 text-xs font-medium tracking-wide uppercase">{product.gender}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-5 hidden md:table-cell text-gray-400 font-medium">{product.category}</td>
+                            <td className="px-6 py-5">
+                              <span className="text-white font-black text-base">${product.price.toFixed(2)}</span>
+                            </td>
+                            <td className="px-6 py-5">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.in_stock ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+                                {product.in_stock ? "In Stock" : "Out of Stock"}
+                              </span>
+                            </td>
+                            <td className="px-6 py-5">
+                              <div className="flex items-center gap-3">
+                                <button onClick={(e) => handleOpenEdit(e, product)} className="p-2.5 bg-gray-800 hover:bg-white hover:text-black text-gray-400 rounded-xl transition-all shadow-sm">
+                                  <Edit size={16} />
+                                </button>
+                                <button onClick={(e) => handleDelete(e, product)} className="p-2.5 bg-gray-800 hover:bg-red-600 hover:text-white text-gray-400 rounded-xl transition-all shadow-sm">
+                                  <Trash2 size={16} />
+                                </button>
+                                {isExpanded ? <ChevronUp size={20} className="text-gray-600 ml-2" /> : <ChevronDown size={20} className="text-gray-600 ml-2" />}
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* EXPANDED DETAIL VIEW */}
+                          {isExpanded && (
+                            <tr className="bg-gray-900/50 border-b border-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <td colSpan={5} className="px-8 py-10">
+                                <div className="flex flex-col lg:flex-row gap-12 items-start">
+                                  <div className="w-full lg:w-1/3 aspect-square rounded-3xl overflow-hidden bg-black border border-gray-800 shadow-2xl group/image relative">
+                                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-4" />
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); setViewingImage(product.image_url); }}
+                                      className="absolute bottom-4 right-4 p-3 bg-white/10 hover:bg-white text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover/image:opacity-100"
+                                    >
+                                      <ZoomIn size={20} />
+                                    </button>
+                                  </div>
+
+                                  <div className="flex-1 w-full space-y-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-12">
+                                      <div className="space-y-1">
+                                        <span className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest"><Info size={14} className="text-gray-600" /> Product Name</span>
+                                        <p className="text-white font-bold text-lg border-b border-gray-800 pb-2">{product.name}</p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <span className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest"><DollarSign size={14} className="text-gray-600" /> Price</span>
+                                        <p className="text-white font-black text-lg border-b border-gray-800 pb-2">${product.price.toFixed(2)}</p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <span className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest"><Package2 size={14} className="text-gray-600" /> Sizes</span>
+                                        <p className="text-white font-bold text-lg border-b border-gray-800 pb-2">{product.sizes?.length > 0 ? product.sizes.join(' — ') : "N/A"}</p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <span className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest"><Tag size={14} className="text-gray-600" /> ID Number</span>
+                                        <p className="text-gray-400 font-mono text-sm border-b border-gray-800 pb-2 uppercase">{pId.slice(-8)}...</p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <span className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest"><Layers size={14} className="text-gray-600" /> Category</span>
+                                        <p className="text-white font-bold text-lg border-b border-gray-800 pb-2">{product.category}</p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <span className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest"><Globe size={14} className="text-gray-600" /> Made In</span>
+                                        <p className="text-white font-bold text-lg border-b border-gray-800 pb-2">USA / Imported</p>
+                                      </div>
+                                    </div>
+                                    <div className="space-y-6 pt-4">
+                                      <div className="space-y-2">
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Description</span>
+                                        <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">{product.description || "No description provided."}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    }))}
                   </tbody>
                 </table>
               </div>
             </div>
-          </div>
-
-          {/* SIDEBAR */}
-          <div className="relative overflow-hidden rounded-2xl hidden lg:block">
-            <img src="https://w0.peakpx.com/wallpaper/142/362/HD-wallpaper-nike-brand-logo-cool-cloud.jpg" alt="Nike Background" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
-            <div className="relative z-10 p-6 min-h-[400px] flex flex-col justify-end">
-              <h2 className="text-5xl font-black text-white leading-tight tracking-tighter mb-3">
-                JUST<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">DO IT.</span>
-              </h2>
-              <p className="text-gray-300 text-base font-medium max-w-xs">Sleek control of your Nike inventory.</p>
-            </div>
+            {pagination && (
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={(page) => {
+                  setExpandedId(null)
+                  setCurrentPage(page)
+                }}
+              />
+            )}
           </div>
         </div>
       </div>
+
 
       {/* DELETE CONFIRMATION POPUP */}
       {deleteConfirm && (

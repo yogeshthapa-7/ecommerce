@@ -11,7 +11,7 @@ import { useCart } from '@/app/context/CartContext';
 const ProductDetailPage = () => {
   const router = useRouter();
   const params = useParams();
-  const id = params?.id;
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState(null);
@@ -27,13 +27,17 @@ const ProductDetailPage = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch('/api/products');
-        const allProducts = await res.json();
-        const foundProduct = allProducts.find(p => (p._id || p.id)?.toString() === id);
+        const res = await fetch(`/api/products/${id}`);
+        const foundProduct = await res.json();
+
+        if (!res.ok) {
+          setProduct(null);
+          return;
+        }
 
         if (foundProduct) {
           setProduct(foundProduct);
-          setCurrentImage(foundProduct.image_url);
+          setCurrentImage(foundProduct.image_url || '');
 
           // Set default color if available
           if (foundProduct.colors && foundProduct.colors.length > 0) {
@@ -51,6 +55,7 @@ const ProductDetailPage = () => {
         }
       } catch (error) {
         console.error('Error fetching product:', error);
+        setProduct(null);
       } finally {
         setLoading(false);
       }

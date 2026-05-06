@@ -1,21 +1,58 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Activity, ArrowUpRight, Box, Globe2, Smartphone, Zap } from "lucide-react";
+
+type Category = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  products?: number;
+};
+
+const trafficSeries = [
+  { label: "Mon", revenue: 34, visitors: 42 },
+  { label: "Tue", revenue: 48, visitors: 52 },
+  { label: "Wed", revenue: 41, visitors: 49 },
+  { label: "Thu", revenue: 66, visitors: 71 },
+  { label: "Fri", revenue: 74, visitors: 68 },
+  { label: "Sat", revenue: 58, visitors: 83 },
+  { label: "Sun", revenue: 88, visitors: 91 },
+];
+
+const channelTrackers = [
+  { label: "Nike.com", value: "48.2K", trend: "+18%", progress: 86, icon: Globe2 },
+  { label: "Mobile App", value: "32.8K", trend: "+24%", progress: 74, icon: Smartphone },
+  { label: "SNKRS Drop", value: "11.4K", trend: "+31%", progress: 62, icon: Zap },
+];
+
+const productTrackers = [
+  { name: "Air Max Pulse", stock: 84, velocity: "High" },
+  { name: "Pegasus Trail 5", stock: 61, velocity: "Rising" },
+  { name: "Dunk Low Retro", stock: 39, velocity: "Watch" },
+];
+
+const linePoints = trafficSeries
+  .map((point, index) => {
+    const x = 18 + index * 44;
+    const y = 112 - point.visitors;
+    return `${x},${y}`;
+  })
+  .join(" ");
 
 const BarGraph = () => {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch("/api/categories");
         const data = await res.json();
-        setCategories(data);
-        setIsLoading(false);
+        setCategories(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching categories:", error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -23,225 +60,162 @@ const BarGraph = () => {
     fetchCategories();
   }, []);
 
-  const maxProducts =
-    categories.length > 0 ? Math.max(...categories.map((c) => c?.products || 0)) : 1;
-  const totalProducts = Array.isArray(categories) ? categories.reduce((sum, cat) => sum + (cat?.products || 0), 0) : 0;
+  const categorySummary = useMemo(() => {
+    const safeCategories = categories.length
+      ? categories
+      : [
+          { name: "Running", products: 38 },
+          { name: "Lifestyle", products: 27 },
+          { name: "Basketball", products: 21 },
+          { name: "Training", products: 16 },
+        ];
+
+    const maxProducts = Math.max(...safeCategories.map((category) => category.products || 0), 1);
+    const totalProducts = safeCategories.reduce((sum, category) => sum + (category.products || 0), 0);
+
+    return { safeCategories, maxProducts, totalProducts };
+  }, [categories]);
 
   if (isLoading) {
     return (
-      <div className="w-full mx-auto p-8 bg-black rounded-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-orange-600/5"></div>
-        <div className="relative animate-pulse space-y-6">
-          <div className="h-8 bg-white/10 rounded-lg w-2/5"></div>
-          <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="space-y-2">
-                <div className="h-4 bg-white/10 rounded w-1/3"></div>
-                <div className="h-10 bg-white/10 rounded-lg"></div>
-              </div>
-            ))}
+      <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#101010] p-6">
+        <div className="animate-pulse space-y-5">
+          <div className="h-8 w-64 rounded-full bg-white/10" />
+          <div className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
+            <div className="h-72 rounded-3xl bg-white/10" />
+            <div className="h-72 rounded-3xl bg-white/10" />
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="w-full mx-auto p-8 bg-black rounded-2xl relative overflow-hidden shadow-2xl">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-orange-600/5"></div>
-      <div className="absolute top-0 right-0 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-72 h-72 bg-white/5 rounded-full blur-3xl"></div>
-
-      {/* Noise Texture */}
-      <div className="absolute inset-0 opacity-[0.015]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E")`,
-        backgroundRepeat: 'repeat',
-      }}></div>
-
-      <div className="relative z-10">
-        {/* Header Section */}
-        <div className="mb-8 flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className="w-1 h-6 bg-gradient-to-b from-orange-500 to-orange-600 rounded-full"></div>
-              <h2 className="text-3xl font-black text-white tracking-tighter" style={{ fontFamily: "'Bebas Neue', 'Impact', sans-serif" }}>
-                CATEGORY PERFORMANCE
+    <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#0f0f0f] shadow-2xl shadow-black/40">
+      <div className="grid gap-px bg-white/10 lg:grid-cols-[1.35fr_0.65fr]">
+        <div className="bg-[#0f0f0f] p-6 md:p-8">
+          <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+            <div>
+              <div className="mb-3 flex items-center gap-3 text-xs font-black uppercase tracking-[0.28em] text-lime-300">
+                <Activity size={16} />
+                Commerce Pulse
+              </div>
+              <h2 className="max-w-xl text-4xl font-black uppercase leading-none tracking-tight text-white md:text-5xl">
+                Digital demand is moving fast
               </h2>
             </div>
-            <p className="text-zinc-400 text-xs font-medium tracking-wide ml-4 uppercase">
-              Product Distribution Analysis
-            </p>
+            <div className="rounded-3xl border border-white/10 bg-white px-5 py-4 text-black">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-black/50">Portfolio SKUs</p>
+              <p className="mt-1 text-4xl font-black tracking-tight">{categorySummary.totalProducts}</p>
+            </div>
           </div>
 
-          {/* Total Stats Badge */}
-          <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-xl px-5 py-3 border border-white/10">
-            <p className="text-zinc-500 text-xs uppercase font-bold tracking-wider mb-0.5">Total Portfolio</p>
-            <p className="text-white text-2xl font-black">{totalProducts}</p>
-          </div>
-        </div>
-
-        {/* Chart Grid */}
-        <div className="space-y-5">
-          {categories.map((category, index) => {
-            const percentage = (category.products / maxProducts) * 100;
-            const isHovered = hoveredIndex === index;
-
-            return (
-              <div
-                key={category._id || category.id || index}
-                className="group relative"
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
-                style={{
-                  animation: `fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.08}s both`,
-                }}
-              >
-                {/* Category Header */}
-                <div className="flex justify-between items-baseline mb-2">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-white font-black text-base uppercase tracking-wider" style={{ fontFamily: "'Bebas Neue', 'Impact', sans-serif" }}>
-                      {category?.name || "Unknown"}
-                    </span>
-                    {isHovered && (
-                      <span className="text-orange-500 text-xs font-bold uppercase tracking-widest animate-pulse">
-                        ●
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-white text-2xl font-black tabular-nums">
-                      {category?.products || 0}
-                    </span>
-                    <span className="text-zinc-600 text-xs font-bold uppercase tracking-wider">
-                      SKUs
-                    </span>
-                  </div>
-                </div>
-
-                {/* Bar Container */}
-                <div className="relative">
-                  {/* Background Track */}
-                  <div className="relative h-10 bg-white/5 rounded-lg overflow-hidden backdrop-blur-sm border border-white/10">
-                    {/* Progress Bar */}
+          <div className="relative h-72 overflow-hidden rounded-[1.5rem] border border-white/10 bg-black p-5">
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.055)_1px,transparent_1px)] bg-[size:44px_44px]" />
+            <div className="relative flex h-full items-end gap-4">
+              {trafficSeries.map((point) => (
+                <div key={point.label} className="flex h-full flex-1 flex-col justify-end gap-3">
+                  <div className="relative flex flex-1 items-end justify-center">
                     <div
-                      className={`absolute top-0 left-0 h-full transition-all duration-700 ease-out ${isHovered ? 'scale-y-105' : 'scale-y-100'
-                        }`}
-                      style={{
-                        width: `${percentage}%`,
-                        transformOrigin: 'left center',
-                        animation: `slideBar 1s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.08}s both`,
-                      }}
-                    >
-                      {/* Gradient Fill */}
-                      <div className={`absolute inset-0 transition-all duration-500 ${isHovered
-                        ? 'bg-gradient-to-r from-orange-600 via-orange-500 to-orange-400'
-                        : 'bg-gradient-to-r from-white via-zinc-200 to-zinc-300'
-                        }`}>
-                        {/* Shine Effect */}
-                        <div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{
-                            animation: isHovered ? 'shine 1.5s ease-in-out infinite' : 'none',
-                          }}
-                        ></div>
-
-                        {/* Top Highlight */}
-                        <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent"></div>
-                      </div>
-
-                      {/* Pattern Overlay */}
-                      <div className="absolute inset-0 opacity-10" style={{
-                        backgroundImage: `repeating-linear-gradient(
-                          45deg,
-                          transparent,
-                          transparent 10px,
-                          rgba(255,255,255,0.1) 10px,
-                          rgba(255,255,255,0.1) 20px
-                        )`,
-                      }}></div>
-                    </div>
-
-                    {/* Percentage Label */}
-                    <div className="absolute inset-0 flex items-center justify-end pr-4">
-                      <div className={`font-black text-xs transition-all duration-300 ${isHovered ? 'text-white scale-110' : 'text-black/60'
-                        }`}>
-                        {Math.round(percentage)}%
-                      </div>
-                    </div>
-
-                    {/* Glow Effect */}
-                    {isHovered && (
-                      <div className="absolute inset-0 rounded-lg" style={{
-                        boxShadow: '0 0 20px rgba(249, 115, 22, 0.4), inset 0 0 15px rgba(249, 115, 22, 0.1)',
-                      }}></div>
-                    )}
+                      className="w-full max-w-9 rounded-t-full bg-white transition-all duration-500 hover:bg-lime-300"
+                      style={{ height: `${point.revenue}%` }}
+                    />
                   </div>
+                  <p className="text-center text-[11px] font-black uppercase tracking-widest text-white/45">
+                    {point.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <svg
+              className="pointer-events-none absolute inset-x-5 top-10 h-36 w-[calc(100%-2.5rem)] overflow-visible"
+              viewBox="0 0 300 130"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <polyline
+                points={linePoints}
+                fill="none"
+                stroke="#bef264"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {trafficSeries.map((point, index) => (
+                <circle key={point.label} cx={18 + index * 44} cy={112 - point.visitors} r="4.5" fill="#ffffff" />
+              ))}
+            </svg>
+          </div>
 
-                  {/* Rank Indicator */}
-                  <div className={`absolute -left-10 top-1/2 -translate-y-1/2 text-xl font-black transition-all duration-300 ${isHovered ? 'text-orange-500 scale-125' : 'text-white/20'
-                    }`} style={{ fontFamily: "'Bebas Neue', 'Impact', sans-serif" }}>
-                    {String(index + 1).padStart(2, '0')}
-                  </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {channelTrackers.map((tracker) => (
+              <div key={tracker.label} className="rounded-3xl border border-white/10 bg-white/[0.04] p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <tracker.icon size={18} className="text-white/60" />
+                  <span className="flex items-center gap-1 text-xs font-black text-lime-300">
+                    {tracker.trend}
+                    <ArrowUpRight size={13} />
+                  </span>
+                </div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/45">{tracker.label}</p>
+                <p className="mt-1 text-2xl font-black text-white">{tracker.value}</p>
+                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-full rounded-full bg-lime-300" style={{ width: `${tracker.progress}%` }} />
                 </div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Bottom Stats Grid */}
-        <div className="mt-8 pt-6 border-t border-white/10">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300">
-              <p className="text-zinc-500 text-xs uppercase font-bold tracking-wider mb-1">Categories</p>
-              <p className="text-white text-2xl font-black">{categories.length}</p>
-            </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300">
-              <p className="text-zinc-500 text-xs uppercase font-bold tracking-wider mb-1">Average</p>
-              <p className="text-white text-2xl font-black">{Math.round(totalProducts / categories.length)}</p>
-            </div>
-            <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 backdrop-blur-sm rounded-xl p-4 border border-orange-500/20 hover:border-orange-500/40 transition-all duration-300">
-              <p className="text-orange-300 text-xs uppercase font-bold tracking-wider mb-1">Top Category</p>
-              <p className="text-white text-2xl font-black">{maxProducts}</p>
-            </div>
+            ))}
           </div>
         </div>
+
+        <aside className="bg-[#151515] p-6 md:p-8">
+          <div className="mb-7">
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-white/40">Product Trackers</p>
+            <h3 className="mt-2 text-2xl font-black uppercase tracking-tight text-white">Drop readiness</h3>
+          </div>
+
+          <div className="space-y-4">
+            {productTrackers.map((product) => (
+              <div key={product.name} className="rounded-3xl border border-white/10 bg-black/35 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-black">
+                      <Box size={18} />
+                    </div>
+                    <div>
+                      <p className="font-black text-white">{product.name}</p>
+                      <p className="text-xs font-bold uppercase tracking-widest text-white/40">{product.velocity}</p>
+                    </div>
+                  </div>
+                  <span className="text-lg font-black text-white">{product.stock}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-full rounded-full bg-white" style={{ width: `${product.stock}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 space-y-4">
+            {categorySummary.safeCategories.slice(0, 4).map((category, index) => {
+              const value = category.products || 0;
+              const width = Math.max((value / categorySummary.maxProducts) * 100, 8);
+
+              return (
+                <div key={category._id || category.id || category.name || index}>
+                  <div className="mb-2 flex items-center justify-between text-xs font-black uppercase tracking-widest">
+                    <span className="text-white/55">{category.name || "Category"}</span>
+                    <span className="text-white">{value}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-lime-300" style={{ width: `${width}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </aside>
       </div>
-
-      {/* CSS Animations */}
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-        
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slideBar {
-          from {
-            width: 0;
-          }
-        }
-
-        @keyframes shine {
-          0% {
-            transform: translateX(-100%) skewX(-15deg);
-          }
-          50% {
-            transform: translateX(100%) skewX(-15deg);
-          }
-          100% {
-            transform: translateX(100%) skewX(-15deg);
-          }
-        }
-      `}</style>
-    </div>
+    </section>
   );
 };
 
