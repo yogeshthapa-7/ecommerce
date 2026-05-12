@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "findStore": "स्टोर खोज्नुहोस्",
+    "help": "सहयोग",
+    "join": "सदस्य बन्नुहोस्",
+    "signIn": "साइन इन",
+    "men": "पुरुष",
+    "women": "महिला",
+    "kids": "बालबालिका",
+    "running": "दौड",
+    "lifestyle": "लाइफस्टाइल",
+    "jordan": "जोर्डन",
+    "sale": "सेल",
+    "searchLabel": "खोज खोल्नुहोस्",
+    "menuLabel": "मेनु खोल्नुहोस्",
+    "searchPlaceholder": "जुत्ता, संग्रह र अरू खोज्नुहोस्..."
+  },
+  "landing": {
+    "eyebrow": "नयाँ आगमन",
+    "titleLine1": "आफ्नै",
+    "titleLine2": "तरिकाले जित्नुहोस्।",
+    "subtitle": "बलियो लन्च, सफा उत्पादन लय र Nike shop मा सिधा बाटोसहित बनाइएको छिटो र धारिलो स्टोरफ्रन्टसँग आफ्नो सीमा पार गर्नुहोस्।",
+    "homeCta": "होमपेजमा जानुहोस्",
+    "videoCta": "भिडियो हेर्नुहोस्",
+    "sideTitle": "Air Max pulse",
+    "sideCopy": "लन्च, सदस्य छनोट र दैनिक प्रयोगका ट्रेनिङ स्टेपलमा पुग्ने स्पष्ट प्रवेशद्वार।",
+    "scroll": "स्क्रोल",
+    "featuredEyebrow": "विशेष रोटेसन",
+    "trusted": "विश्वभरका खेलाडीहरूले विश्वास गरेका"
+  },
+  "featuredShoes": {
+    "nikeSystem": "Nike Air System",
+    "adidasSuperstar": "Adidas Superstar",
+    "newBalance": "New Balance 550",
+    "pumaSpeedcat": "Puma Speedcat",
+    "uaLockdown": "UA Lockdown",
+    "asicsGel": "Asics Gel NYC",
+    "reebokNano": "Reebok Nano X5",
+    "flagship": "मुख्य ड्रप",
+    "street": "स्ट्रीट क्लासिक",
+    "daily": "दैनिक रोटेसन",
+    "track": "ट्र्याक प्रेरित",
+    "court": "कोर्ट तयार",
+    "soft": "नरम अवतरण",
+    "training": "ट्रेनिङ बेस"
+  }
+}

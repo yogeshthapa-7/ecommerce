@@ -1,6 +1,7 @@
 'use client';
+
+import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { HTMLMotionProps, motion } from 'motion/react';
 
 export const GRADIENT_ANGLES = {
   top: 0,
@@ -14,22 +15,22 @@ export type ProgressiveBlurProps = {
   blurLayers?: number;
   className?: string;
   blurIntensity?: number;
-} & HTMLMotionProps<'div'>;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export function ProgressiveBlur({
   direction = 'bottom',
-  blurLayers = 8,
+  blurLayers = 4,
   className,
   blurIntensity = 0.25,
   ...props
 }: ProgressiveBlurProps) {
-  const layers = Math.max(blurLayers, 2);
-  const segmentSize = 1 / (blurLayers + 1);
+  const layers = Math.min(Math.max(blurLayers, 2), 5);
+  const segmentSize = 1 / (layers + 1);
+  const angle = GRADIENT_ANGLES[direction];
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn('relative', className)} {...props}>
       {Array.from({ length: layers }).map((_, index) => {
-        const angle = GRADIENT_ANGLES[direction];
         const gradientStops = [
           index * segmentSize,
           (index + 1) * segmentSize,
@@ -45,15 +46,14 @@ export function ProgressiveBlur({
         )})`;
 
         return (
-          <motion.div
+          <div
             key={index}
-            className='pointer-events-none absolute inset-0 rounded-[inherit]'
+            className="pointer-events-none absolute inset-0 rounded-[inherit]"
             style={{
               maskImage: gradient,
               WebkitMaskImage: gradient,
               backdropFilter: `blur(${index * blurIntensity}px)`,
             }}
-            {...props}
           />
         );
       })}

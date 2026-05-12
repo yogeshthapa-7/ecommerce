@@ -1,14 +1,15 @@
 'use client';
+
+import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { useMotionValue, animate, motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
-import useMeasure from 'react-use-measure';
 
 type InfiniteSliderProps = {
   children: React.ReactNode;
   gap?: number;
   duration?: number;
   durationOnHover?: number;
+  speed?: number;
+  speedOnHover?: number;
   direction?: 'horizontal' | 'vertical';
   reverse?: boolean;
   className?: string;
@@ -17,91 +18,67 @@ type InfiniteSliderProps = {
 export function InfiniteSlider({
   children,
   gap = 16,
-  duration = 25,
+  duration,
   durationOnHover,
+  speed,
+  speedOnHover,
   direction = 'horizontal',
   reverse = false,
   className,
 }: InfiniteSliderProps) {
-  const [currentDuration, setCurrentDuration] = useState(duration);
-  const [ref, { width, height }] = useMeasure();
-  const translation = useMotionValue(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [key, setKey] = useState(0);
-
-  useEffect(() => {
-    let controls;
-    const size = direction === 'horizontal' ? width : height;
-    const contentSize = size + gap;
-    const from = reverse ? -contentSize / 2 : 0;
-    const to = reverse ? 0 : -contentSize / 2;
-
-    if (isTransitioning) {
-      controls = animate(translation, [translation.get(), to], {
-        ease: 'linear',
-        duration:
-          currentDuration * Math.abs((translation.get() - to) / contentSize),
-        onComplete: () => {
-          setIsTransitioning(false);
-          setKey((prevKey) => prevKey + 1);
-        },
-      });
-    } else {
-      controls = animate(translation, [from, to], {
-        ease: 'linear',
-        duration: currentDuration,
-        repeat: Infinity,
-        repeatType: 'loop',
-        repeatDelay: 0,
-        onRepeat: () => {
-          translation.set(from);
-        },
-      });
-    }
-
-    return controls?.stop;
-  }, [
-    key,
-    translation,
-    currentDuration,
-    width,
-    height,
-    gap,
-    isTransitioning,
-    direction,
-    reverse,
-  ]);
-
-  const hoverProps = durationOnHover
-    ? {
-        onHoverStart: () => {
-          setIsTransitioning(true);
-          setCurrentDuration(durationOnHover);
-        },
-        onHoverEnd: () => {
-          setIsTransitioning(true);
-          setCurrentDuration(duration);
-        },
-      }
-    : {};
+  const baseDuration = duration ?? speed ?? 25;
+  const hoverDuration = durationOnHover ?? speedOnHover;
+  const animationName =
+    direction === 'horizontal' ? 'infinite-slider-x' : 'infinite-slider-y';
 
   return (
-    <div className={cn('overflow-hidden', className)}>
-      <motion.div
-        className='flex w-max'
+    <div
+      className={cn(
+        'overflow-hidden [--slider-duration:25s] [--slider-hover-duration:var(--slider-duration)]',
+        className
+      )}
+      style={
+        {
+          '--slider-duration': `${baseDuration}s`,
+          '--slider-hover-duration': `${hoverDuration ?? baseDuration}s`,
+        } as React.CSSProperties
+      }
+    >
+      <div
+        className={cn(
+          'flex w-max motion-reduce:animate-none',
+          hoverDuration && 'hover:[animation-duration:var(--slider-hover-duration)]',
+          direction === 'vertical' && 'flex-col',
+          reverse && '[animation-direction:reverse]'
+        )}
         style={{
-          ...(direction === 'horizontal'
-            ? { x: translation }
-            : { y: translation }),
-          gap: `${gap}px`,
-          flexDirection: direction === 'horizontal' ? 'row' : 'column',
+          animation: `${animationName} var(--slider-duration) linear infinite`,
+          gap,
         }}
-        ref={ref}
-        {...hoverProps}
       >
         {children}
         {children}
-      </motion.div>
+      </div>
+
+      <style jsx>{`
+        @keyframes infinite-slider-x {
+          from {
+            transform: translate3d(0, 0, 0);
+          }
+          to {
+            transform: translate3d(calc(-50% - ${gap / 2}px), 0, 0);
+          }
+        }
+
+        @keyframes infinite-slider-y {
+          from {
+            transform: translate3d(0, 0, 0);
+          }
+          to {
+            transform: translate3d(0, calc(-50% - ${gap / 2}px), 0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

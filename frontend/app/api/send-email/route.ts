@@ -13,6 +13,27 @@ type OrderEmailItem = {
     currency?: string;
 };
 
+const getPublicBaseUrl = (request: Request) => {
+    const configuredUrl = process.env.NEXT_PUBLIC_BASE_URL?.split('||')[0]?.trim();
+    const requestOrigin = request.headers.get('origin');
+    const host = request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'http';
+
+    return configuredUrl || requestOrigin || (host ? `${protocol}://${host}` : '');
+};
+
+const resolveEmailImage = (image: string | undefined, baseUrl: string) => {
+    if (!image) return '';
+    if (/^(https?:|cid:|data:)/i.test(image)) return image;
+    if (!baseUrl) return image;
+
+    try {
+        return new URL(image, baseUrl).toString();
+    } catch {
+        return image;
+    }
+};
+
 export async function POST(request: Request) {
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
         console.error('GMAIL credentials missing in environment variables');
@@ -41,6 +62,11 @@ export async function POST(request: Request) {
             : Array.isArray(cartItems)
               ? cartItems
               : [];
+        const publicBaseUrl = getPublicBaseUrl(request);
+        const emailItems = resolvedItems.map((item) => ({
+            ...item,
+            image: resolveEmailImage(item.image, publicBaseUrl),
+        }));
 
         const emailHtml = await render(
             NikeOrderEmail({
@@ -53,7 +79,7 @@ export async function POST(request: Request) {
                 shipping,
                 discount,
                 totalAmount,
-                items: resolvedItems,
+                items: emailItems,
             })
         );
 

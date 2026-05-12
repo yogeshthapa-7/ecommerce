@@ -379,7 +379,7 @@ const PaymentDetailsPage = () => {
                     type="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="Enter valid phone number with country code"
                     required
                     autoComplete="tel"
                     inputMode="tel"
@@ -389,7 +389,7 @@ const PaymentDetailsPage = () => {
                     name="address"
                     value={formData.address}
                     onChange={handleInputChange}
-                    placeholder="123 Main Street"
+                    placeholder="Tinkune"
                     required
                     autoComplete="street-address"
                   />
@@ -402,7 +402,7 @@ const PaymentDetailsPage = () => {
                       name="city"
                       value={formData.city}
                       onChange={handleInputChange}
-                      placeholder="New York"
+                      placeholder="Kathmandu"
                       required
                       autoComplete="address-level2"
                     />
@@ -420,7 +420,7 @@ const PaymentDetailsPage = () => {
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleInputChange}
-                    placeholder="10001"
+                    placeholder="45800"
                     required
                     autoComplete="postal-code"
                   />
@@ -432,7 +432,7 @@ const PaymentDetailsPage = () => {
                     name="country"
                     value={formData.country}
                     onChange={handleInputChange}
-                    placeholder="United States"
+                    placeholder="Nepal"
                     autoComplete="country-name"
                   />
                 </div>

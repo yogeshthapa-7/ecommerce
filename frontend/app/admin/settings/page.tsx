@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { User, Lock, Shield, AlertTriangle, Camera, CheckCircle, XCircle } from "lucide-react"
+import { AdminConfirmDialog, PageBody, PageHeader, adminPanel, fieldClass, labelClass } from "@/components/admin/AdminSurface"
 const AdminSettingsPage = () => {
   const router = useRouter()
   // --- STATE MANAGEMENT ---
   const [isLoading, setIsLoading] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Notification State
@@ -77,12 +80,67 @@ const AdminSettingsPage = () => {
   // 1. Image Upload Logic
   const triggerImageUpload = () => fileInputRef.current?.click()
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const imageUrl = URL.createObjectURL(file)
-      setProfile(prev => ({ ...prev, profilePic: imageUrl }))
-      showNotification("Profile picture updated successfully!")
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      showNotification("Please select a valid image file.", "error")
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification("Profile picture must be 5MB or smaller.", "error")
+      return
+    }
+
+    const token = localStorage.getItem("token")
+    if (!token) {
+      router.push("/login")
+      return
+    }
+
+    const previousProfilePic = profile.profilePic
+    const previewUrl = URL.createObjectURL(file)
+    setProfile(prev => ({ ...prev, profilePic: previewUrl }))
+    setIsUploadingImage(true)
+
+    try {
+      const image = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result))
+        reader.onerror = () => reject(new Error("Failed to read image"))
+        reader.readAsDataURL(file)
+      })
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile-picture`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          image,
+          fileName: file.name
+        })
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.imageUrl) {
+        setProfile(prev => ({ ...prev, profilePic: data.imageUrl }))
+        showNotification("Profile picture uploaded. Click Save Profile Changes to store it.")
+      } else {
+        setProfile(prev => ({ ...prev, profilePic: previousProfilePic }))
+        showNotification(data.message || "Failed to upload profile picture.", "error")
+      }
+    } catch (err) {
+      setProfile(prev => ({ ...prev, profilePic: previousProfilePic }))
+      showNotification("Failed to upload profile picture.", "error")
+    } finally {
+      URL.revokeObjectURL(previewUrl)
+      setIsUploadingImage(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
     }
   }
 
@@ -183,23 +241,17 @@ const AdminSettingsPage = () => {
 
   // 4. Delete Account Logic
   const handleDeleteAccount = () => {
-    const confirmDelete = window.confirm(
-      "Are you absolutely sure? This action cannot be undone and will delete your admin access."
-    )
-
-    if (confirmDelete) {
-      setIsLoading(true)
-      // Simulate API call
-      setTimeout(() => {
-        setIsLoading(false)
-        alert("Account deleted. You will be redirected to login.")
-        // window.location.href = "/login"
-      }, 1000)
-    }
+    setIsLoading(true)
+    setTimeout(() => {
+      setIsLoading(false)
+      setIsDeleteDialogOpen(false)
+      showNotification("Account deletion flow confirmed. Connect the real API before enabling the final removal step.")
+      // router.push("/login")
+    }, 1000)
   }
 
   return (
-    <div className="min-h-screen bg-black relative">
+    <div className="min-h-screen bg-[#080808] relative">
 
       {/* CUSTOM NOTIFICATION TOAST */}
       {notification && (
@@ -214,46 +266,26 @@ const AdminSettingsPage = () => {
         </div>
       )}
 
-      {/* HEADER SECTION */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black px-6 pt-12 pb-8">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
-
-        <div className="relative z-10">
-          <div className="inline-block mb-3 px-4 py-1 bg-white text-black text-xs font-black tracking-widest uppercase rounded-full">
-            Account Settings
-          </div>
-
-          <div>
-            <h1 className="text-6xl md:text-7xl font-black text-white leading-none tracking-tighter mb-3">
-              SETTINGS
-            </h1>
-            <p className="text-xl text-gray-400 font-medium">
-              Manage your profile, security, and preferences
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Settings"
+        label="Account Settings"
+        description="Manage profile, security, and admin preferences with a cleaner control surface."
+      />
 
       {/* MAIN CONTENT */}
-      <div className="px-6 py-8">
+      <PageBody>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* LEFT - SETTINGS FORMS */}
           <div className="lg:col-span-2 space-y-6">
 
             {/* PROFILE CARD */}
             <div
-              className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-gray-800 p-6"
-              style={{ animation: 'slideUp 0.6s ease-out 0s backwards' }}
+              className={`${adminPanel} p-6`}
             >
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
                   <div className="relative group cursor-pointer" onClick={triggerImageUpload}>
-                    <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-800 border-2 border-orange-500">
+                    <div className="h-16 w-16 rounded-2xl overflow-hidden bg-gray-800 border border-white/15">
                       <img
                         src={profile.profilePic}
                         alt="Profile"
@@ -268,8 +300,11 @@ const AdminSettingsPage = () => {
                       accept="image/*"
                       onChange={handleImageChange}
                     />
-                    <button className="absolute -bottom-1 -right-1 p-1.5 bg-orange-500 rounded-full hover:bg-orange-600 transition-colors z-10">
-                      <Camera size={12} className="text-white" />
+                    <button
+                      type="button"
+                      className="absolute -bottom-1 -right-1 z-10 rounded-full bg-white p-1.5 text-black transition-colors hover:bg-lime-300"
+                    >
+                      <Camera size={12} className="text-black" />
                     </button>
                     {/* Hover Overlay */}
                     <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -278,13 +313,13 @@ const AdminSettingsPage = () => {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <User size={18} className="text-orange-500" />
+                      <User size={18} className="text-lime-300" />
                       <h2 className="text-xl font-black text-white uppercase tracking-tight">
                         Profile Information
                       </h2>
                     </div>
                     <p className="text-gray-400 text-sm font-medium">
-                      Update your admin account details
+                      {isUploadingImage ? "Uploading profile picture..." : "Update your admin account details"}
                     </p>
                   </div>
                 </div>
@@ -292,36 +327,36 @@ const AdminSettingsPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2 block">
+                  <Label className={labelClass}>
                     Name
                   </Label>
                   <Input
                     name="name"
                     value={profile.name}
                     onChange={handleProfileChange}
-                    className="bg-gray-800 border-gray-700 text-white font-medium focus:border-orange-500 focus:ring-orange-500/20"
+                    className={fieldClass}
                   />
                 </div>
 
                 <div>
-                  <Label className="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2 block">
+                  <Label className={labelClass}>
                     Email
                   </Label>
                   <Input
                     name="email"
                     value={profile.email}
                     onChange={handleProfileChange}
-                    className="bg-gray-800 border-gray-700 text-white font-medium focus:border-orange-500 focus:ring-orange-500/20"
+                    className={fieldClass}
                   />
                 </div>
 
                 <div className="md:col-span-2">
                   <Button
                     onClick={handleSaveProfile}
-                    disabled={isLoading}
+                    disabled={isLoading || isUploadingImage}
                     className="w-full mt-4 bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider py-6 rounded-xl transition-all disabled:opacity-50"
                   >
-                    {isLoading ? "Saving..." : "Save Profile Changes"}
+                    {isUploadingImage ? "Uploading image..." : isLoading ? "Saving..." : "Save Profile Changes"}
                   </Button>
                 </div>
               </div>
@@ -329,8 +364,7 @@ const AdminSettingsPage = () => {
 
             {/* PASSWORD CARD */}
             <div
-              className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-gray-800 p-6"
-              style={{ animation: 'slideUp 0.6s ease-out 0.1s backwards' }}
+              className={`${adminPanel} p-6`}
             >
               <div className="flex items-center gap-2 mb-6">
                 <Lock size={18} className="text-blue-500" />
@@ -346,7 +380,7 @@ const AdminSettingsPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label className="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2 block">
+                  <Label className={labelClass}>
                     Current Password
                   </Label>
                   <Input
@@ -354,11 +388,11 @@ const AdminSettingsPage = () => {
                     name="current"
                     value={passwords.current}
                     onChange={handlePasswordChange}
-                    className="bg-gray-800 border-gray-700 text-white font-medium focus:border-blue-500 focus:ring-blue-500/20"
+                    className={fieldClass}
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2 block">
+                  <Label className={labelClass}>
                     New Password
                   </Label>
                   <Input
@@ -366,11 +400,11 @@ const AdminSettingsPage = () => {
                     name="new"
                     value={passwords.new}
                     onChange={handlePasswordChange}
-                    className="bg-gray-800 border-gray-700 text-white font-medium focus:border-blue-500 focus:ring-blue-500/20"
+                    className={fieldClass}
                   />
                 </div>
                 <div>
-                  <Label className="text-gray-400 font-bold text-xs uppercase tracking-wider mb-2 block">
+                  <Label className={labelClass}>
                     Confirm Password
                   </Label>
                   <Input
@@ -378,7 +412,7 @@ const AdminSettingsPage = () => {
                     name="confirm"
                     value={passwords.confirm}
                     onChange={handlePasswordChange}
-                    className="bg-gray-800 border-gray-700 text-white font-medium focus:border-blue-500 focus:ring-blue-500/20"
+                    className={fieldClass}
                   />
                 </div>
 
@@ -397,7 +431,6 @@ const AdminSettingsPage = () => {
             {/* DANGER ZONE */}
             <div
               className="relative overflow-hidden rounded-2xl border border-red-500/50 bg-gradient-to-br from-red-950/50 to-black p-6"
-              style={{ animation: 'slideUp 0.6s ease-out 0.2s backwards' }}
             >
               <div className="absolute inset-0 bg-red-500/5" />
               <div className="relative">
@@ -412,8 +445,8 @@ const AdminSettingsPage = () => {
                 </p>
 
                 <Button
-                  onClick={handleDeleteAccount}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider py-6 rounded-xl border border-red-500 transition-all hover:scale-[1.01]"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-black text-sm uppercase tracking-wider py-6 rounded-xl border border-red-500 transition-colors"
                 >
                   Delete Admin Account
                 </Button>
@@ -444,8 +477,7 @@ const AdminSettingsPage = () => {
 
             {/* Quick Stats Panel */}
             <div
-              className="bg-gradient-to-br from-gray-900 to-black rounded-2xl border border-gray-800 p-6"
-              style={{ animation: 'slideUp 0.6s ease-out 0.3s backwards' }}
+              className={`${adminPanel} p-6`}
             >
               <div className="flex items-center gap-2 mb-4">
                 <Shield size={20} className="text-green-500" />
@@ -479,21 +511,16 @@ const AdminSettingsPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </PageBody>
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      ` }} />
+      <AdminConfirmDialog
+        open={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDeleteAccount}
+        title="Delete Admin Account"
+        message="This will remove your admin access and is meant to be permanent. The live destructive API is still commented out, but the browser confirm has been replaced with this controlled confirmation flow."
+        confirmLabel={isLoading ? "Deleting..." : "Delete Account"}
+      />
     </div>
   )
 }

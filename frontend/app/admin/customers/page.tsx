@@ -1,15 +1,17 @@
 "use client"
 import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Edit, Trash2, UserCheck, UserX, Plus, TrendingUp, Award, X } from "lucide-react"
+import { Edit, Trash2, UserCheck, UserX, Plus, TrendingUp, Award } from "lucide-react"
 import axios from "axios"
+import { AdminConfirmDialog, AdminModal, PageBody, PageHeader, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, iconButton, labelClass, primaryButton, StatusBadge } from "@/components/admin/AdminSurface"
 
 const CustomersPage = () => {
   const [customers, setCustomers] = useState<any[]>([])
 
   // State for Modal handling
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingId, setEditingId] = useState(null)
+  const [editingId, setEditingId] = useState<string | number | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | number | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,16 +38,16 @@ const CustomersPage = () => {
 
   // Delete Customer
   const handleDelete = async (id: string | number) => {
-    if (confirm("Are you sure you want to delete this customer?")) {
-      const token = localStorage.getItem("token")
-      try {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setCustomers(prev => prev.filter(c => (c._id || c.id) !== id))
-      } catch (err) {
-        console.error("Error deleting customer:", err)
-      }
+    const token = localStorage.getItem("token")
+    try {
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setCustomers(prev => prev.filter(c => (c._id || c.id) !== id))
+    } catch (err) {
+      console.error("Error deleting customer:", err)
+    } finally {
+      setDeleteTargetId(null)
     }
   }
 
@@ -108,48 +110,26 @@ const CustomersPage = () => {
     .slice(0, 3)
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* HEADER SECTION */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black px-6 pt-12 pb-8">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
-
-        <div className="relative z-10">
-          <div className="inline-block mb-3 px-4 py-1 bg-white text-black text-xs font-black tracking-widest uppercase rounded-full">
-            Customer Management
-          </div>
-
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div>
-              <h1 className="text-6xl md:text-7xl font-black text-white leading-none tracking-tighter mb-3">
-                CUSTOMERS
-              </h1>
-          <p className="text-xl text-gray-400 font-medium">
-            {Array.isArray(customers) ? customers.length : 0} Total Members
-          </p>
-            </div>
-
-            <Button
-              onClick={handleOpenAdd}
-              className="group bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider px-8 py-6 rounded-full transition-all hover:scale-105"
-            >
-              <Plus size={20} className="mr-2" />
-              Add Customer
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#080808]">
+      <PageHeader
+        title="Customers"
+        label="Customer Management"
+        description={`${Array.isArray(customers) ? customers.length : 0} total members across active, inactive, and banned segments.`}
+        action={
+          <button onClick={handleOpenAdd} className={primaryButton}>
+            <Plus size={18} />
+            Add Customer
+          </button>
+        }
+      />
 
       {/* MAIN CONTENT */}
-      <div className="px-6 py-8">
+      <PageBody>
         <div className="space-y-6">
           {/* CUSTOMER INSIGHTS */}
 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
   {/* Top Customers Card */}
-  <div className="relative overflow-hidden bg-gradient-to-br from-orange-600 via-red-600 to-pink-600 rounded-2xl p-6 text-white">
+  <div className="relative overflow-hidden rounded-2xl border border-lime-300/20 bg-lime-300/10 p-6 text-white">
     <div className="relative z-10">
       <div className="flex items-center gap-2 mb-4">
         <Award size={24} className="text-white" />
@@ -162,12 +142,9 @@ const CustomersPage = () => {
         {topCustomers.length > 0 ? topCustomers.map((customer, idx) => (
           <div
             key={customer._id || customer.id}
-            className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20"
-            style={{
-              animation: `slideRight 0.5s ease-out ${idx * 0.1}s backwards`,
-            }}
+            className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-3"
           >
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white text-orange-600 font-black text-sm">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white text-black font-black text-sm">
               {idx + 1}
             </div>
             <div className="flex-1 min-w-0">
@@ -183,11 +160,10 @@ const CustomersPage = () => {
         )}
       </div>
     </div>
-    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
   </div>
 
   {/* Stats Card */}
-  <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-6 border border-gray-800">
+  <div className={`${adminPanel} p-6`}>
     <h3 className="text-lg font-black text-white uppercase tracking-tight mb-4">
       Quick Stats
     </h3>
@@ -220,7 +196,7 @@ const CustomersPage = () => {
   </div>
 
   {/* CTA Card */}
-  <div className="relative overflow-hidden rounded-2xl hidden md:block min-h-[220px]">
+  <div className="relative hidden min-h-[220px] overflow-hidden rounded-2xl border border-white/10 md:block">
     <img
       src="https://wallpapers-clan.com/wp-content/uploads/2025/11/nike-logo-neon-gradient-sneaker-wallpaper-preview.jpg"
       alt="Nike Background"
@@ -241,30 +217,30 @@ const CustomersPage = () => {
 
           {/* CUSTOMERS TABLE */}
           <div>
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800">
+            <div className={`${adminPanel} overflow-hidden`}>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className={adminTable}>
                   <thead>
-                    <tr className="border-b border-gray-800">
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
+                    <tr>
+                      <th className={adminHeaderCell}>
                         Name
                       </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                      <th className={`${adminHeaderCell} hidden md:table-cell`}>
                         Email
                       </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider hidden xl:table-cell">
+                      <th className={`${adminHeaderCell} hidden xl:table-cell`}>
                         Phone
                       </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
+                      <th className={adminHeaderCell}>
                         Orders
                       </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
+                      <th className={adminHeaderCell}>
                         Spent
                       </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
+                      <th className={adminHeaderCell}>
                         Status
                       </th>
-                      <th className="px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">
+                      <th className={adminHeaderCell}>
                         Actions
                       </th>
                     </tr>
@@ -272,21 +248,18 @@ const CustomersPage = () => {
                   <tbody>
                     {(!Array.isArray(customers) || customers.length === 0) ? (
                       <tr key="empty-customers">
-                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={7} className="px-4 py-8 text-center text-white/35">
                           No customers found. Add one to get started.
                         </td>
                       </tr>
                     ) : (Array.isArray(customers) ? customers.map((customer, idx) => (
                       <tr
                         key={customer._id || customer.id || idx}
-                        className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors group"
-                        style={{
-                          animation: `fadeIn 0.4s ease-out ${idx * 0.05}s backwards`,
-                        }}
+                        className="group transition-colors hover:bg-white/[0.04]"
                       >
-                        <td className="px-4 py-4 max-w-[150px] sm:max-w-[200px]">
+                        <td className={`${adminCell} max-w-[150px] sm:max-w-[200px]`}>
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white font-black text-sm">
+                            <div className="w-10 h-10 shrink-0 rounded-xl bg-white flex items-center justify-center text-black font-black text-sm">
                               {customer.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                             </div>
                             <span className="text-white font-bold text-sm truncate" title={customer.name}>
@@ -294,52 +267,43 @@ const CustomersPage = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-4 hidden md:table-cell max-w-[150px] lg:max-w-[200px]">
+                        <td className={`${adminCell} hidden md:table-cell max-w-[150px] lg:max-w-[200px]`}>
                           <span className="text-gray-400 text-sm truncate block" title={customer.email}>
                             {customer.email}
                           </span>
                         </td>
-                        <td className="px-4 py-4 hidden xl:table-cell">
+                        <td className={`${adminCell} hidden xl:table-cell`}>
                           <span className="text-gray-400 text-sm">
                             {customer.phone}
                           </span>
                         </td>
-                        <td className="px-4 py-4">
+                        <td className={adminCell}>
                           <span className="text-white font-bold text-sm">
                             {customer.orders}
                           </span>
                         </td>
-                        <td className="px-4 py-4">
+                        <td className={adminCell}>
                           <span className="text-white font-bold text-sm">
                             ${(customer.totalSpent ?? 0).toLocaleString()}
                           </span>
                         </td>
-                        <td className="px-4 py-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider ${customer.status === "Active"
-                              ? "bg-green-500/20 text-green-400 border border-green-500/50"
-                              : customer.status === "Inactive"
-                                ? "bg-gray-500/20 text-gray-400 border border-gray-500/50"
-                                : "bg-red-500/20 text-red-400 border border-red-500/50"
-                              }`}
-                          >
-                            {customer.status}
-                          </span>
+                        <td className={adminCell}>
+                          <StatusBadge status={customer.status} />
                         </td>
-                        <td className="px-4 py-4">
+                        <td className={adminCell}>
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleOpenEdit(customer)}
-                              className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                              className={iconButton}
                             >
                               <Edit size={14} />
                             </button>
 
                             <button
                               onClick={() => handleStatusToggle(customer._id || customer.id, customer.status)}
-                              className={`p-2 rounded-lg transition-colors text-white ${customer.status === "Banned"
-                                ? "bg-green-600 hover:bg-green-700"
-                                : "bg-red-600 hover:bg-red-700"
+                              className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${customer.status === "Banned"
+                                ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400 hover:text-black"
+                                : "border-red-400/30 bg-red-400/10 text-red-300 hover:bg-red-500 hover:text-white"
                                 }`}
                               title={customer.status === "Banned" ? "Unban User" : "Ban User"}
                             >
@@ -347,8 +311,8 @@ const CustomersPage = () => {
                             </button>
 
                             <button
-                              onClick={() => handleDelete(customer._id || customer.id)}
-                              className="p-2 bg-gray-800 hover:bg-red-600 text-white rounded-lg transition-colors"
+                              onClick={() => setDeleteTargetId(customer._id || customer.id)}
+                              className={iconButton}
                             >
                               <Trash2 size={14} />
                             </button>
@@ -363,103 +327,97 @@ const CustomersPage = () => {
           </div>
 
         </div>
-      </div>
+      </PageBody>
 
-      {/* 4. MODAL COMPONENT (Built-in for functionality without external deps) */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl animate-in fade-in zoom-in duration-200">
-            <button
+      <AdminModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        eyebrow="Customer Editor"
+        title={editingId ? "Edit Customer" : "Add Customer"}
+        subtitle="Create or update customer details without leaving the dashboard."
+        maxWidthClass="max-w-xl"
+        footer={
+          <>
+            <Button
+              type="button"
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
             >
-              <X size={20} />
-            </button>
-
-            <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-tight">
-              {editingId ? "Edit Customer" : "Add Customer"}
-            </h2>
-
-            <form onSubmit={handleSave} className="space-y-4">
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="customer-form"
+              className="inline-flex flex-1 items-center justify-center rounded-xl bg-white px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-black transition-colors hover:bg-lime-300"
+            >
+              {editingId ? "Update" : "Create"}
+            </Button>
+          </>
+        }
+      >
+        <form id="customer-form" onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Full Name</label>
+                <label className={labelClass}>Full Name</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
+                  className={fieldClass}
                   placeholder="e.g. Michael Jordan"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Email</label>
+                <label className={labelClass}>Email</label>
                 <input
                   type="email"
                   required
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
+                  className={fieldClass}
                   placeholder="e.g. mj@bulls.com"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Phone</label>
+                <label className={labelClass}>Phone</label>
                 <input
                   type="text"
                   value={formData.phone}
                   onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
+                  className={fieldClass}
                   placeholder="e.g. +1 234 567 890"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status</label>
+                <label className={labelClass}>Status</label>
                 <select
                   value={formData.status}
                   onChange={e => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors appearance-none"
+                  className={`${fieldClass} appearance-none`}
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                   <option value="Banned">Banned</option>
                 </select>
               </div>
+        </form>
+      </AdminModal>
 
-              <div className="pt-4 flex gap-3">
-                <Button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-gray-800 text-white hover:bg-gray-700 font-bold py-6 rounded-xl"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="flex-1 bg-white text-black hover:bg-gray-200 font-black uppercase tracking-wider py-6 rounded-xl"
-                >
-                  {editingId ? "Update" : "Create"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideRight {
-          from { opacity: 0; transform: translateX(-20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-      ` }} />
+      <AdminConfirmDialog
+        open={deleteTargetId !== null}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={() => {
+          if (deleteTargetId !== null) {
+            handleDelete(deleteTargetId)
+          }
+        }}
+        title="Delete Customer"
+        message="This customer record will be removed from the admin dashboard. This action cannot be undone."
+        confirmLabel="Delete"
+      />
     </div>
   )
 }

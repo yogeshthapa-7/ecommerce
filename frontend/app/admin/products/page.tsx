@@ -3,11 +3,12 @@ import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Pagination from "@/components/ui/pagination"
 import { 
-  Plus, Edit, Trash2, Eye, Package2, X, ZoomIn, 
+  Plus, Edit, Trash2, Package2, X, ZoomIn, 
   CheckCircle, AlertCircle, ChevronDown, ChevronUp,
   Tag, Info, Layers, Globe, DollarSign
 } from "lucide-react"
 import axios from "axios"
+import { AdminConfirmDialog, AdminModal, PageBody, PageHeader, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, iconButton, labelClass, primaryButton } from "@/components/admin/AdminSurface"
 const ProductsPage = () => {
   const [products, setProducts] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
@@ -179,7 +180,7 @@ const ProductsPage = () => {
     }
   }
   return (
-    <div className="min-h-screen bg-black text-white font-sans">
+    <div className="min-h-screen bg-[#080808] text-white font-sans">
       {/* TOAST */}
       {toast.show && (
         <div className="fixed top-4 right-4 z-[100] animate-in slide-in-from-top-2 fade-in duration-300">
@@ -189,54 +190,50 @@ const ProductsPage = () => {
           </div>
         </div>
       )}
-      {/* HEADER */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black px-6 pt-12 pb-8">
-        <div className="relative z-10">
-          <div className="inline-block mb-3 px-4 py-1 bg-white text-black text-xs font-black tracking-widest uppercase rounded-full">Inventory Management</div>
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div>
-              <h1 className="text-6xl md:text-7xl font-black text-white leading-none tracking-tighter mb-3">PRODUCTS</h1>
-              <p className="text-xl text-gray-400 font-medium">Manage your Nike product catalog</p>
-            </div>
-            <Button onClick={handleOpenAdd} className="group bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider px-8 py-6 rounded-full transition-all hover:scale-105">
-              <Plus size={20} className="mr-2" /> Add Product
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        title="Products"
+        label="Inventory Management"
+        description="Manage Nike catalog details, imagery, colorways, sizes, and stock state with a faster control surface."
+        action={
+          <button onClick={handleOpenAdd} className={primaryButton}>
+            <Plus size={18} />
+            Add Product
+          </button>
+        }
+      />
 
       {/* MAIN CONTENT */}
-      <div className="px-6 py-8">
+      <PageBody>
         <div className="space-y-6">
           {/* FEATURE IMAGE */}
-          <div className="relative overflow-hidden rounded-2xl min-h-[240px] border border-gray-800">
+          <div className="relative min-h-[220px] overflow-hidden rounded-2xl border border-white/10">
             <img src="https://w0.peakpx.com/wallpaper/142/362/HD-wallpaper-nike-brand-logo-cool-cloud.jpg" alt="Nike Background" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-            <div className="relative z-10 p-6 sm:p-8 min-h-[240px] flex flex-col justify-end">
-              <h2 className="text-5xl sm:text-6xl font-black text-white leading-tight tracking-tighter mb-3">
+            <div className="relative z-10 flex min-h-[220px] flex-col justify-end p-6 sm:p-8">
+              <h2 className="mb-3 text-4xl font-black leading-tight tracking-normal text-white sm:text-6xl">
                 JUST <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">DO IT.</span>
               </h2>
-              <p className="text-gray-300 text-base font-medium max-w-lg">Sleek control of your Nike inventory.</p>
+              <p className="max-w-lg text-base font-medium text-white/65">Sleek control of your Nike inventory.</p>
             </div>
           </div>
 
           {/* PRODUCTS TABLE */}
           <div className="w-full">
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800">
+            <div className={`${adminPanel} overflow-hidden`}>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className={adminTable}>
                   <thead>
-                    <tr className="border-b border-gray-800 bg-black/40">
-                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider hidden md:table-cell">Category</th>
-                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Price</th>
-                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Actions</th>
+                    <tr>
+                      <th className={adminHeaderCell}>Product</th>
+                      <th className={`${adminHeaderCell} hidden md:table-cell`}>Category</th>
+                      <th className={adminHeaderCell}>Price</th>
+                      <th className={adminHeaderCell}>Status</th>
+                      <th className={adminHeaderCell}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(!Array.isArray(products) || products.length === 0) ? (
-                      <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500 font-medium">No products available in the catalog.</td></tr>
+                      <tr><td colSpan={5} className="px-6 py-12 text-center font-medium text-white/35">No products available in the catalog.</td></tr>
                     ) : (
                     products.map((product, idx) => {
                       const pId = product._id || product.id;
@@ -247,12 +244,12 @@ const ProductsPage = () => {
                           {/* MAIN ROW */}
                           <tr 
                             onClick={() => toggleExpand(pId)}
-                            className={`border-b border-gray-800 hover:bg-gray-800/30 transition-all cursor-pointer group ${isExpanded ? 'bg-gray-800/20' : ''}`}
+                            className={`cursor-pointer transition-colors hover:bg-white/[0.04] ${isExpanded ? 'bg-white/[0.035]' : ''}`}
                           >
-                            <td className="px-6 py-5">
+                            <td className={adminCell}>
                               <div className="flex items-center gap-4">
                                 <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-800 flex-shrink-0 border border-gray-700">
-                                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                                 </div>
                                 <div>
                                   <span className="text-white font-bold text-base block mb-0.5">{product.name}</span>
@@ -260,21 +257,21 @@ const ProductsPage = () => {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-5 hidden md:table-cell text-gray-400 font-medium">{product.category}</td>
-                            <td className="px-6 py-5">
+                            <td className={`${adminCell} hidden md:table-cell text-gray-400 font-medium`}>{product.category}</td>
+                            <td className={adminCell}>
                               <span className="text-white font-black text-base">${product.price.toFixed(2)}</span>
                             </td>
-                            <td className="px-6 py-5">
+                            <td className={adminCell}>
                               <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.in_stock ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
                                 {product.in_stock ? "In Stock" : "Out of Stock"}
                               </span>
                             </td>
-                            <td className="px-6 py-5">
+                            <td className={adminCell}>
                               <div className="flex items-center gap-3">
-                                <button onClick={(e) => handleOpenEdit(e, product)} className="p-2.5 bg-gray-800 hover:bg-white hover:text-black text-gray-400 rounded-xl transition-all shadow-sm">
+                                <button onClick={(e) => handleOpenEdit(e, product)} className={iconButton}>
                                   <Edit size={16} />
                                 </button>
-                                <button onClick={(e) => handleDelete(e, product)} className="p-2.5 bg-gray-800 hover:bg-red-600 hover:text-white text-gray-400 rounded-xl transition-all shadow-sm">
+                                <button onClick={(e) => handleDelete(e, product)} className={iconButton}>
                                   <Trash2 size={16} />
                                 </button>
                                 {isExpanded ? <ChevronUp size={20} className="text-gray-600 ml-2" /> : <ChevronDown size={20} className="text-gray-600 ml-2" />}
@@ -284,14 +281,14 @@ const ProductsPage = () => {
 
                           {/* EXPANDED DETAIL VIEW */}
                           {isExpanded && (
-                            <tr className="bg-gray-900/50 border-b border-gray-800 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <tr className="border-b border-white/10 bg-black/35">
                               <td colSpan={5} className="px-8 py-10">
                                 <div className="flex flex-col lg:flex-row gap-12 items-start">
-                                  <div className="w-full lg:w-1/3 aspect-square rounded-3xl overflow-hidden bg-black border border-gray-800 shadow-2xl group/image relative">
+                                  <div className="group/image relative aspect-square w-full overflow-hidden rounded-2xl border border-white/10 bg-black lg:w-1/3">
                                     <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-4" />
                                     <button 
                                       onClick={(e) => { e.stopPropagation(); setViewingImage(product.image_url); }}
-                                      className="absolute bottom-4 right-4 p-3 bg-white/10 hover:bg-white text-white hover:text-black rounded-full backdrop-blur-md transition-all opacity-0 group-hover/image:opacity-100"
+                                      className="absolute bottom-4 right-4 rounded-full bg-white/10 p-3 text-white opacity-0 backdrop-blur-md transition-colors hover:bg-white hover:text-black group-hover/image:opacity-100"
                                     >
                                       <ZoomIn size={20} />
                                     </button>
@@ -309,7 +306,7 @@ const ProductsPage = () => {
                                       </div>
                                       <div className="space-y-1">
                                         <span className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest"><Package2 size={14} className="text-gray-600" /> Sizes</span>
-                                        <p className="text-white font-bold text-lg border-b border-gray-800 pb-2">{product.sizes?.length > 0 ? product.sizes.join(' — ') : "N/A"}</p>
+                                        <p className="text-white font-bold text-lg border-b border-gray-800 pb-2">{product.sizes?.length > 0 ? product.sizes.join(" / ") : "N/A"}</p>
                                       </div>
                                       <div className="space-y-1">
                                         <span className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest"><Tag size={14} className="text-gray-600" /> ID Number</span>
@@ -354,51 +351,48 @@ const ProductsPage = () => {
             )}
           </div>
         </div>
-      </div>
+      </PageBody>
 
 
-      {/* DELETE CONFIRMATION POPUP */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="text-center">
-              <div className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-                <Trash2 className="w-8 h-8 text-red-500" />
-              </div>
-              <h2 className="text-2xl font-black text-white mb-2">Delete Product?</h2>
-              <p className="text-gray-400 mb-6">
-                Are you sure you want to delete <span className="font-bold text-white">"{deleteConfirm.name}"</span>? This action cannot be undone.
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 bg-gray-800 text-white hover:bg-gray-700 font-bold py-3 rounded-xl transition-colors"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={confirmDelete}
-                  className="flex-1 bg-red-500 text-white hover:bg-red-600 font-bold py-3 rounded-xl transition-colors"
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AdminConfirmDialog
+        open={deleteConfirm !== null}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={confirmDelete}
+        title="Delete Product"
+        message={`This will permanently remove ${deleteConfirm?.name || "this product"} from the catalog and the admin inventory view.`}
+        confirmLabel="Delete"
+      />
 
-      {/* FORM MODAL - EXPANDED WITH ALL FIELDS */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl p-6 relative shadow-2xl animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
-            <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-tight">{editingId ? "Edit Product" : "New Product"}</h2>
-
-            <form onSubmit={handleSave} className="space-y-4">
+      <AdminModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        eyebrow="Product Editor"
+        title={editingId ? "Edit Product" : "New Product"}
+        subtitle="Manage catalog details, imagery, sizes, and colorways in one premium editor."
+        maxWidthClass="max-w-3xl"
+        footer={
+          <>
+            <Button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="product-form"
+              className="inline-flex flex-1 items-center justify-center rounded-xl bg-white px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-black transition-colors hover:bg-lime-300"
+            >
+              {editingId ? "Update Product" : "Create Product"}
+            </Button>
+          </>
+        }
+      >
+        <form id="product-form" onSubmit={handleSave} className="space-y-4">
               {/* Product Name */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Product Name *</label>
+                <label className={labelClass}>Product Name *</label>
                 <input
                   type="text"
                   required
@@ -411,7 +405,7 @@ const ProductsPage = () => {
               {/* Category, Gender, Status */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Category *</label>
+                  <label className={labelClass}>Category *</label>
                   <select
                     value={formData.category}
                     onChange={e => setFormData({ ...formData, category: e.target.value })}
@@ -420,12 +414,12 @@ const ProductsPage = () => {
                     <option value="Shoes">Shoes</option>
                     <option value="Bags">Bags</option>
                     <option value="Hoodies">Hoodies</option>
-                    <option value="Accessories">Accessories</option>
+                    <option value="Slippers">Slippers</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Gender *</label>
+                  <label className={labelClass}>Gender *</label>
                   <select
                     value={formData.gender}
                     onChange={e => setFormData({ ...formData, gender: e.target.value })}
@@ -439,7 +433,7 @@ const ProductsPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Status *</label>
+                  <label className={labelClass}>Status *</label>
                   <select
                     value={formData.status}
                     onChange={e => setFormData({ ...formData, status: e.target.value })}
@@ -454,7 +448,7 @@ const ProductsPage = () => {
               {/* Price and In Stock Toggle */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Price ($) *</label>
+                  <label className={labelClass}>Price ($) *</label>
                   <input
                     type="number"
                     step="0.01"
@@ -465,7 +459,7 @@ const ProductsPage = () => {
                   />
                 </div>
                 <div className="flex flex-col justify-center">
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">In Stock</label>
+                  <label className={labelClass}>In Stock</label>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, in_stock: !formData.in_stock })}
@@ -483,7 +477,7 @@ const ProductsPage = () => {
 
               {/* Image URL */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Main Image URL</label>
+                <label className={labelClass}>Main Image URL</label>
                 <input
                   type="text"
                   value={formData.image_url}
@@ -495,7 +489,7 @@ const ProductsPage = () => {
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Description</label>
+                <label className={labelClass}>Description</label>
                 <textarea
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -507,7 +501,7 @@ const ProductsPage = () => {
 
               {/* Sizes */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Available Sizes</label>
+                <label className={labelClass}>Available Sizes</label>
                 <input
                   type="text"
                   value={sizesInput}
@@ -528,7 +522,7 @@ const ProductsPage = () => {
 
               {/* Colors Section */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Product Colors</label>
+                <label className={labelClass}>Product Colors</label>
 
                 {/* Existing Colors */}
                 {formData.colors.length > 0 && (
@@ -579,7 +573,7 @@ const ProductsPage = () => {
 
               {/* Reviews Count */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Reviews Count</label>
+                <label className={labelClass}>Reviews Count</label>
                 <input
                   type="number"
                   value={formData.reviews_count}
@@ -588,27 +582,8 @@ const ProductsPage = () => {
                   placeholder="0"
                 />
               </div>
-
-              {/* Action Buttons */}
-              <div className="pt-4 flex gap-3">
-                <Button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-gray-800 text-white hover:bg-gray-700 font-bold py-6 rounded-xl transition-colors"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  className="flex-1 bg-white text-black hover:bg-gray-200 font-black uppercase tracking-wider py-6 rounded-xl transition-colors"
-                >
-                  {editingId ? "Update Product" : "Create Product"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+        </form>
+      </AdminModal>
 
       {/* IMAGE PREVIEW MODAL */}
       {viewingImage && (
@@ -641,13 +616,6 @@ const ProductsPage = () => {
         </div>
       )}
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      ` }} />
     </div>
   )
 }

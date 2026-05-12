@@ -1,14 +1,16 @@
 "use client"
 import React, { useEffect, useState } from "react"
-import { Edit, Trash2, Package, DollarSign, XCircle, TrendingUp, Plus, X } from "lucide-react"
+import { Edit, Trash2, Package, DollarSign, XCircle, TrendingUp, Plus } from "lucide-react"
 import axios from "axios"
 import Pagination from "@/components/ui/pagination"
+import { AdminConfirmDialog, AdminModal, PageBody, PageHeader, MetricCard, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, iconButton, labelClass, primaryButton } from "@/components/admin/AdminSurface"
 
 
 /* ================= ORDERS PAGE ================= */
 const OrdersPage = () => {
   const [orders, setOrders] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
   const [currentPage, setCurrentPage] = useState(1); const [pagination, setPagination] = useState(null);
   const [editingId, setEditingId] = useState(null)
 
@@ -40,17 +42,16 @@ const OrdersPage = () => {
 
   const handleDelete = async (order) => {
     const id = order._id || order.id;
-    const orderDisplayId = order.orderId || order.id;
     const token = localStorage.getItem("token")
-    if (confirm(`Delete order ${orderDisplayId}? This cannot be undone.`)) {
-      try {
-        await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/orders/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setOrders(prev => prev.filter(o => (o._id || o.id) !== id))
-      } catch (err) {
-        console.error("Error deleting order:", err)
-      }
+    try {
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/orders/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setOrders(prev => prev.filter(o => (o._id || o.id) !== id))
+    } catch (err) {
+      console.error("Error deleting order:", err)
+    } finally {
+      setDeleteTarget(null)
     }
   }
 
@@ -119,62 +120,42 @@ const OrdersPage = () => {
   const cancelledAmount = cancelledOrders.reduce((sum, o) => sum + o.total, 0)
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* HEADER */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black px-6 pt-12 pb-8">
-        <div className="relative z-10">
-          <div className="inline-block mb-3 px-4 py-1 bg-white text-black text-xs font-black tracking-widest uppercase rounded-full">
-            Order Management
-          </div>
-
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div>
-              <h1 className="text-6xl md:text-7xl font-black text-white leading-none tracking-tighter mb-3">
-                ORDERS
-              </h1>
-              <p className="text-xl text-gray-400 font-medium">
-                Track and manage all customer orders
-              </p>
-            </div>
-
-            <button
-              onClick={handleOpenAdd}
-              className="group bg-white text-black hover:bg-gray-200 font-black text-sm uppercase tracking-wider px-8 py-6 rounded-full transition-all hover:scale-105 flex items-center"
-            >
-              <Plus size={20} className="mr-2" />
-              New Order
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#080808]">
+      <PageHeader
+        title="Orders"
+        label="Order Management"
+        description="Track customer orders, payment state, delivery movement, and cancellations in one fast table."
+        action={
+          <button onClick={handleOpenAdd} className={primaryButton}>
+            <Plus size={18} />
+            New Order
+          </button>
+        }
+      />
 
       {/* SUMMARY CARDS */}
-      <div className="px-6 py-8">
+      <PageBody>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <SummaryCard
-            icon={<DollarSign size={24} className="text-white" />}
+          <MetricCard
+            icon={<DollarSign size={22} />}
             label="Payment Received"
             value={`$${(totalReceived ?? 0).toLocaleString()}`}
-            gradient="from-green-600 to-emerald-600"
-            trend={<TrendingUp size={16} className="text-green-400" />}
+            note={<TrendingUp size={14} />}
           />
-          <SummaryCard
-            icon={<Package size={24} className="text-white" />}
+          <MetricCard
+            icon={<Package size={22} />}
             label="Payment Pending"
             value={`$${(totalPending ?? 0).toLocaleString()}`}
-            gradient="from-yellow-600 to-orange-600"
           />
-          <SummaryCard
-            icon={<XCircle size={24} className="text-white" />}
+          <MetricCard
+            icon={<XCircle size={22} />}
             label="Cancelled Orders"
             value={cancelledOrders.length}
-            gradient="from-red-600 to-pink-600"
           />
-          <SummaryCard
-            icon={<DollarSign size={24} className="text-white" />}
+          <MetricCard
+            icon={<DollarSign size={22} />}
             label="Cancelled Amount"
             value={`$${(cancelledAmount ?? 0).toLocaleString()}`}
-            gradient="from-purple-600 to-blue-600"
           />
         </div>
 
@@ -182,11 +163,11 @@ const OrdersPage = () => {
         <div className="relative">
           {/* TABLE */}
           <div className="relative z-10">
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800">
+            <div className={`${adminPanel} overflow-hidden`}>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className={adminTable}>
                   <thead>
-                    <tr className="border-b border-gray-800">
+                    <tr>
                       <TableHeader label="Order ID" />
                       <TableHeader label="Customer" />
                       <TableHeader label="Items" />
@@ -202,25 +183,25 @@ const OrdersPage = () => {
                   <tbody>
                     {orders.length === 0 ? (
                       <tr key="empty-orders">
-                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                        <td colSpan={7} className="px-4 py-8 text-center text-white/35">
                           No orders found. Create one to get started.
                         </td>
                       </tr>
                     ) : orders.map((order, index) => (
                       <tr
                         key={order._id || order.id || index}
-                        className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
+                        className="transition-colors hover:bg-white/[0.04]"
                       >
-                        <td className="px-4 py-4 text-white font-bold text-sm max-w-[120px] truncate" title={order.orderId || order._id || order.id}>
+                        <td className={`${adminCell} max-w-[120px] truncate text-sm font-bold text-white`} title={order.orderId || order._id || order.id}>
                           {order.orderId || order._id || order.id}
                         </td>
-                        <td className="px-4 py-4 max-w-[150px]">
+                        <td className={`${adminCell} max-w-[150px]`}>
                           <div>
                             <p className="text-gray-300 text-sm font-medium truncate" title={order.customer || 'N/A'}>{order.customer || 'N/A'}</p>
                             <p className="text-gray-500 text-xs truncate" title={order.customerEmail || 'No email'}>{order.customerEmail || 'No email'}</p>
                           </div>
                         </td>
-                        <td className="px-4 py-4">
+                        <td className={adminCell}>
                           <div className="max-w-xs">
                             {order.items && order.items.length > 0 ? (
                               <div className="text-xs text-gray-400">
@@ -238,24 +219,24 @@ const OrdersPage = () => {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-white font-bold text-sm">${(order?.total ?? 0).toLocaleString()}</td>
-                        <td className="px-4 py-4">
+                        <td className={`${adminCell} text-sm font-bold text-white`}>${(order?.total ?? 0).toLocaleString()}</td>
+                        <td className={adminCell}>
                           <StatusBadge status={order.paymentStatus} />
                         </td>
-                        <td className="px-4 py-4 hidden xl:table-cell">
+                        <td className={`${adminCell} hidden xl:table-cell`}>
                           <StatusBadge status={order.deliveryStatus} />
                         </td>
-                        <td className="px-4 py-4 sticky right-0 z-10 bg-black/95 shadow-[-12px_0_20px_rgba(0,0,0,0.35)]">
+                        <td className={`${adminCell} sticky right-0 z-10 bg-[#111111] shadow-[-12px_0_20px_rgba(0,0,0,0.28)]`}>
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleOpenEdit(order)}
-                              className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                              className={iconButton}
                             >
                               <Edit size={14} />
                             </button>
                             <button
-                              onClick={() => handleDelete(order)}
-                              className="p-2 bg-gray-800 hover:bg-red-600 text-white rounded-lg transition-colors"
+                              onClick={() => setDeleteTarget(order)}
+                              className={iconButton}
                             >
                               <Trash2 size={14} />
                             </button>
@@ -277,55 +258,66 @@ const OrdersPage = () => {
             onPageChange={(page) => setCurrentPage(page)}
           />
         )}
-      </div>
+      </PageBody>
 
-      {/* MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl animate-in fade-in zoom-in duration-200">
+      <AdminModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        eyebrow="Order Editor"
+        title={editingId ? "Edit Order" : "New Order"}
+        subtitle="Manage order totals, payment state, and delivery movement in one focused panel."
+        maxWidthClass="max-w-xl"
+        footer={
+          <>
             <button
+              type="button"
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
             >
-              <X size={20} />
+              Cancel
             </button>
-
-            <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-tight">
-              {editingId ? "Edit Order" : "New Order"}
-            </h2>
-
-            <form onSubmit={handleSave} className="space-y-4">
+            <button
+              type="submit"
+              form="order-form"
+              className="inline-flex flex-1 items-center justify-center rounded-xl bg-white px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-black transition-colors hover:bg-lime-300"
+            >
+              {editingId ? "Update" : "Create"}
+            </button>
+          </>
+        }
+      >
+        <form id="order-form" onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Customer Name</label>
+                <label className={labelClass}>Customer Name</label>
                 <input
                   type="text"
                   required
                   value={formData.customer}
                   onChange={e => setFormData({ ...formData, customer: e.target.value })}
-                  className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
+                  className={fieldClass}
                   placeholder="e.g. Travis Scott"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Amount ($)</label>
+                <label className={labelClass}>Total Amount ($)</label>
                 <input
                   type="number"
                   required
                   value={formData.total}
                   onChange={e => setFormData({ ...formData, total: e.target.value })}
-                  className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
+                  className={fieldClass}
                   placeholder="0.00"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment</label>
+                  <label className={labelClass}>Payment</label>
                   <select
                     value={formData.paymentStatus}
                     onChange={e => setFormData({ ...formData, paymentStatus: e.target.value })}
-                    className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors appearance-none"
+                    className={`${fieldClass} appearance-none`}
                   >
                     <option value="Paid">Paid</option>
                     <option value="Pending">Pending</option>
@@ -333,11 +325,11 @@ const OrdersPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Delivery</label>
+                  <label className={labelClass}>Delivery</label>
                   <select
                     value={formData.deliveryStatus}
                     onChange={e => setFormData({ ...formData, deliveryStatus: e.target.value })}
-                    className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors appearance-none"
+                    className={`${fieldClass} appearance-none`}
                   >
                     <option value="Processing">Processing</option>
                     <option value="Shipped">Shipped</option>
@@ -346,49 +338,26 @@ const OrdersPage = () => {
                   </select>
                 </div>
               </div>
+        </form>
+      </AdminModal>
 
-              <div className="pt-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-gray-800 text-white hover:bg-gray-700 font-bold py-4 rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-white text-black hover:bg-gray-200 font-black uppercase tracking-wider py-4 rounded-xl transition-colors"
-                >
-                  {editingId ? "Update" : "Create"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AdminConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            handleDelete(deleteTarget)
+          }
+        }}
+        title="Delete Order"
+        message={`This will permanently remove ${deleteTarget?.orderId || deleteTarget?._id || "this order"} from the order log. This action cannot be undone.`}
+        confirmLabel="Delete"
+      />
     </div>
   )
 }
 
 /* ================= COMPONENTS ================= */
-
-const SummaryCard = ({ icon, label, value, gradient, trend }) => (
-  <div className="group relative overflow-hidden bg-gradient-to-br from-gray-900 to-black rounded-2xl p-6 border border-gray-800 hover:scale-105 transition-all duration-300">
-    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10`} />
-    <div className="relative">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-lg`}>
-          {icon}
-        </div>
-        {trend}
-      </div>
-      <p className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-2">
-        {label}
-      </p>
-      <h2 className="text-4xl font-black text-white tracking-tight">{value}</h2>
-    </div>
-  </div>
-)
 
 const TableHeader = ({
   label,
@@ -400,7 +369,7 @@ const TableHeader = ({
   className?: string;
 }) => (
   <th
-    className={`px-4 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider ${hidden ? `hidden ${hidden}:table-cell` : ""} ${className}`}
+    className={`${adminHeaderCell} ${hidden ? `hidden ${hidden}:table-cell` : ""} ${className}`}
   >
     {label}
   </th>

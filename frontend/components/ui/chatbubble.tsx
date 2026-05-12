@@ -11,7 +11,7 @@ export default function ChatBubble() {
       {/* Chat Bubble Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 bg-gradient-to-br from-gray-900 to-gray-800 text-white p-5 rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 z-50 group border-2 border-white/10"
+        className="fixed bottom-5 right-5 z-[2147483647] grid size-16 place-items-center rounded-full border border-white/30 bg-[#111827] text-white shadow-[0_20px_60px_rgba(0,0,0,0.38)] transition-colors duration-200 hover:bg-black focus:outline-none focus-visible:ring-4 focus-visible:ring-white/45 md:bottom-6 md:right-6"
         aria-label="Toggle chat"
       >
         {/* Icon with rotation animation */}
@@ -26,11 +26,9 @@ export default function ChatBubble() {
             </svg>
           )}
         </div>
-        
-        
 
         {/* Ripple Effect */}
-        <span className="absolute inset-0 rounded-full bg-white/20 animate-ping opacity-75"></span>
+        {!open && <span className="absolute inset-0 rounded-full border border-white/25 animate-ping opacity-70"></span>}
       </button>
 
       {/* Chat Window */}
@@ -38,12 +36,12 @@ export default function ChatBubble() {
         <>
           {/* Backdrop overlay for mobile */}
           <div 
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+            className="fixed inset-0 z-[2147483645] bg-black/45 backdrop-blur-sm md:hidden"
             onClick={() => setOpen(false)}
           ></div>
           
           {/* Chat Component */}
-          <div className="z-50">
+          <div className="relative z-[2147483646]">
             <AssistantChat />
           </div>
         </>

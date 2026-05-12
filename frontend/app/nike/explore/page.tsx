@@ -1,349 +1,472 @@
 "use client";
-import { useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import {
-ChevronRight,
-Play,
-Award,
-Zap,
-Globe,
-Heart,
-TrendingUp,
-Calendar,
-} from 'lucide-react';
-import EcomNavbar from '@/components/ecomnavbar';
-import EcomFooter from '@/components/ecomfooter';
-const ExplorePage = () => {
-const [selectedTab, setSelectedTab] = useState('Featured');
-const tabs = ['Featured', 'Innovation', 'Athletes', 'Sustainability', 'Culture'];
-const featuredCollections = [
-{
-title: 'Air Technology',
-subtitle: 'Revolutionary Cushioning',
-description: 'Experience the evolution of Air cushioning technology that has defined comfort for decades.',
-image: 'https://www.sneakerfiles.com/wp-content/uploads/2024/11/nike-air-max-muse-black-metallic-silver-FV1920-001.jpg',
-badge: 'Innovation',
-link: '/nike/products',
-},
-{
-title: 'Jordan Legacy',
-subtitle: 'From Court to Culture',
-description: "Explore the iconic sneaker line that transcends basketball and defines streetwear excellence.",
-image: 'https://stuffmagazine.fr/wp-content/uploads/2023/04/Air-Jordan-6-Black-Infrared1.jpg',
-badge: 'Heritage',
-link: '/nike/products',
-},
-{
-title: 'Dri-FIT Technology',
-subtitle: 'Moisture Management',
-description: 'Stay dry and comfortable with advanced fabric technology designed for peak performance.',
-image: 'https://images.footballfanatics.com/baltimore-orioles/mens-nike-black-baltimore-orioles-authentic-collection-performance-pullover-hoodie_ss5_p-201716071+pv-2+u-acaphcqvjxaw2kddtql6+v-gckyjeqlagznvrbrphbt.jpg?_hv=2&w=600',
-badge: 'Performance',
-link: '/nike/products',
-},
-];
-const stories = [
-{
-title: 'The Future of Running',
-category: 'Innovation',
-image: 'https://media.gq-magazine.co.uk/photos/67334c214ed46d433b25de24/16:9/w_2560%2Cc_limit/Nike-AF1.jpg',
-date: 'Jan 2026',
-readTime: '5 min read',
-},
-{
-title: 'Sustainability Goals 2026',
-category: 'Environment',
-image: 'https://www.mistertennis.com/images/2022-media-10/U_NIKE_BRASILIA_9-5-BLACKBLACKWHITE-do9193-010_C.jpg',
-date: 'Dec 2025',
-readTime: '8 min read',
-},
-{
-title: 'Athlete Spotlight Series',
-category: 'Community',
-image: 'https://static.ftshp.digital/img/p/1/2/9/7/7/9/8/1297798-full_product.jpg',
-date: 'Dec 2025',
-readTime: '6 min read',
-},
-];
-const innovations = [
-{
-icon: Zap,
-title: 'React Foam',
-description: 'Lightweight, durable cushioning that returns energy with every step.',
-},
-{
-icon: Award,
-title: 'Flyknit',
-description: 'Precision-engineered fabric for a sock-like fit with minimal waste.',
-},
-{
-icon: Globe,
-title: 'Nike Grind',
-description: 'Recycled materials giving new life to worn-out shoes and manufacturing scraps.',
-},
-{
-icon: Heart,
-title: 'Nike Fit',
-description: 'AI-powered shoe fitting technology for the perfect size every time.',
-},
-];
-return (
-<div className="min-h-screen bg-black text-white">
-<EcomNavbar />
-{/* Hero Section */}
-  <section className="relative pt-32 pb-20 overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-b from-red-500/20 via-black to-black"></div>
-    <div className="max-w-7xl mx-auto px-6 relative z-10">
-      <div className="text-center space-y-6">
-        <div className="inline-block px-4 py-2 bg-red-500 rounded-full text-sm font-bold mb-4">
-          Explore Nike
-        </div>
-        <h1 className="text-5xl md:text-7xl font-black leading-tight">
-          WHERE <span className="text-red-500">INNOVATION</span>
-          <br />
-          MEETS INSPIRATION
-        </h1>
-        <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-          Discover the stories, technologies, and athletes that drive us forward.
-          From groundbreaking innovations to cultural movements, explore what makes Nike iconic.
-        </p>
-      </div>
-    </div>
-  </section>
+  ArrowUpRight,
+  Award,
+  Calendar,
+  ChevronRight,
+  Globe,
+  Heart,
+  Play,
+  Sparkles,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
+import EcomNavbar from "@/components/ecomnavbar";
+import EcomFooter from "@/components/ecomfooter";
 
-  {/* Tabs Navigation */}
-  <section className="sticky top-15 z-40 bg-black/95 backdrop-blur-lg border-b border-gray-800">
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setSelectedTab(tab)}
-            className={`px-6 py-2 rounded-full font-bold whitespace-nowrap transition-all ${
-              selectedTab === tab
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-900 text-gray-400 hover:bg-gray-800'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-    </div>
-  </section>
+const tabs = ["Featured", "Innovation", "Athletes", "Sustainability", "Culture"];
 
-    {/* Video/Interactive Section */}
-<section className="py-20 bg-gray-900">
-  <div className="max-w-7xl mx-auto px-6">
-    <div className="grid md:grid-cols-2 gap-12 items-center">
-      <div className="space-y-6">
-        <div className="inline-block px-4 py-2 bg-red-500/10 border border-red-500 rounded-full text-sm font-bold text-red-500">
-          Watch Now
-        </div>
-        <h2 className="text-4xl md:text-5xl font-black leading-tight">
-          The Science of
-          <br />
-          <span className="text-red-500">Performance</span>
-        </h2>
-        <p className="text-xl text-gray-400 leading-relaxed">
-          Go behind the scenes at the Nike Sport Research Lab where innovation
-          meets human performance. Discover how we test, iterate, and perfect
-          every product.
-        </p>
-        <Button
-          size="lg"
-          className="bg-red-500 text-white font-bold hover:bg-red-600 px-8 py-6 rounded-full group cursor-pointer"
-        >
-          <Play className="mr-2 w-5 h-5" />
-          Watch Documentary
-        </Button>
-      </div>
-
-      {/* Video Player */}
-      <div className="relative">
-        <div className="aspect-video rounded-2xl overflow-hidden border border-gray-700 hover:border-red-500 transition-all">
-          <video
-            className="w-full h-full object-cover"
-            controls
-            poster="https://img3.wallspic.com/crops/5/5/2/6/4/146255/146255-shoe-black-darkness-nike-graphic_design-3840x2160.jpg"
-          >
-            <source src="/Documentary.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-  {/* Featured Collections */}
-  <section className="py-20 bg-gradient-to-b from-black to-gray-900">
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="mb-12">
-        <h2 className="text-4xl md:text-5xl font-black mb-3">
-          Featured Collections
-        </h2>
-        <p className="text-gray-400 text-lg">
-          Dive deep into the technologies and designs that define Nike
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {featuredCollections.map((collection, idx) => (
-          <div
-            key={idx}
-            className="group relative bg-gradient-to-b from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800 hover:border-red-500/50 transition-all hover:-translate-y-2"
-          >
-            <div className="aspect-[4/3] overflow-hidden bg-gray-800">
-              <img
-                src={collection.image}
-                alt={collection.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-            </div>
-            <div className="absolute top-4 left-4">
-              <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                {collection.badge}
-              </span>
-            </div>
-            <div className="p-6 space-y-3">
-              <h3 className="text-2xl font-black">{collection.title}</h3>
-              <p className="text-red-400 font-bold text-sm">
-                {collection.subtitle}
-              </p>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                {collection.description}
-              </p>
-              <Link href={collection.link}>
-                <Button className="w-full bg-white text-black font-bold hover:bg-red-500 rounded-full group-hover:bg-red-500 group-hover:text-white transition-colors cursor-pointer mt-4">
-                  Explore Now
-                  <ChevronRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  {/* Innovation Grid */}
-  <section className="py-20 bg-black">
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="text-center mb-12">
-        <h2 className="text-4xl md:text-5xl font-black mb-3">
-          Innovation at Nike
-        </h2>
-        <p className="text-gray-400 text-lg">
-          Technologies that push boundaries and redefine possibilities
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {innovations.map((innovation, idx) => (
-          <div
-            key={idx}
-            className="bg-gradient-to-b from-gray-900 to-black rounded-2xl p-6 border border-gray-800 hover:border-red-500/50 transition-all hover:-translate-y-2 space-y-4"
-          >
-            <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center">
-              <innovation.icon className="w-6 h-6 text-red-500" />
-            </div>
-            <h3 className="text-xl font-black">{innovation.title}</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              {innovation.description}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  {/* Stories & Articles */}
-  <section className="py-20 bg-gray-900">
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="flex items-end justify-between mb-12">
-        <div>
-          <h2 className="text-4xl md:text-5xl font-black mb-3">
-            Latest Stories
-          </h2>
-          <p className="text-gray-400 text-lg">
-            News, insights, and inspiration from the Nike universe
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          className="hidden md:flex items-center hover:text-red-400 group"
-        >
-          View All Stories
-          <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {stories.map((story, idx) => (
-          <div
-            key={idx}
-            className="group cursor-pointer bg-gradient-to-b from-gray-800 to-gray-900 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-red-500/20 transition-all hover:-translate-y-2"
-          >
-            <div className="aspect-[16/10] overflow-hidden bg-gray-800">
-              <img
-                src={story.image}
-                alt={story.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-            </div>
-            <div className="p-6 space-y-3">
-              <div className="flex items-center gap-3 text-sm text-gray-400">
-                <span className="px-2 py-1 bg-red-500/10 text-red-500 rounded font-bold">
-                  {story.category}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {story.date}
-                </span>
-                <span>• {story.readTime}</span>
-              </div>
-              <h3 className="text-xl font-bold group-hover:text-red-400 transition-colors">
-                {story.title}
-              </h3>
-              <button className="flex items-center text-red-500 font-bold group-hover:gap-2 transition-all">
-                Read More
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  {/* CTA Section */}
-  <section className="py-24 bg-black relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-transparent"></div>
-    <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-      <h2 className="text-4xl md:text-6xl font-black mb-6">
-        Ready to Experience
-        <br />
-        <span className="text-red-500">The Innovation?</span>
-      </h2>
-      <p className="text-xl text-gray-400 mb-8">
-        Shop the latest collections featuring cutting-edge technology
-      </p>
-      <Link href="/nike/products">
-        <Button
-          size="lg"
-          className="bg-red-500 text-white font-bold hover:bg-red-600 px-8 py-6 rounded-full group cursor-pointer"
-        >
-          Shop Now
-          <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-        </Button>
-      </Link>
-    </div>
-  </section>
-
-  <EcomFooter />
-</div>
-);
+const tabDetails: Record<string, { title: string; description: string }> = {
+  Featured: {
+    title: "A curated view of Nike performance culture.",
+    description:
+      "Start with the newest stories, signature product ideas, and the design thinking behind every collection.",
+  },
+  Innovation: {
+    title: "Built in labs. Proven in motion.",
+    description:
+      "Explore material systems, cushioning platforms, and research-led details that shape the feel of Nike gear.",
+  },
+  Athletes: {
+    title: "Performance stories from the people who move sport forward.",
+    description:
+      "Follow athlete-led insight, training moments, and signature decisions that influence the product line.",
+  },
+  Sustainability: {
+    title: "Lower impact materials with a sharper product standard.",
+    description:
+      "See how circular design, Nike Grind, and engineered knits can reduce waste without losing performance.",
+  },
+  Culture: {
+    title: "The moments where sport becomes style.",
+    description:
+      "Track the footwear, apparel, and creative partnerships that keep Nike connected to everyday culture.",
+  },
 };
-export default ExplorePage; 
+
+const featuredCollections = [
+  {
+    title: "Air Technology",
+    subtitle: "Revolutionary Cushioning",
+    description:
+      "Experience the evolution of Air cushioning technology that has defined comfort for decades.",
+    image:
+      "https://www.sneakerfiles.com/wp-content/uploads/2024/11/nike-air-max-muse-black-metallic-silver-FV1920-001.jpg",
+    badge: "Innovation",
+    link: "/nike/products",
+  },
+  {
+    title: "Jordan Legacy",
+    subtitle: "From Court to Culture",
+    description:
+      "Explore the iconic sneaker line that transcends basketball and defines streetwear excellence.",
+    image:
+      "https://stuffmagazine.fr/wp-content/uploads/2023/04/Air-Jordan-6-Black-Infrared1.jpg",
+    badge: "Heritage",
+    link: "/nike/products",
+  },
+  {
+    title: "Dri-FIT Technology",
+    subtitle: "Moisture Management",
+    description:
+      "Stay dry and comfortable with advanced fabric technology designed for peak performance.",
+    image:
+      "https://images.footballfanatics.com/baltimore-orioles/mens-nike-black-baltimore-orioles-authentic-collection-performance-pullover-hoodie_ss5_p-201716071+pv-2+u-acaphcqvjxaw2kddtql6+v-gckyjeqlagznvrbrphbt.jpg?_hv=2&w=600",
+    badge: "Performance",
+    link: "/nike/products",
+  },
+];
+
+const stories = [
+  {
+    title: "The Future of Running",
+    category: "Innovation",
+    image:
+      "https://media.gq-magazine.co.uk/photos/67334c214ed46d433b25de24/16:9/w_2560%2Cc_limit/Nike-AF1.jpg",
+    date: "Jan 2026",
+    readTime: "5 min read",
+  },
+  {
+    title: "Sustainability Goals 2026",
+    category: "Environment",
+    image:
+      "https://www.mistertennis.com/images/2022-media-10/U_NIKE_BRASILIA_9-5-BLACKBLACKWHITE-do9193-010_C.jpg",
+    date: "Dec 2025",
+    readTime: "8 min read",
+  },
+  {
+    title: "Athlete Spotlight Series",
+    category: "Community",
+    image: "https://static.ftshp.digital/img/p/1/2/9/7/7/9/8/1297798-full_product.jpg",
+    date: "Dec 2025",
+    readTime: "6 min read",
+  },
+];
+
+const innovations = [
+  {
+    icon: Zap,
+    title: "React Foam",
+    description: "Lightweight, durable cushioning that returns energy with every step.",
+  },
+  {
+    icon: Award,
+    title: "Flyknit",
+    description: "Precision-engineered fabric for a sock-like fit with minimal waste.",
+  },
+  {
+    icon: Globe,
+    title: "Nike Grind",
+    description: "Recycled materials giving new life to worn-out shoes and manufacturing scraps.",
+  },
+  {
+    icon: Heart,
+    title: "Nike Fit",
+    description: "AI-powered shoe fitting technology for the perfect size every time.",
+  },
+];
+
+const proofPoints = [
+  { value: "04", label: "research-led systems" },
+  { value: "365", label: "days of sport culture" },
+  { value: "01", label: "connected Nike universe" },
+];
+
+const glassPanel =
+  "border border-white/12 bg-white/[0.075] shadow-[0_18px_44px_rgba(0,0,0,0.28)]";
+
+const ExplorePage = () => {
+  const [selectedTab, setSelectedTab] = useState("Featured");
+  const activeTab = tabDetails[selectedTab];
+
+  return (
+    <div className="min-h-screen overflow-hidden bg-[#050505] text-white">
+      <EcomNavbar />
+
+      <main>
+        <section className="relative min-h-[92vh] overflow-hidden pt-28">
+          <img
+            src="https://media.gq-magazine.co.uk/photos/67334c214ed46d433b25de24/16:9/w_2560%2Cc_limit/Nike-AF1.jpg"
+            alt="Nike footwear editorial"
+            className="absolute inset-0 h-full w-full object-cover opacity-65"
+            fetchPriority="high"
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_14%,rgba(255,255,255,0.28),transparent_28%),linear-gradient(115deg,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.72)_42%,rgba(0,0,0,0.28)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050505] to-transparent" />
+
+          <div className="relative z-10 mx-auto flex min-h-[calc(92vh-7rem)] max-w-7xl flex-col justify-end px-5 pb-10 sm:px-6 lg:px-8">
+            <div className="grid items-end gap-8 lg:grid-cols-[1.08fr_0.92fr]">
+              <div className="max-w-4xl">
+                <p className="mb-5 text-xs font-semibold uppercase tracking-[0.42em] text-white/60">
+                  Nike Explore
+                </p>
+                <h1 className="max-w-5xl text-5xl font-black uppercase leading-[0.92] tracking-normal text-white sm:text-6xl lg:text-8xl">
+                  Where Sport Becomes Design Intelligence.
+                </h1>
+                <p className="mt-7 max-w-2xl text-base leading-8 text-white/72 sm:text-lg">
+                  Discover the stories, technologies, athletes, and cultural signals that drive Nike
+                  forward, from lab-tested innovation to everyday icons.
+                </p>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link href="/nike/products">
+                    <Button className="h-12 rounded-full bg-white px-7 text-sm font-black uppercase tracking-[0.16em] text-black hover:bg-white/88">
+                      Shop the edit
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="h-12 rounded-full border-white/25 bg-white/12 px-7 text-sm font-black uppercase tracking-[0.16em] text-white hover:bg-white/16"
+                  >
+                    <Play className="mr-2 h-4 w-4" />
+                    Watch story
+                  </Button>
+                </div>
+              </div>
+
+              <div className={`${glassPanel} rounded-[2rem] p-5 sm:p-6`}>
+                <div className="flex items-center justify-between border-b border-white/10 pb-5">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/46">
+                      Current focus
+                    </p>
+                    <h2 className="mt-2 text-2xl font-black uppercase leading-none">
+                      {selectedTab}
+                    </h2>
+                  </div>
+                  <Sparkles className="h-6 w-6 text-white/70" />
+                </div>
+                <p className="mt-6 text-xl font-semibold leading-7 text-white">
+                  {activeTab.title}
+                </p>
+                <p className="mt-4 text-sm leading-6 text-white/58">{activeTab.description}</p>
+                <div className="mt-7 grid grid-cols-3 gap-3">
+                  {proofPoints.map((point) => (
+                    <div
+                      key={point.label}
+                      className="rounded-2xl border border-white/10 bg-black/28 p-4"
+                    >
+                      <p className="text-2xl font-black">{point.value}</p>
+                      <p className="mt-2 text-[0.66rem] font-bold uppercase leading-4 tracking-[0.18em] text-white/46">
+                        {point.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="sticky top-16 z-40 border-y border-white/10 bg-black/88 shadow-[0_10px_30px_rgba(0,0,0,0.24)]">
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+            <div className="flex gap-2 overflow-x-auto py-4">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setSelectedTab(tab)}
+                  className={`min-h-10 whitespace-nowrap rounded-full border px-5 text-xs font-black uppercase tracking-[0.18em] transition-colors ${
+                    selectedTab === tab
+                      ? "border-white bg-white text-black"
+                      : "border-white/12 bg-white/[0.06] text-white/58 hover:border-white/28 hover:text-white"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative py-20 [contain-intrinsic-size:760px] [content-visibility:auto]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(255,255,255,0.12),transparent_26%),linear-gradient(180deg,#050505_0%,#101010_100%)]" />
+          <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+            <div className={`${glassPanel} grid overflow-hidden rounded-[2rem] lg:grid-cols-[0.88fr_1.12fr]`}>
+              <div className="flex flex-col justify-between p-6 sm:p-8 lg:p-10">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.32em] text-white/46">
+                    Research lab
+                  </p>
+                  <h2 className="mt-5 text-4xl font-black uppercase leading-none sm:text-5xl">
+                    The Science of Performance
+                  </h2>
+                  <p className="mt-6 max-w-xl text-base leading-7 text-white/62">
+                    Go behind the scenes at the Nike Sport Research Lab where innovation meets human
+                    performance. See how products are tested, iterated, and refined.
+                  </p>
+                </div>
+                <Button className="mt-8 h-12 w-fit rounded-full bg-white px-7 text-sm font-black uppercase tracking-[0.16em] text-black hover:bg-white/88">
+                  <Play className="mr-2 h-4 w-4" />
+                  Watch documentary
+                </Button>
+              </div>
+
+              <div className="relative min-h-[320px] border-t border-white/10 bg-black/40 lg:border-l lg:border-t-0">
+                <video
+                  className="h-full min-h-[320px] w-full object-cover opacity-90"
+                  controls
+                  preload="metadata"
+                  poster="https://img3.wallspic.com/crops/5/5/2/6/4/146255/146255-shoe-black-darkness-nike-graphic_design-3840x2160.jpg"
+                >
+                  <source src="/Documentary.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                <div className="pointer-events-none absolute left-5 top-5 rounded-full border border-white/12 bg-black/70 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white/72">
+                  Documentary
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative py-20 [contain-intrinsic-size:820px] [content-visibility:auto]">
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+            <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.32em] text-white/40">
+                  Collections
+                </p>
+                <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-5xl">
+                  Featured Systems
+                </h2>
+              </div>
+              <p className="max-w-md text-sm leading-6 text-white/55">
+                Dive into the technologies, materials, and silhouettes that define the Nike product
+                language.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              {featuredCollections.map((collection) => (
+                <article
+                  key={collection.title}
+                  className={`${glassPanel} group overflow-hidden rounded-[1.75rem] transition-colors hover:border-white/24`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-white/5">
+                    <img
+                      src={collection.image}
+                      alt={collection.title}
+                      className="h-full w-full object-cover transition-opacity duration-300 group-hover:opacity-85"
+                      decoding="async"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/12 to-transparent" />
+                    <span className="absolute left-4 top-4 rounded-full border border-white/16 bg-black/72 px-3 py-1.5 text-[0.66rem] font-black uppercase tracking-[0.18em] text-white/74">
+                      {collection.badge}
+                    </span>
+                  </div>
+                  <div className="p-6">
+                    <p className="text-xs font-black uppercase tracking-[0.22em] text-white/44">
+                      {collection.subtitle}
+                    </p>
+                    <h3 className="mt-3 text-2xl font-black uppercase">{collection.title}</h3>
+                    <p className="mt-4 min-h-20 text-sm leading-6 text-white/58">
+                      {collection.description}
+                    </p>
+                    <Link href={collection.link}>
+                      <Button className="mt-6 h-11 w-full rounded-full bg-white text-xs font-black uppercase tracking-[0.16em] text-black hover:bg-white/88">
+                        Explore now
+                        <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative py-20 [contain-intrinsic-size:620px] [content-visibility:auto]">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,#050505_0%,#151515_48%,#050505_100%)]" />
+          <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+            <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+              <div className="lg:sticky lg:top-36">
+                <p className="text-xs font-black uppercase tracking-[0.32em] text-white/40">
+                  Innovation
+                </p>
+                <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-5xl">
+                  Engineered to Disappear Into Motion.
+                </h2>
+                <p className="mt-6 text-sm leading-6 text-white/55">
+                  The best technology should feel invisible once the run, lift, match, or commute
+                  starts.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {innovations.map((innovation) => (
+                  <article
+                    key={innovation.title}
+                    className={`${glassPanel} rounded-[1.5rem] p-6 transition-colors hover:border-white/24`}
+                  >
+                    <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.07]">
+                      <innovation.icon className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-black uppercase">{innovation.title}</h3>
+                    <p className="mt-4 text-sm leading-6 text-white/56">{innovation.description}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="relative py-20 [contain-intrinsic-size:760px] [content-visibility:auto]">
+          <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+            <div className="mb-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.32em] text-white/40">
+                  Journal
+                </p>
+                <h2 className="mt-3 text-4xl font-black uppercase leading-none sm:text-5xl">
+                  Latest Stories
+                </h2>
+              </div>
+              <Button
+                variant="ghost"
+                className="w-fit rounded-full border border-white/12 bg-white/[0.06] px-5 text-xs font-black uppercase tracking-[0.16em] text-white hover:bg-white/12"
+              >
+                View all stories
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              {stories.map((story) => (
+                <article
+                  key={story.title}
+                  className={`${glassPanel} group cursor-pointer overflow-hidden rounded-[1.75rem] transition-colors hover:border-white/24`}
+                >
+                  <div className="aspect-[16/10] overflow-hidden bg-white/5">
+                    <img
+                      src={story.image}
+                      alt={story.title}
+                      className="h-full w-full object-cover transition-opacity duration-300 group-hover:opacity-85"
+                      decoding="async"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-bold uppercase tracking-[0.14em] text-white/46">
+                      <span className="rounded-full border border-white/12 bg-white/[0.06] px-3 py-1 text-white/68">
+                        {story.category}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {story.date}
+                      </span>
+                      <span>&middot; {story.readTime}</span>
+                    </div>
+                    <h3 className="mt-5 text-xl font-black uppercase leading-tight transition-colors group-hover:text-white/72">
+                      {story.title}
+                    </h3>
+                    <button className="mt-6 flex items-center text-xs font-black uppercase tracking-[0.16em] text-white/72 transition-colors group-hover:text-white">
+                      Read more
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="relative overflow-hidden py-24 [contain-intrinsic-size:520px] [content-visibility:auto]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.16),transparent_30%),linear-gradient(180deg,#050505_0%,#111_100%)]" />
+          <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+            <div className={`${glassPanel} overflow-hidden rounded-[2rem] p-6 sm:p-10 lg:p-12`}>
+              <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.32em] text-white/40">
+                    Shop the result
+                  </p>
+                  <h2 className="mt-4 max-w-3xl text-4xl font-black uppercase leading-none sm:text-6xl">
+                    Ready to Experience the Innovation?
+                  </h2>
+                  <p className="mt-6 max-w-xl text-sm leading-6 text-white/55">
+                    Shop the latest collections featuring cutting-edge technology and Nike's most
+                    recognizable design systems.
+                  </p>
+                </div>
+                <Link href="/nike/products">
+                  <Button className="h-12 rounded-full bg-white px-7 text-sm font-black uppercase tracking-[0.16em] text-black hover:bg-white/88">
+                    Shop now
+                    <TrendingUp className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <EcomFooter />
+    </div>
+  );
+};
+
+export default ExplorePage;

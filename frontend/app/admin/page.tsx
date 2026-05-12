@@ -10,20 +10,35 @@ import {
   X,
   MapPin,
   CreditCard,
-  Calendar
+  Calendar,
+  Truck,
+  ReceiptText
 } from "lucide-react"
 
 import axios from "axios"
-import { Card, CardContent } from "@/components/ui/card"
+import { motion } from "motion/react"
+import Image from "next/image"
 import BarGraph from "@/components/bargraph"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { PageBody, PageHeader, MetricCard, adminPanel, adminTable, adminHeaderCell, adminCell, secondaryButton, StatusBadge } from "@/components/admin/AdminSurface"
+import {
+  DashboardOrder,
+  formatCurrency,
+  formatPaymentMethod,
+  getCustomerEmail,
+  getCustomerName,
+  getItemImage,
+  getItemName,
+  getOrderDisplayId,
+  getOrderItems,
+} from "@/lib/order-helpers"
 
 const AdminDashboardPage = () => {
   // --- STATE ---
   const router = useRouter()
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [selectedOrder, setSelectedOrder] = useState<DashboardOrder | null>(null)
 
   const [stats, setStats] = useState([
     { title: "Total Revenue", value: 0, prefix: "$", icon: DollarSign, change: "...", bg: "from-orange-500 to-red-600" },
@@ -32,7 +47,7 @@ const AdminDashboardPage = () => {
     { title: "Products", value: 0, prefix: "", icon: Package, change: "...", bg: "from-green-500 to-emerald-600" },
   ])
 
-  const [recentOrders, setRecentOrders] = useState([])
+  const [recentOrders, setRecentOrders] = useState<DashboardOrder[]>([])
 
   // --- FETCH DATA ---
   useEffect(() => {
@@ -49,13 +64,13 @@ const AdminDashboardPage = () => {
         router.push("/nike/products")
         return
       }
-    } catch (e) {
+    } catch {
       router.push("/login")
       return
     }
 
     fetchDashboardData()
-  }, [])
+  }, [router])
 
   const fetchDashboardData = async () => {
     setIsRefreshing(true)
@@ -88,7 +103,7 @@ const AdminDashboardPage = () => {
   }
 
   // Open Modal
-  const handleViewOrder = (order) => {
+  const handleViewOrder = (order: DashboardOrder) => {
     setSelectedOrder(order)
   }
 
@@ -97,156 +112,195 @@ const AdminDashboardPage = () => {
     setSelectedOrder(null)
   }
 
-  return (
-    <div className="min-h-screen bg-black">
-      {/* HERO SECTION */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black">
-        {/* Animated background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
+  const handlePrintInvoice = (order: DashboardOrder) => {
+    const orderId = order._id || order.id
+    if (!orderId || typeof window === "undefined") {
+      return
+    }
 
-        <div className="relative z-10 px-6 pt-12 pb-8">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-            <div className="flex-1">
-              <div className="inline-block mb-3 px-4 py-1 bg-white text-black text-xs font-black tracking-widest uppercase rounded-full">
-                Admin Portal
+    window.open(`/invoice/${orderId}`, "_blank", "noopener,noreferrer")
+  }
+
+  const selectedOrderItems = selectedOrder ? getOrderItems(selectedOrder) : []
+  const featuredItem = selectedOrderItems[0]
+  const featuredImage = featuredItem ? getItemImage(featuredItem) : ""
+  const heroShoes = [
+    "/assets/nikehero1.webp",
+    "/assets/nikehero2.webp",
+    "/assets/nikehero3.webp",
+    "/assets/nikehero4.png",
+    "/assets/nikehero5.webp",
+    "/assets/nikehero6.webp",
+  ]
+  const heroSliderShoes = [...heroShoes, heroShoes[0]]
+
+  return (
+    <div className="min-h-screen bg-[#080808]">
+      <PageHeader
+        title="Dashboard"
+        label="Admin Portal"
+        description="Performance overview for revenue, orders, customers, products, and live commerce movement."
+        action={
+          <button onClick={handleRefresh} className={secondaryButton}>
+            <RefreshCcw size={18} className={isRefreshing ? "animate-spin" : ""} />
+            {isRefreshing ? "Updating" : "Refresh Data"}
+          </button>
+        }
+      />
+
+      <PageBody>
+        <section className="relative mb-7 overflow-hidden rounded-2xl border border-white/10 bg-[#101010] shadow-[0_22px_80px_rgba(0,0,0,0.34)]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_20%,rgba(190,242,100,0.16),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_38%)]" />
+          <div className="relative grid min-h-[360px] gap-6 p-5 sm:p-7 lg:grid-cols-[0.92fr_1.08fr] lg:p-8">
+            <div className="flex flex-col justify-between gap-8 py-2">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-lime-300">Nike Command View</p>
+                <h2 className="mt-4 max-w-2xl text-5xl font-black uppercase leading-none tracking-normal text-white sm:text-6xl xl:text-7xl">
+                  Own the drop before it moves.
+                </h2>
+                <p className="mt-5 max-w-xl text-sm font-semibold leading-6 text-white/52 sm:text-base">
+                  A focused control surface for stock movement, demand signals, customer growth, and yearly sales condition.
+                </p>
               </div>
-              <h1 className="text-7xl font-black text-white leading-none tracking-tighter mb-3">
-                DASHBOARD
-              </h1>
-              <p className="text-xl text-gray-400 font-medium">
-                Performance Overview
-              </p>
+
+              <div className="grid max-w-xl grid-cols-3 gap-3">
+                <div className="border-l border-white/15 pl-4">
+                  <p className="text-2xl font-black text-white">Live</p>
+                  <p className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/38">Order pulse</p>
+                </div>
+                <div className="border-l border-white/15 pl-4">
+                  <p className="text-2xl font-black text-white">Auto</p>
+                  <p className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/38">Weekly view</p>
+                </div>
+                <div className="border-l border-white/15 pl-4">
+                  <p className="text-2xl font-black text-white">Year</p>
+                  <p className="mt-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/38">Sales line</p>
+                </div>
+              </div>
             </div>
 
-            {/* Action Button */}
-            <button
-              onClick={handleRefresh}
-              className="group flex items-center gap-2 px-6 py-4 bg-gray-900 hover:bg-gray-800 border border-gray-700 text-white rounded-full transition-all active:scale-95"
-            >
-              <RefreshCcw size={20} className={`text-gray-400 group-hover:text-white transition-colors ${isRefreshing ? "animate-spin" : ""}`} />
-              <span className="font-bold text-sm uppercase tracking-wider">
-                {isRefreshing ? "Updating..." : "Refresh Data"}
-              </span>
-            </button>
-          </div>
-
-          {/* STATS CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            {stats.map((stat, idx) => (
-              <Card
-                key={stat.title}
-                className="group relative overflow-hidden border-0 bg-gradient-to-br from-gray-900 to-black hover:scale-105 transition-all duration-300 cursor-pointer"
-                style={{
-                  animation: `slideUp 0.6s ease-out ${idx * 0.1}s backwards`,
-                }}
-              >
-                {/* Gradient accent */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${stat.bg} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-
-                <CardContent className="relative p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.bg} shadow-lg`}>
-                      <stat.icon size={24} className="text-white" />
+            <div className="relative min-h-[300px] overflow-hidden rounded-2xl border border-white/10 bg-black/35">
+              <div className="absolute inset-x-0 top-6 z-10 text-center text-[16vw] font-black uppercase leading-none tracking-normal text-white/[0.035] sm:text-[7rem] lg:text-[8.8rem]">
+                Nike
+              </div>
+              <div className="absolute left-6 top-6 z-20 rounded-full border border-white/10 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.18em] text-black">
+                Nike Corousal Control
+              </div>
+              <div className="absolute inset-0 overflow-hidden">
+                <motion.div
+                  className="flex h-full w-[500%] will-change-transform"
+                  animate={{ x: ["0%", "-20%", "-20%", "-40%", "-40%", "-60%", "-60%", "-80%", "-80%"] }}
+                  transition={{
+                    duration: 22,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    times: [0, 0.16, 0.22, 0.38, 0.44, 0.6, 0.66, 0.82, 1],
+                  }}
+                >
+                  {heroSliderShoes.map((src, index) => (
+                    <div key={`${src}-${index}`} className="relative flex h-full w-1/5 shrink-0 items-center justify-center">
+                      <span className="relative block h-[78%] w-[72%] max-w-[560px] [transform:translateZ(0)] drop-shadow-[0_30px_45px_rgba(0,0,0,0.55)]">
+                        <Image
+                          src={src}
+                          alt="Nike shoe cutout"
+                          fill
+                          sizes="(min-width: 1024px) 560px, 72vw"
+                          className={`object-contain ${index % 2 === 0 ? "-rotate-6" : "rotate-6"}`}
+                          priority={index === 0}
+                        />
+                      </span>
                     </div>
-                    <div className="flex items-center gap-1 text-green-400 text-sm font-bold">
-                      <TrendingUp size={14} />
-                      {stat.change}
-                    </div>
-                  </div>
-
-                  <p className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-2">
-                    {stat.title}
-                  </p>
-                  <h2 className="text-4xl font-black text-white tracking-tight">
-                    {stat.prefix}{(stat.value ?? 0).toLocaleString()}
-                  </h2>
-                </CardContent>
-              </Card>
-            ))}
+                  ))}
+                </motion.div>
+              </div>
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black via-black/50 to-transparent" />
+            </div>
           </div>
+        </section>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {stats.map((stat) => (
+            <MetricCard
+              key={stat.title}
+              icon={<stat.icon size={22} />}
+              label={stat.title}
+              value={`${stat.prefix}${(stat.value ?? 0).toLocaleString()}`}
+              note={
+                <span className="inline-flex items-center gap-1">
+                  <TrendingUp size={13} />
+                  {stat.change}
+                </span>
+              }
+            />
+          ))}
         </div>
-      </div>
 
       {/* RECENT ORDERS SECTION */}
-      <div className="px-6 py-8">
-        <div className="max-w-full">
+        <div className="mt-7 max-w-full">
           {/* Section header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-3xl font-black text-white tracking-tight mb-1">
+              <h2 className="mb-1 text-2xl font-black uppercase tracking-normal text-white">
                 RECENT ORDERS
               </h2>
-              <p className="text-gray-400 text-sm font-medium">
+              <p className="text-sm font-medium text-white/45">
                 Latest customer purchases
               </p>
             </div>
-            <button className="group flex items-center gap-2 px-6 py-3 bg-white text-black font-bold text-sm uppercase tracking-wider rounded-full hover:bg-gray-200 transition-colors">
+            <button className="group flex items-center gap-2 rounded-full bg-white px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-black transition-colors hover:bg-lime-300">
               View All
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              <ArrowRight size={16} />
             </button>
           </div>
 
           {/* Orders table */}
-          <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800">
+          <div className={`${adminPanel} overflow-hidden`}>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className={adminTable}>
                 <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Order ID</th>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Customer</th>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Total</th>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-wider">Action</th>
+                  <tr>
+                    <th className={adminHeaderCell}>Order ID</th>
+                    <th className={adminHeaderCell}>Customer</th>
+                    <th className={adminHeaderCell}>Total</th>
+                    <th className={adminHeaderCell}>Status</th>
+                    <th className={adminHeaderCell}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentOrders.length === 0 ? (
                     <tr key="empty-recent-orders">
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={5} className="px-6 py-8 text-center text-white/35">
                         No orders found yet.
                       </td>
                     </tr>
-                  ) : recentOrders.map((order, idx) => (
+                  ) : recentOrders.map((order) => (
                     <tr
                       key={order._id || order.id}
-                      className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors group cursor-pointer"
+                      className="group cursor-pointer transition-colors hover:bg-white/[0.04]"
                       onClick={() => handleViewOrder(order)}
-                      style={{
-                        animation: `fadeIn 0.4s ease-out ${idx * 0.1}s backwards`,
-                      }}
                     >
-                      <td className="px-6 py-4">
+                      <td className={adminCell}>
                         <span className="text-white font-bold text-sm">
-                          {order.orderId || (order._id ? order._id.substring(0, 8) : order.id)}
+                          {getOrderDisplayId(order)}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className={adminCell}>
                         <span className="text-gray-300 font-medium text-sm">
-                          {order.customer?.name || order.customer || "Walking Guest"}
+                          {getCustomerName(order)}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className={adminCell}>
                         <span className="text-white font-bold text-sm">
-                          ${order.total?.toLocaleString() || "0"}
+                          {formatCurrency(order.total)}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${order.status === "Paid" ? "bg-green-500/20 text-green-400 border border-green-500/50" :
-                          order.status === "Pending" ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/50" :
-                            "bg-red-500/20 text-red-400 border border-red-500/50"
-                          }`}>
-                          {order.status}
-                        </span>
+                      <td className={adminCell}>
+                        <StatusBadge status={order.deliveryStatus || order.paymentStatus || order.status} />
                       </td>
-                      <td className="px-6 py-4">
+                      <td className={adminCell}>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleViewOrder(order); }}
-                          className="text-gray-400 hover:text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2 group-hover:gap-3 transition-all"
+                          className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-white/50 transition-colors hover:text-white"
                         >
                           View
                           <ArrowRight size={14} />
@@ -260,109 +314,181 @@ const AdminDashboardPage = () => {
           </div>
 
         </div>
-        <div className="m-3 p-3">
+        <div className="mt-7">
           <BarGraph />
         </div>
-      </div>
+      </PageBody>
 
       {/* ORDER DETAILS MODAL */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 sm:p-5">
+          <div className="relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0b] shadow-[0_24px_90px_rgba(0,0,0,0.55)]">
 
             {/* Close Button */}
             <button
               onClick={closeOrderModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
+              aria-label="Close order details"
+              className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white/55 transition-colors hover:border-white/25 hover:bg-white hover:text-black"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
 
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-800 bg-black/50">
-              <div className="inline-block mb-2 px-3 py-1 bg-white/10 text-white text-[10px] font-black tracking-widest uppercase rounded-full border border-white/20">
-                Order Details
+            <div className="grid border-b border-white/10 bg-[#090909] lg:grid-cols-[1fr_280px]">
+              <div className="p-5 sm:p-7">
+                <div className="mb-4 flex flex-wrap items-center gap-3">
+                  <span className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-white/80">
+                    Order Details
+                  </span>
+                  <StatusBadge status={selectedOrder.deliveryStatus || selectedOrder.paymentStatus || selectedOrder.status} />
+                </div>
+                <h2 className="max-w-[720px] text-4xl font-black uppercase leading-none tracking-normal text-white sm:text-5xl">
+                  {getOrderDisplayId(selectedOrder)}
+                </h2>
+                <div className="mt-4 flex flex-wrap items-center gap-4 text-sm font-semibold text-white/45">
+                  <span className="inline-flex items-center gap-2">
+                    <Calendar size={15} />
+                    {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleDateString() : (selectedOrder.date || "N/A")}
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    <ReceiptText size={15} />
+                    {selectedOrderItems.length || 1} item{(selectedOrderItems.length || 1) === 1 ? "" : "s"}
+                  </span>
+                </div>
               </div>
-              <h2 className="text-3xl font-black text-white">
-                {selectedOrder.orderId || (selectedOrder._id ? selectedOrder._id.substring(0, 8) : selectedOrder.id)}
-              </h2>
-              <div className="flex items-center gap-2 mt-2 text-gray-400 text-sm">
-                <Calendar size={14} />
-                <span>{selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleDateString() : (selectedOrder.date || "N/A")}</span>
+
+              <div className="hidden border-l border-white/10 bg-white/[0.03] p-5 lg:block">
+                <div className="relative h-full min-h-[170px] overflow-hidden rounded-xl border border-white/10 bg-[#151515]">
+                  {featuredImage ? (
+                    <img
+                      src={featuredImage}
+                      alt={featuredItem ? getItemName(featuredItem) : "Ordered product"}
+                      className="h-full w-full object-contain p-5"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-white/20">
+                      <Package size={54} />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-6">
-              {/* Product Info */}
-              <div className="space-y-4 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                {Array.isArray(selectedOrder.items) ? selectedOrder.items.map((item, i) => (
-                  <div key={i} className="flex items-start gap-4 pb-4 border-b border-gray-800 last:border-0 last:pb-0">
-                    <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center text-gray-500 overflow-hidden">
-                      {item.product?.image_url ? (
-                        <img src={item.product.image_url} alt={item.product?.name || "Product"} className="w-full h-full object-cover" />
-                      ) : (
-                        <Package size={24} />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-white font-bold text-sm">{item.product?.name || item.product || "Product"}</h3>
-                      <p className="text-gray-400 text-xs">Qty: {item.quantity}</p>
-                      <p className="text-white font-black mt-1 text-sm">${item.price}</p>
-                    </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-5 pb-24 sm:p-7 sm:pb-28">
+              <div className="grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
+                {/* Product Info */}
+                <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                      Products Bought
+                    </h3>
+                    <span className="text-xs font-black uppercase tracking-[0.14em] text-lime-300">
+                      {formatCurrency(selectedOrder.total)}
+                    </span>
                   </div>
-                )) : (
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center text-gray-500">
-                      <Package size={32} />
-                    </div>
-                    <div>
-                      <h3 className="text-white font-bold text-lg">{selectedOrder.items || "N/A"}</h3>
-                      <p className="text-gray-400 text-sm">Quantity: 1</p>
-                      <p className="text-white font-black mt-1">${selectedOrder.total || 0}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
 
-              {/* Grid Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-gray-800/30 rounded-xl border border-gray-800">
-                  <div className="flex items-center gap-2 mb-2 text-gray-400">
-                    <MapPin size={16} />
-                    <span className="text-xs font-bold uppercase tracking-wider">Shipping</span>
-                  </div>
-                  <p className="text-white text-sm font-medium">
-                    {selectedOrder.customer?.name || selectedOrder.customer || "Walking Guest"}
-                  </p>
-                  <p className="text-gray-500 text-[10px] mt-1 line-clamp-2">
-                    {selectedOrder.customer?.email || "No email provided"}
-                  </p>
-                </div>
+                  <div className="space-y-3">
+                    {selectedOrderItems.length > 0 ? selectedOrderItems.map((item, i) => {
+                      const image = getItemImage(item)
 
-                <div className="p-4 bg-gray-800/30 rounded-xl border border-gray-800">
-                  <div className="flex items-center gap-2 mb-2 text-gray-400">
-                    <CreditCard size={16} />
-                    <span className="text-xs font-bold uppercase tracking-wider">Payment</span>
+                      return (
+                        <div key={`${item.productId || getItemName(item)}-${i}`} className="flex gap-4 rounded-xl border border-white/10 bg-black/35 p-3">
+                          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#181818] text-white/25 sm:h-24 sm:w-24">
+                            {image ? (
+                              <img
+                                src={image}
+                                alt={getItemName(item)}
+                                className="h-full w-full object-contain p-2"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <Package size={28} />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="truncate text-base font-black text-white">{getItemName(item)}</h4>
+                            <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/45">
+                              <span>Qty {item.quantity || 1}</span>
+                              {item.size ? <span>Size {item.size}</span> : null}
+                              {item.color ? <span>{item.color}</span> : null}
+                            </div>
+                            <p className="mt-3 text-lg font-black text-white">{formatCurrency(item.price)}</p>
+                          </div>
+                        </div>
+                      )
+                    }) : (
+                      <div className="flex gap-4 rounded-xl border border-white/10 bg-black/35 p-3">
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-[#181818] text-white/25 sm:h-24 sm:w-24">
+                          <Package size={30} />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-black text-white">{typeof selectedOrder.items === "string" ? selectedOrder.items : "Product"}</h4>
+                          <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/45">Qty 1</p>
+                          <p className="mt-3 text-lg font-black text-white">{formatCurrency(selectedOrder.total)}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-white text-sm font-medium">Method: Online</p>
-                  <div className={`mt-2 inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase ${selectedOrder.status === "Paid" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
-                    }`}>
-                    {selectedOrder.status}
-                  </div>
+                </section>
+
+                {/* Order Info */}
+                <div className="space-y-4">
+                  <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                    <div className="mb-3 flex items-center gap-2 text-white/45">
+                      <MapPin size={16} />
+                      <span className="text-[11px] font-black uppercase tracking-[0.18em]">Shipping</span>
+                    </div>
+                    <p className="text-base font-black text-white">{getCustomerName(selectedOrder)}</p>
+                    <p className="mt-1 text-sm font-semibold text-white/45">{getCustomerEmail(selectedOrder)}</p>
+                    {selectedOrder.shippingInfo?.address ? (
+                      <p className="mt-4 text-sm font-medium leading-6 text-white/55">
+                        {selectedOrder.shippingInfo.address}
+                        {selectedOrder.shippingInfo.city ? `, ${selectedOrder.shippingInfo.city}` : ""}
+                        {selectedOrder.shippingInfo.state ? `, ${selectedOrder.shippingInfo.state}` : ""}
+                        {selectedOrder.shippingInfo.zipCode ? ` ${selectedOrder.shippingInfo.zipCode}` : ""}
+                      </p>
+                    ) : null}
+                  </section>
+
+                  <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                      <div className="mb-3 flex items-center gap-2 text-white/45">
+                        <CreditCard size={16} />
+                        <span className="text-[11px] font-black uppercase tracking-[0.18em]">Payment</span>
+                      </div>
+                      <p className="text-sm font-bold text-white">Method: {formatPaymentMethod(selectedOrder.paymentMethod)}</p>
+                      <div className="mt-3">
+                        <StatusBadge status={selectedOrder.paymentStatus || selectedOrder.status} />
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                      <div className="mb-3 flex items-center gap-2 text-white/45">
+                        <Truck size={16} />
+                        <span className="text-[11px] font-black uppercase tracking-[0.18em]">Delivery</span>
+                      </div>
+                      <p className="text-sm font-bold text-white">{selectedOrder.deliveryStatus || "Processing"}</p>
+                      <p className="mt-3 text-2xl font-black text-white">{formatCurrency(selectedOrder.total)}</p>
+                    </div>
+                  </section>
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-gray-800 flex gap-3">
+            <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-white/10 bg-[#0b0b0b]/95 p-4 backdrop-blur-md sm:flex-row">
               <button
                 onClick={closeOrderModal}
-                className="flex-1 py-4 rounded-xl bg-gray-800 hover:bg-gray-700 text-white font-bold transition-colors"
+                className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
               >
                 Close
               </button>
-              <button className="flex-1 py-4 rounded-xl bg-white hover:bg-gray-200 text-black font-black uppercase tracking-wider transition-colors">
+              <button
+                onClick={() => handlePrintInvoice(selectedOrder)}
+                className="inline-flex flex-1 items-center justify-center rounded-xl bg-white px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-black transition-colors hover:bg-lime-300"
+              >
                 Print Invoice
               </button>
             </div>
@@ -370,18 +496,6 @@ const AdminDashboardPage = () => {
         </div>
       )}
 
-      {/* Styles for Animations */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      ` }} />
     </div>
   )
 }

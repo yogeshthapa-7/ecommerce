@@ -30,51 +30,35 @@ const items = [
 
 export function AppSidebar() {
   return (
-    <Sidebar collapsible="icon" className="bg-black border-r border-gray-800/50">
-      <SidebarContent className="bg-black">
-        {/* Nike Logo Section */}
-<div className="relative py-6 px-6 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-4">
-  <div className="flex items-center justify-center mb-2 group-data-[collapsible=icon]:mb-0">
-    <img
-      src="https://i.pinimg.com/736x/00/41/dd/0041ddfa1ba9700a2cf389244e3f4ae7.jpg"
-      alt="Nike"
-      className="h-20 w-30 object-contain group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7"
-    />
-  </div>
-
-  <div className="text-center group-data-[collapsible=icon]:hidden">
-    <p className="text-gray-500 text-xs font-black uppercase tracking-widest">
-      Nike Admin Portal
-    </p>
-  </div>
-</div>
+    <Sidebar collapsible="icon" className="border-r border-white/10 bg-[#080808]">
+      <SidebarContent className="bg-[#080808]">
+        <div className="px-5 py-6 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-4">
+          <div className="flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-sm font-black text-black">
+              N
+            </div>
+            <div className="group-data-[collapsible=icon]:hidden">
+              <p className="text-sm font-black uppercase tracking-normal text-white">Nike Admin</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">Control room</p>
+            </div>
+          </div>
+        </div>
 
         <SidebarGroup>
-          <SidebarGroupContent className="px-4 py-5 group-data-[collapsible=icon]:px-1">
+          <SidebarGroupContent className="px-3 py-4 group-data-[collapsible=icon]:px-2">
 
             <SidebarMenu className="space-y-1">
               {items.map((item, idx) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                  <a
-  href={item.url}
-  className="group relative flex items-center gap-3 px-4 py-5 rounded-lg transition-all duration-200 text-gray-400 hover:text-black hover:bg-gray-900 overflow-hidden group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-0"
->
-
-                      {/* Hover accent line */}
-                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-orange-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                      
-                      {/* Icon */}
-                    <item.icon
-  className="relative z-10 size-5 text-gray-500 group-hover:text-orange-500 transition-colors duration-200 flex-shrink-0"
-/>
-
-                      
-                      {/* Text */}
-                      <span className="relative z-10 font-bold text-sm tracking-tight group-data-[collapsible=icon]:hidden">
-  {item.title}
-</span>
-
+                    <a
+                      href={item.url}
+                      className="group flex h-12 items-center gap-3 rounded-xl px-3 text-white/48 transition-colors hover:bg-white hover:text-black group-data-[collapsible=icon]:h-10 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-0"
+                    >
+                      <item.icon className="size-5 flex-shrink-0 transition-colors group-hover:text-black" />
+                      <span className="text-sm font-bold tracking-normal group-data-[collapsible=icon]:hidden">
+                        {item.title}
+                      </span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -85,34 +69,16 @@ export function AppSidebar() {
 
         {/* Bottom CTA Section */}
         <div className="mt-auto p-4 group-data-[collapsible=icon]:hidden">
-  <div className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-orange-600 to-red-600">
-            <div className="relative z-10">
-              <h3 className="text-white font-black text-base uppercase tracking-tight mb-1">
-                Just Do It
-              </h3>
-              <p className="text-white/90 text-xs font-medium">
-                Nike Admin v1.0
-              </p>
-            </div>
-            
-            {/* Decorative swoosh element */}
-            <div className="absolute -right-2 -bottom-2 w-16 h-16 bg-white/10 rounded-full blur-xl" />
+          <div className="rounded-2xl border border-lime-300/20 bg-lime-300/10 p-4">
+            <h3 className="mb-1 text-sm font-black uppercase tracking-normal text-white">
+              Admin v1.0
+            </h3>
+            <p className="text-xs font-medium leading-relaxed text-white/45">
+              Fast catalog, orders, and customer control.
+            </p>
           </div>
         </div>
       </SidebarContent>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes slideRight {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-      ` }} />
     </Sidebar>
   )
 }

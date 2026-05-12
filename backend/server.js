@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 const connectDB = require('./config/db');
 
 // Load env vars
@@ -11,17 +12,23 @@ connectDB();
 
 const app = express();
 
-// CORS configuration - allow localhost and production domains
+// CORS configuration - allow localhost, configured production domains, and temporary tunnel previews
 const corsOptions = {
     origin: function (origin, callback) {
         const allowedOrigins = [
             'https://your-production-domain.vercel.app',
-            'https://your-production-domain.com'
+            'https://your-production-domain.com',
+            ...(process.env.FRONTEND_URL || '')
+                .split(',')
+                .map((url) => url.trim())
+                .filter(Boolean)
         ];
         const isLocalhostOrigin = typeof origin === 'string'
             && /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
+        const isCloudflareTunnelOrigin = typeof origin === 'string'
+            && /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin);
         // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin || isLocalhostOrigin || allowedOrigins.includes(origin)) {
+        if (!origin || isLocalhostOrigin || isCloudflareTunnelOrigin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
@@ -30,7 +37,8 @@ const corsOptions = {
     credentials: true
 };
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/products', require('./routes/productRoutes'));

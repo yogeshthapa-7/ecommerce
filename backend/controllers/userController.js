@@ -1,5 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 
 // GET user count
 exports.getUserCount = async (req, res) => {
@@ -83,6 +85,49 @@ exports.updateProfile = async (req, res) => {
         delete updatedUser.password;
 
         res.json({ success: true, user: updatedUser });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// POST upload profile picture
+exports.uploadProfilePicture = async (req, res) => {
+    try {
+        const { image, fileName } = req.body;
+
+        if (!image || typeof image !== 'string') {
+            return res.status(400).json({ success: false, message: 'Image is required' });
+        }
+
+        const match = image.match(/^data:(image\/(?:png|jpe?g|webp|gif));base64,(.+)$/);
+        if (!match) {
+            return res.status(400).json({ success: false, message: 'Only PNG, JPG, WEBP, or GIF images are allowed' });
+        }
+
+        const mimeType = match[1];
+        const base64Data = match[2];
+        const extension = mimeType.split('/')[1].replace('jpeg', 'jpg');
+        const safeBaseName = path
+            .basename(fileName || 'profile')
+            .replace(/\.[^/.]+$/, '')
+            .replace(/[^a-z0-9-_]/gi, '-')
+            .toLowerCase();
+
+        const uploadDir = path.join(__dirname, '..', 'uploads', 'profile');
+        fs.mkdirSync(uploadDir, { recursive: true });
+
+        const storedFileName = `${req.user.id}-${Date.now()}-${safeBaseName || 'profile'}.${extension}`;
+        const filePath = path.join(uploadDir, storedFileName);
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        if (buffer.length > 5 * 1024 * 1024) {
+            return res.status(400).json({ success: false, message: 'Image must be 5MB or smaller' });
+        }
+
+        fs.writeFileSync(filePath, buffer);
+
+        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/profile/${storedFileName}`;
+        res.json({ success: true, imageUrl });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

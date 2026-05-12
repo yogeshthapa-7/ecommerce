@@ -32,11 +32,14 @@ type Product = {
 
 type ProductsByCategory = Record<string, Product[]>;
 
-const fallbackHeroImages = [
-  "https://media.gq-magazine.co.uk/photos/67334c214ed46d433b25de24/16:9/w_2560%2Cc_limit/Nike-AF1.jpg",
-  "https://www.sneakerfiles.com/wp-content/uploads/2024/11/nike-air-max-muse-black-metallic-silver-FV1920-001.jpg",
-  "https://stuffmagazine.fr/wp-content/uploads/2023/04/Air-Jordan-6-Black-Infrared1.jpg",
+const heroShoeImages = [
+  "/assets/nike-hero/nike6-transparent.png",
+  "/assets/nike-hero/nike3-transparent.png",
+  "/assets/nike-hero/nike2-transparent.png",
+  "/assets/nike-hero/nike1-transparent.png",
 ];
+
+const fallbackHeroImages = heroShoeImages;
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -227,10 +230,8 @@ const ProductsPage = () => {
     (total, category) => total + filteredProductsByCategory[category].length,
     0,
   );
-  const heroProducts = safeProducts.slice(0, 3);
-  const heroImages = fallbackHeroImages.map(
-    (fallback, index) => heroProducts[index]?.image_url || fallback,
-  );
+
+  const heroImages = heroShoeImages;
 
   return (
     <div className="min-h-screen overflow-hidden bg-black text-white">
@@ -301,37 +302,65 @@ const ProductsPage = () => {
             </div>
           </div>
 
-          <div className="relative min-h-[500px]">
+          <div className="relative min-h-[500px] overflow-hidden">
             <div className="absolute left-1/2 top-1/2 h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-red-500/10" />
             <div className="absolute left-1/2 top-1/2 h-[470px] w-[470px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
-            {heroImages.map((image, index) => (
-              <div
-                key={image}
-                className={`absolute overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950 shadow-2xl shadow-black/50 ${
-                  index === 0
-                    ? "left-0 top-16 h-64 w-48 rotate-[-8deg] sm:h-80 sm:w-60"
-                    : index === 1
-                      ? "right-0 top-0 h-72 w-56 rotate-[8deg] sm:h-96 sm:w-72"
-                      : "bottom-0 left-[24%] h-56 w-72 rotate-[-2deg] sm:h-64 sm:w-96"
-                }`}
-              >
-                <img
-                  src={image}
-                  alt=""
-                  loading={index === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                  className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            <div className="absolute inset-y-0 left-0 flex items-center overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
+              <div className="flex w-max items-center hero-shoe-marquee">
+                {[0, 1].map((setIndex) => (
+                  <div
+                    key={setIndex}
+                    aria-hidden={setIndex === 1}
+                    className="flex shrink-0 items-center gap-12 pr-12"
+                  >
+                    {heroImages.map((image, index) => (
+                      <img
+                        key={`${image}-${setIndex}-${index}`}
+                        src={image}
+                        alt={setIndex === 0 ? "Nike shoe" : ""}
+                        loading={setIndex === 0 && index === 0 ? "eager" : "lazy"}
+                        decoding="async"
+                        className={`h-auto shrink-0 object-contain drop-shadow-[0_34px_50px_rgba(0,0,0,0.75)] ${
+                          index === 0
+                            ? "w-[360px] rotate-[-8deg] sm:w-[460px]"
+                            : index === 1
+                              ? "w-[300px] rotate-[-3deg] sm:w-[390px]"
+                              : index === 2
+                                ? "w-[430px] rotate-[5deg] sm:w-[560px]"
+                                : "w-[340px] rotate-[7deg] sm:w-[440px]"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                ))}
               </div>
-            ))}
-            <div className="absolute bottom-10 right-4 flex items-center gap-3 rounded-full border border-white/10 bg-black/80 px-5 py-3 shadow-xl">
-              <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
-              <span className="text-sm font-black uppercase">Fresh arrivals live</span>
             </div>
           </div>
         </div>
       </section>
+
+      <style jsx>{`
+        .hero-shoe-marquee {
+          animation: hero-shoe-marquee 26s linear infinite;
+          will-change: transform;
+        }
+
+        @keyframes hero-shoe-marquee {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .hero-shoe-marquee {
+            animation: none;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
 
       <section
         id="shop-controls"

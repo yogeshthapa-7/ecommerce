@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "findStore": "Find a Store",
+    "help": "Help",
+    "join": "Join Us",
+    "signIn": "Sign In",
+    "men": "Men",
+    "women": "Women",
+    "kids": "Kids",
+    "running": "Running",
+    "lifestyle": "Lifestyle",
+    "jordan": "Jordan",
+    "sale": "Sale",
+    "searchLabel": "Open search",
+    "menuLabel": "Open menu",
+    "searchPlaceholder": "Search shoes, collections, and more..."
+  },
+  "landing": {
+    "eyebrow": "New arrivals",
+    "titleLine1": "Win on",
+    "titleLine2": "your terms.",
+    "subtitle": "Push past your limits with a faster, sharper storefront built around bold launches, clean product rhythm, and a direct path into the Nike shop.",
+    "homeCta": "Go to homepage",
+    "videoCta": "Watch the video",
+    "sideTitle": "Air Max pulse",
+    "sideCopy": "A sharp entry into launches, member picks, and training staples made for the next daily rotation.",
+    "scroll": "Scroll",
+    "featuredEyebrow": "Featured rotation",
+    "trusted": "Trusted by athletes worldwide"
+  },
+  "featuredShoes": {
+    "nikeSystem": "Nike Air System",
+    "adidasSuperstar": "Adidas Superstar",
+    "newBalance": "New Balance 550",
+    "pumaSpeedcat": "Puma Speedcat",
+    "uaLockdown": "UA Lockdown",
+    "asicsGel": "Asics Gel NYC",
+    "reebokNano": "Reebok Nano X5",
+    "flagship": "Flagship drop",
+    "street": "Street classic",
+    "daily": "Daily rotation",
+    "track": "Track inspired",
+    "court": "Court ready",
+    "soft": "Soft landing",
+    "training": "Training base"
+  }
+}
