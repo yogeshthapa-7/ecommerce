@@ -40,7 +40,7 @@ const OrdersPage = () => {
 
   /* ====== HANDLERS ====== */
 
-  const handleDelete = async (order) => {
+  const handleDelete = async (order: any) => {
     const id = order._id || order.id;
     const token = localStorage.getItem("token")
     try {
