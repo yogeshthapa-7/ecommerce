@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useFormik } from "formik"
 import * as Yup from "yup"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, Eye, EyeOff, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import toastr from "toastr"
 import "toastr/build/toastr.min.css"
 
@@ -41,6 +42,240 @@ const showToast = (type: 'success' | 'error', message: string, title?: string) =
       }
     }, 10)
   }
+}
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+]
+
+const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+
+function CustomDatePicker({
+  value,
+  onChange,
+  onBlur,
+  error,
+  disabled,
+}: {
+  value: string
+  onChange: (date: string) => void
+  onBlur: () => void
+  error?: boolean
+  disabled?: boolean
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [viewDate, setViewDate] = useState(() => {
+    if (value) return new Date(value)
+    const today = new Date()
+    return new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
+  })
+
+  const selectedDate = value ? new Date(value) : null
+  const today = new Date()
+  const maxDate = new Date()
+
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate()
+  }
+
+  const getFirstDayOfMonth = (year: number, month: number) => {
+    return new Date(year, month, 1).getDay()
+  }
+
+  const handlePrevMonth = () => {
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
+  }
+
+  const handleNextMonth = () => {
+    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
+  }
+
+  const handleDateSelect = (day: number) => {
+    const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day)
+    if (newDate > maxDate) return
+    const formatted = newDate.toISOString().split('T')[0]
+    onChange(formatted)
+    setIsOpen(false)
+    onBlur()
+  }
+
+  const handleMonthChange = (monthIndex: number) => {
+    setViewDate(new Date(viewDate.getFullYear(), monthIndex, 1))
+  }
+
+  const handleYearChange = (year: number) => {
+    setViewDate(new Date(year, viewDate.getMonth(), 1))
+  }
+
+  const yearOptions = []
+  const startYear = maxDate.getFullYear()
+  for (let y = startYear; y >= startYear - 100; y--) {
+    yearOptions.push(y)
+  }
+
+  const daysInMonth = getDaysInMonth(viewDate.getFullYear(), viewDate.getMonth())
+  const firstDay = getFirstDayOfMonth(viewDate.getFullYear(), viewDate.getMonth())
+  const days: (number | null)[] = []
+  for (let i = 0; i < firstDay; i++) days.push(null)
+  for (let i = 1; i <= daysInMonth; i++) days.push(i)
+
+  const formatDisplayDate = (dateStr: string) => {
+    const d = new Date(dateStr)
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    })
+  }
+
+  const isSelected = (day: number) => {
+    if (!selectedDate) return false
+    return (
+      selectedDate.getFullYear() === viewDate.getFullYear() &&
+      selectedDate.getMonth() === viewDate.getMonth() &&
+      selectedDate.getDate() === day
+    )
+  }
+
+  const isToday = (day: number) => {
+    return (
+      today.getFullYear() === viewDate.getFullYear() &&
+      today.getMonth() === viewDate.getMonth() &&
+      today.getDate() === day
+    )
+  }
+
+  const isFuture = (day: number) => {
+    const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), day)
+    return d > maxDate
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onBlur={onBlur}
+        disabled={disabled}
+        className={`h-12 w-full rounded-sm border bg-white px-3 text-left text-sm flex items-center justify-between transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          error
+            ? "border-red-500 focus:border-red-500"
+            : isOpen
+              ? "border-black"
+              : "border-gray-300 hover:border-gray-400"
+        } ${value ? "text-gray-900" : "text-gray-500"}`}
+      >
+        <span>{value ? formatDisplayDate(value) : "Date of Birth"}</span>
+        <Calendar size={18} className="text-gray-500" />
+      </button>
+
+      {isOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-20"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-sm shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className="p-1.5 hover:bg-gray-100 rounded-sm transition-colors"
+                aria-label="Previous month"
+              >
+                <ChevronLeft size={18} className="text-gray-700" />
+              </button>
+
+              <div className="flex gap-2 flex-1 justify-center">
+                <select
+                  value={viewDate.getMonth()}
+                  onChange={(e) => handleMonthChange(Number(e.target.value))}
+                  className="text-sm font-semibold text-gray-900 bg-transparent border border-gray-200 rounded-sm px-2 py-1 cursor-pointer hover:border-gray-400 focus:outline-none focus:border-black"
+                >
+                  {MONTHS.map((month, idx) => (
+                    <option key={month} value={idx}>{month.slice(0, 3)}</option>
+                  ))}
+                </select>
+                <select
+                  value={viewDate.getFullYear()}
+                  onChange={(e) => handleYearChange(Number(e.target.value))}
+                  className="text-sm font-semibold text-gray-900 bg-transparent border border-gray-200 rounded-sm px-2 py-1 cursor-pointer hover:border-gray-400 focus:outline-none focus:border-black"
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                disabled={viewDate.getFullYear() >= maxDate.getFullYear() && viewDate.getMonth() >= maxDate.getMonth()}
+                className="p-1.5 hover:bg-gray-100 rounded-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Next month"
+              >
+                <ChevronRight size={18} className="text-gray-700" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {DAYS.map((day) => (
+                <div key={day} className="text-center text-xs font-semibold text-gray-500 py-1">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {days.map((day, idx) => {
+                if (day === null) {
+                  return <div key={`empty-${idx}`} />
+                }
+                const selected = isSelected(day)
+                const todayDate = isToday(day)
+                const future = isFuture(day)
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => handleDateSelect(day)}
+                    disabled={future}
+                    className={`aspect-square text-sm font-medium rounded-sm transition-all flex items-center justify-center ${
+                      selected
+                        ? "bg-black text-white"
+                        : todayDate
+                          ? "border border-black text-black hover:bg-gray-100"
+                          : future
+                            ? "text-gray-300 cursor-not-allowed"
+                            : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+              <span>Select your date of birth</span>
+              <button
+                type="button"
+                onClick={() => {
+                  onChange("")
+                  setIsOpen(false)
+                  onBlur()
+                }}
+                className="text-gray-700 hover:text-black font-medium underline"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 // Yup validation schema
@@ -85,6 +320,7 @@ const validationSchema = Yup.object({
 
 export default function RegisterPage() {
   const router = useRouter()
+  const [showPassword, setShowPassword] = useState(false)
 
   const formik = useFormik({
     initialValues: {
@@ -138,18 +374,13 @@ export default function RegisterPage() {
         setTimeout(() => {
           router.push("/login");
         }, 1000);
-      } catch (error: any) {
+      } catch {
         showToast('error', "Server error. Please try again.", "Error");
       } finally {
         setSubmitting(false);
       }
     }
   })
-
-  const handleGenderSelect = (gender: string) => {
-    formik.setFieldValue("gender", gender)
-    formik.setFieldTouched("gender", true)
-  }
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -281,18 +512,29 @@ export default function RegisterPage() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="password" className="sr-only">Password</Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      value={formik.values.password}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${formik.touched.password && formik.errors.password ? 'border-red-500 focus-visible:border-red-500' : ''
-                        }`}
-                      placeholder="Password"
-                      disabled={formik.isSubmitting}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        value={formik.values.password}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors pr-12 ${formik.touched.password && formik.errors.password ? 'border-red-500 focus-visible:border-red-500' : ''
+                          }`}
+                        placeholder="Password"
+                        disabled={formik.isSubmitting}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={formik.isSubmitting}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 disabled:opacity-50"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                     {formik.touched.password && formik.errors.password && (
                       <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
                         <AlertCircle size={14} />
@@ -347,16 +589,11 @@ export default function RegisterPage() {
 
                   <div className="space-y-1.5">
                     <Label htmlFor="dateOfBirth" className="sr-only">Date of Birth</Label>
-                    <Input
-                      id="dateOfBirth"
-                      name="dateOfBirth"
-                      type="date"
+                    <CustomDatePicker
                       value={formik.values.dateOfBirth}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${formik.touched.dateOfBirth && formik.errors.dateOfBirth ? 'border-red-500 focus-visible:border-red-500' : ''
-                        } ${formik.values.dateOfBirth ? 'text-gray-900' : 'text-gray-500'}`}
-                      placeholder="Date of Birth"
+                      onChange={(value) => formik.setFieldValue("dateOfBirth", value)}
+                      onBlur={() => formik.setFieldTouched("dateOfBirth", true)}
+                      error={!!(formik.touched.dateOfBirth && formik.errors.dateOfBirth)}
                       disabled={formik.isSubmitting}
                     />
                     {formik.touched.dateOfBirth && formik.errors.dateOfBirth ? (
@@ -374,32 +611,46 @@ export default function RegisterPage() {
                   <div className="space-y-3">
                     <Label className="text-xs text-gray-700">Gender</Label>
                     <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleGenderSelect("male")}
-                        disabled={formik.isSubmitting}
-                        className={`h-12 border-[1.5px] transition-colors rounded-sm text-sm font-medium ${formik.values.gender === "male"
-                          ? 'border-black bg-black text-white'
-                          : formik.touched.gender && formik.errors.gender
-                            ? 'border-red-500 hover:border-red-600'
-                            : 'border-gray-300 hover:border-black'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        Male
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleGenderSelect("female")}
-                        disabled={formik.isSubmitting}
-                        className={`h-12 border-[1.5px] transition-colors rounded-sm text-sm font-medium ${formik.values.gender === "female"
-                          ? 'border-black bg-black text-white'
-                          : formik.touched.gender && formik.errors.gender
-                            ? 'border-red-500 hover:border-red-600'
-                            : 'border-gray-300 hover:border-black'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        Female
-                      </button>
+                      <label className="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="gender"
+                          value="male"
+                          checked={formik.values.gender === "male"}
+                          onChange={(e) => {
+                            formik.handleChange(e)
+                            formik.setFieldTouched("gender", true)
+                          }}
+                          className="sr-only"
+                          disabled={formik.isSubmitting}
+                        />
+                        <div className={`h-12 border-[1.5px] rounded-sm text-sm font-medium flex items-center justify-center transition-colors ${formik.values.gender === "male"
+                            ? "border-black bg-black text-white"
+                            : "border-gray-300 hover:border-black text-gray-900"
+                          } ${formik.touched.gender && formik.errors.gender ? "border-red-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                          Male
+                        </div>
+                      </label>
+                      <label className="cursor-pointer">
+                        <input
+                          type="radio"
+                          name="gender"
+                          value="female"
+                          checked={formik.values.gender === "female"}
+                          onChange={(e) => {
+                            formik.handleChange(e)
+                            formik.setFieldTouched("gender", true)
+                          }}
+                          className="sr-only"
+                          disabled={formik.isSubmitting}
+                        />
+                        <div className={`h-12 border-[1.5px] rounded-sm text-sm font-medium flex items-center justify-center transition-colors ${formik.values.gender === "female"
+                            ? "border-black bg-black text-white"
+                            : "border-gray-300 hover:border-black text-gray-900"
+                          } ${formik.touched.gender && formik.errors.gender ? "border-red-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                          Female
+                        </div>
+                      </label>
                     </div>
                     {formik.touched.gender && formik.errors.gender && (
                       <div className="flex items-center gap-1.5 text-red-600 text-xs">
@@ -425,7 +676,7 @@ export default function RegisterPage() {
                   </div>
 
                   <p className="text-xs text-gray-500 text-center leading-relaxed pt-2">
-                    By creating an account, you agree to Nike's{" "}
+                    By creating an account, you agree to Nike&apos;s{" "}
                     <a href="#" className="underline hover:text-black">Privacy Policy</a>
                     {" "}and{" "}
                     <a href="#" className="underline hover:text-black">Terms of Use</a>.

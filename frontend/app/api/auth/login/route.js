@@ -9,7 +9,7 @@ export async function POST(request) {
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, { status: res.status });
   } catch (error) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

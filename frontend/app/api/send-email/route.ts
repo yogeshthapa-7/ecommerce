@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { NikeOrderEmail } from '@/emails/NikeOrderEmail';
 import { NextResponse } from 'next/server';
 import { render } from '@react-email/render';
+import { getProductCutoutImage } from '@/app/nike/products/[id]/productImageCutouts';
 
 type OrderEmailItem = {
     name: string;
@@ -22,16 +23,41 @@ const getPublicBaseUrl = (request: Request) => {
     return configuredUrl || requestOrigin || (host ? `${protocol}://${host}` : '');
 };
 
-const resolveEmailImage = (image: string | undefined, baseUrl: string) => {
-    if (!image) return '';
-    if (/^(https?:|cid:|data:)/i.test(image)) return image;
-    if (!baseUrl) return image;
-
+async function fetchImageAsDataUri(url: string): Promise<string> {
     try {
-        return new URL(image, baseUrl).toString();
-    } catch {
-        return image;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch image');
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const contentType = response.headers.get('content-type') || 'image/png';
+        const base64 = buffer.toString('base64');
+        return `data:${contentType};base64,${base64}`;
+    } catch (error) {
+        console.error('Failed to convert image to data URI:', error);
+        return '';
     }
+}
+
+const resolveEmailImage = async (image: string | undefined, baseUrl: string) => {
+    if (!image) return '';
+
+    const normalizedImage = getProductCutoutImage(image);
+
+    if (/^(https?:|cid:|data:)/i.test(normalizedImage)) return normalizedImage;
+
+    if (baseUrl) {
+        try {
+            const resolved = new URL(normalizedImage, baseUrl).toString();
+            if (resolved.includes('localhost') || resolved.includes('127.0.0.1')) {
+                return await fetchImageAsDataUri(resolved);
+            }
+            return resolved;
+        } catch {
+            return normalizedImage;
+        }
+    }
+
+    return normalizedImage;
 };
 
 export async function POST(request: Request) {
@@ -63,10 +89,12 @@ export async function POST(request: Request) {
               ? cartItems
               : [];
         const publicBaseUrl = getPublicBaseUrl(request);
-        const emailItems = resolvedItems.map((item) => ({
-            ...item,
-            image: resolveEmailImage(item.image, publicBaseUrl),
-        }));
+        const emailItems = await Promise.all(
+            resolvedItems.map(async (item) => ({
+                ...item,
+                image: await resolveEmailImage(item.image, publicBaseUrl),
+            }))
+        );
 
         const emailHtml = await render(
             NikeOrderEmail({

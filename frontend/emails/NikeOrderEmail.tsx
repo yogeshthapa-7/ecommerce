@@ -69,10 +69,46 @@ export const NikeOrderEmail = ({
 
     return (
         <Html>
-            <Head />
+            <Head>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <style>{`
+                    @media only screen and (max-width: 640px) {
+                        .email-container {
+                            width: 100% !important;
+                            padding-left: 16px !important;
+                            padding-right: 16px !important;
+                        }
+                        .email-stack {
+                            display: block !important;
+                            width: 100% !important;
+                            padding-left: 0 !important;
+                            padding-right: 0 !important;
+                        }
+                        .email-stack-image {
+                            display: block !important;
+                            margin: 0 auto 12px auto !important;
+                            text-align: center !important;
+                        }
+                        .email-stack-total {
+                            display: block !important;
+                            width: 100% !important;
+                            text-align: left !important;
+                            padding-top: 8px !important;
+                        }
+                        .email-mobile-text {
+                            font-size: 28px !important;
+                            line-height: 32px !important;
+                        }
+                        .email-mobile-h1 {
+                            font-size: 32px !important;
+                            line-height: 36px !important;
+                        }
+                    }
+                `}</style>
+            </Head>
             <Preview>Your Nike order is confirmed - {orderId}</Preview>
             <Body style={main}>
-                <Container style={container}>
+                <Container className="email-container" style={container}>
                     <Section style={topBar}>
                         <Text style={logo}>NIKE</Text>
                         <Text style={topMeta}>Order Confirmed</Text>
@@ -80,8 +116,8 @@ export const NikeOrderEmail = ({
 
                     <Section style={hero}>
                         <Text style={eyebrow}>Thanks for your order</Text>
-                        <Heading style={h1}>JUST DONE IT.</Heading>
-                        <Text style={heroText}>
+                        <Heading className="email-mobile-h1" style={h1}>JUST DONE IT.</Heading>
+                        <Text className="email-mobile-text" style={heroText}>
                             Congratulations, {customerName}. Your order is confirmed and
                             our team is getting it ready.
                         </Text>
@@ -124,19 +160,21 @@ export const NikeOrderEmail = ({
                                 return (
                                     <Section key={`${item.name}-${index}`} style={productRow}>
                                         {item.image ? (
-                                            <Img
-                                                src={item.image}
-                                                alt={item.name}
-                                                width="84"
-                                                height="84"
-                                                style={productImage}
-                                            />
+                                            <Section className="email-stack-image" style={productImageWrap}>
+                                                <Img
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    width="84"
+                                                    height="84"
+                                                    style={productImage}
+                                                />
+                                            </Section>
                                         ) : (
-                                            <Section style={productImageFallback}>
+                                            <Section className="email-stack-image" style={productImageFallback}>
                                                 <Text style={productImageFallbackText}>NIKE</Text>
                                             </Section>
                                         )}
-                                        <Section style={productInfo}>
+                                        <Section className="email-stack" style={productInfo}>
                                             <Text style={productName}>{item.name}</Text>
                                             <Text style={productMeta}>
                                                 Qty {item.quantity || 1}
@@ -147,7 +185,7 @@ export const NikeOrderEmail = ({
                                                 {formatMoney(Number(item.price || 0), item.currency || currency)} each
                                             </Text>
                                         </Section>
-                                        <Section style={productTotalWrap}>
+                                        <Section className="email-stack-total" style={productTotalWrap}>
                                             <Text style={productTotal}>
                                                 {formatMoney(lineTotal, item.currency || currency)}
                                             </Text>
@@ -227,12 +265,14 @@ const main = {
     fontFamily:
         '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
     margin: '0',
+    padding: '0',
 };
 
 const container = {
     margin: '0 auto',
     padding: '24px 0 48px',
-    width: '620px',
+    maxWidth: '620px',
+    width: '100%',
 };
 
 const topBar = {
@@ -246,6 +286,7 @@ const logo = {
     fontSize: '30px',
     fontWeight: '900',
     letterSpacing: '-0.06em',
+    lineHeight: '1',
     margin: '0',
 };
 
@@ -369,8 +410,17 @@ const productImage = {
     backgroundColor: '#f4f4f5',
     borderRadius: '18px',
     display: 'inline-block',
+    maxWidth: '100%',
+    height: 'auto',
     objectFit: 'cover' as const,
     verticalAlign: 'top',
+};
+
+const productImageWrap = {
+    display: 'inline-block',
+    textAlign: 'center' as const,
+    verticalAlign: 'top',
+    width: '84px',
 };
 
 const productImageFallback = {
@@ -499,6 +549,7 @@ const grandTotal = {
     fontSize: '34px',
     fontWeight: '900',
     letterSpacing: '-0.04em',
+    lineHeight: '1',
     margin: '0',
     textAlign: 'right' as const,
     width: '55%',
@@ -521,8 +572,8 @@ const regardsTitle = {
     fontSize: '24px',
     fontWeight: '900',
     letterSpacing: '-0.04em',
+    lineHeight: '1.2',
     margin: '0 0 12px',
-    textTransform: 'uppercase' as const,
 };
 
 const signature = {
