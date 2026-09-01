@@ -25,6 +25,6 @@ router.get('/:id', getOrder);
 // Protected routes
 router.post('/', auth, createOrder);
 router.put('/:id', auth, adminAuth, updateOrder);
-router.delete('/:id', auth, adminAuth, deleteOrder);
+router.delete('/:id', auth, deleteOrder);
 
 module.exports = router;

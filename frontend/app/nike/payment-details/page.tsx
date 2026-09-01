@@ -266,6 +266,19 @@ const PaymentDetailsPage = () => {
       const createdOrder = await res.json();
       setOrderPlaced(true);
 
+      const cartSnapshot = typedCartItems.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        color: item.color || "",
+        size: item.size || "",
+        image: item.image || "",
+        currency: item.currency || "$",
+      }));
+
+      console.log(`Order created with ${cartSnapshot.length} items, sending email...`);
+
       fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -280,7 +293,7 @@ const PaymentDetailsPage = () => {
           shipping,
           discount: 0,
           totalAmount: total,
-          items: typedCartItems,
+          items: cartSnapshot,
         }),
       }).catch((err) => console.error("Error sending email:", err));
     } catch (error) {

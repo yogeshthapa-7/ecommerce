@@ -3,6 +3,8 @@ import { NikeOrderEmail } from '@/emails/NikeOrderEmail';
 import { NextResponse } from 'next/server';
 import { render } from '@react-email/render';
 import { getProductCutoutImage } from '@/app/nike/products/[id]/productImageCutouts';
+import fs from 'fs';
+import path from 'path';
 
 type OrderEmailItem = {
     name: string;
@@ -43,7 +45,28 @@ const resolveEmailImage = async (image: string | undefined, baseUrl: string) => 
 
     const normalizedImage = getProductCutoutImage(image);
 
+    if (!normalizedImage) return '';
+
     if (/^(https?:|cid:|data:)/i.test(normalizedImage)) return normalizedImage;
+
+    if (normalizedImage.startsWith('/')) {
+        try {
+            const cleanPath = normalizedImage.split('?')[0];
+            const fullPath = path.join(process.cwd(), 'public', cleanPath);
+            const buffer = await fs.promises.readFile(fullPath);
+            
+            let contentType = 'image/png';
+            if (cleanPath.endsWith('.jpg') || cleanPath.endsWith('.jpeg')) contentType = 'image/jpeg';
+            else if (cleanPath.endsWith('.webp')) contentType = 'image/webp';
+            else if (cleanPath.endsWith('.svg')) contentType = 'image/svg+xml';
+            else if (cleanPath.endsWith('.gif')) contentType = 'image/gif';
+
+            const base64 = buffer.toString('base64');
+            return `data:${contentType};base64,${base64}`;
+        } catch (error) {
+            console.error('Failed to read local image for email:', error);
+        }
+    }
 
     if (baseUrl) {
         try {
@@ -88,13 +111,25 @@ export async function POST(request: Request) {
             : Array.isArray(cartItems)
               ? cartItems
               : [];
+
+        if (resolvedItems.length === 0) {
+            console.error('No order items provided for email');
+            return NextResponse.json({ error: 'No order items provided' }, { status: 400 });
+        }
+
+        console.log(`Sending email for ${resolvedItems.length} order items`);
         const publicBaseUrl = getPublicBaseUrl(request);
         const emailItems = await Promise.all(
-            resolvedItems.map(async (item) => ({
-                ...item,
-                image: await resolveEmailImage(item.image, publicBaseUrl),
-            }))
+            resolvedItems.map(async (item, index) => {
+                const resolvedImage = await resolveEmailImage(item.image, publicBaseUrl);
+                return {
+                    ...item,
+                    image: resolvedImage,
+                };
+            })
         );
+
+        console.log('Email items prepared:', emailItems.map(i => ({ name: i.name, hasImage: !!i.image })));
 
         const emailHtml = await render(
             NikeOrderEmail({
@@ -110,6 +145,10 @@ export async function POST(request: Request) {
                 items: emailItems,
             })
         );
+
+        console.log('Rendered email HTML length:', emailHtml.length, 'chars for', emailItems.length, 'items');
+        const productRowCount = (emailHtml.match(/borderTop/g) || []).length;
+        console.log('Product rows in HTML:', productRowCount);
 
         const transporter = nodemailer.createTransport({
             service: 'gmail',

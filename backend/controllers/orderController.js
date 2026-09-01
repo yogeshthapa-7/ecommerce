@@ -4,17 +4,13 @@ const Product = require('../models/Product');
 const mongoose = require('mongoose');
 
 // GET orders by user ID
-
-// GET orders by user ID
 exports.getOrdersByUser = async (req, res) => {
     try {
         const { userId } = req.params;
         const User = require('../models/User');
 
-        let orders = [];
         let userEmail = null;
 
-        // First, try to get user's email for fallback matching
         try {
             const user = await User.findById(userId);
             if (user && user.email) {
@@ -24,22 +20,13 @@ exports.getOrdersByUser = async (req, res) => {
             // User lookup failed
         }
 
-        // Check if userId is a valid MongoDB ObjectId format
+        let orders = [];
+
         const isValidObjectId = mongoose.Types.ObjectId.isValid(userId);
 
-        if (isValidObjectId && userEmail) {
-            // Query: match userId OR customerEmail
-            orders = await Order.find({
-                $or: [
-                    { userId: new mongoose.Types.ObjectId(userId) },
-                    { customerEmail: userEmail }
-                ]
-            }).sort({ createdAt: -1 });
-        } else if (isValidObjectId) {
-            // If valid ObjectId but no email found, match by userId
+        if (isValidObjectId) {
             orders = await Order.find({ userId: new mongoose.Types.ObjectId(userId) }).sort({ createdAt: -1 });
         } else if (userEmail) {
-            // If invalid ObjectId, just match by email
             orders = await Order.find({ customerEmail: userEmail }).sort({ createdAt: -1 });
         }
 
@@ -174,8 +161,18 @@ exports.updateOrder = async (req, res) => {
 // DELETE order
 exports.deleteOrder = async (req, res) => {
     try {
-        const order = await Order.findByIdAndDelete(req.params.id);
+        const order = await Order.findById(req.params.id);
         if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        const requester = req.user;
+        const isAdmin = requester?.role === 'admin';
+        const isOwner = order.userId && order.userId.toString() === requester?.id;
+
+        if (!isAdmin && !isOwner) {
+            return res.status(403).json({ message: 'You are not allowed to delete this order' });
+        }
+
+        await order.deleteOne();
         res.json({ message: 'Order deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });

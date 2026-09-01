@@ -24,12 +24,14 @@ import {
   Settings,
   Shield,
   ShoppingBag,
+  Trash2,
   Truck,
   User,
   XCircle,
 } from "lucide-react";
 import EcomFooter from "@/components/ecomfooter";
 import EcomNavbar from "@/components/ecomnavbar";
+import { useCart } from "@/app/context/CartContext";
 
 interface UserData {
   _id?: string;
@@ -88,7 +90,9 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState<TabType>("orders");
   const [loading, setLoading] = useState(true);
   const [orderFilter, setOrderFilter] = useState("all");
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const router = useRouter();
+  const { addOrderItemsToCart } = useCart();
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -155,6 +159,47 @@ const ProfilePage = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     router.push("/login");
+  };
+
+  const handleBuyAgain = (order: Order) => {
+    if (!order?.items?.length) return;
+    addOrderItemsToCart(order.items);
+    router.push("/nike/payment-details");
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    setDeleteTargetId(orderId);
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!deleteTargetId) return;
+
+    let apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    if (apiBaseUrl.endsWith("/api")) {
+      apiBaseUrl = apiBaseUrl.slice(0, -4);
+    }
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/orders/${deleteTargetId}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to delete order:", errorText);
+        setDeleteTargetId(null);
+        return;
+      }
+
+      setOrders((prev) => prev.filter((order) => order._id !== deleteTargetId && order.orderId !== deleteTargetId));
+    } catch (error) {
+      console.error("Error deleting order:", error);
+    } finally {
+      setDeleteTargetId(null);
+    }
   };
 
   const getUserInitials = () => {
@@ -406,11 +451,21 @@ const ProfilePage = () => {
                       {order.paymentStatus}
                     </span>
                   </div>
-                  <Link href="/nike/products">
-                    <button className="inline-flex items-center gap-2 text-sm font-black uppercase text-zinc-500 transition-colors hover:text-white">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => handleDeleteOrder(order._id || order.orderId)}
+                      className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-500 transition-colors hover:text-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => handleBuyAgain(order)}
+                      className="inline-flex items-center gap-2 text-sm font-black uppercase text-zinc-500 transition-colors hover:text-white"
+                    >
                       Buy Again <ArrowRight className="h-4 w-4" />
                     </button>
-                  </Link>
+                  </div>
                 </div>
               </div>
             </article>
@@ -631,6 +686,46 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       <EcomNavbar />
+
+      {deleteTargetId && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4">
+          <div className="w-full max-w-md overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60">
+            <div className="border-b border-white/10 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-red-500/30 bg-red-500/10">
+                  <Trash2 className="h-4 w-4 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">Delete Order</h3>
+                  <p className="text-xs font-semibold text-zinc-500">This action cannot be undone</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-5">
+              <p className="text-sm font-semibold text-zinc-300">
+                Are you sure you want to delete this order? This will permanently remove it
+                from your order history.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-white/10 px-6 py-4">
+              <button
+                onClick={() => setDeleteTargetId(null)}
+                className="h-11 rounded-full border border-white/10 px-5 text-sm font-black uppercase text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteOrder}
+                className="h-11 rounded-full bg-red-500 px-5 text-sm font-black uppercase text-white transition-colors hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="border-b border-white/10 bg-[linear-gradient(120deg,#09090b_0%,#000_52%,rgba(239,68,68,0.16)_100%)] pt-28">
         <div className="mx-auto max-w-7xl px-6 py-12">

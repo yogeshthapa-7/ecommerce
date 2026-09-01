@@ -85,7 +85,44 @@ export const productImageCutouts: Record<string, string> = {
   "https://www.nike.sa/dw/image/v2/BDVB_PRD/on/demandware.static/-/Sites-akeneo-master-catalog/default/dw51c9c38a/nk/39b/c/2/d/9/2/39bc2d92_446a_4c28_a3d4_a75726ee8499.jpg?sw=520&sh=520&sm=fit": "/assets/product-cutouts/1f0c5c34d7ded736.png",
 };
 
-export const getProductCutoutImage = (imageUrl?: string) =>
-  imageUrl && productImageCutouts[imageUrl]
-    ? `${productImageCutouts[imageUrl]}?v=3`
-    : imageUrl;
+const NIKE_CDN_BASE = 'https://static.nike.com/a/images/';
+
+const extractNikeImageId = (url: string): string | null => {
+  try {
+    const parsed = new URL(url);
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    if (segments.length < 2) return null;
+    const uuid = segments[segments.length - 2];
+    const filename = segments[segments.length - 1];
+    if (!uuid || !filename || !filename.endsWith('.png')) return null;
+    return `${uuid}/${filename}`;
+  } catch {
+    return null;
+  }
+};
+
+export const getProductCutoutImage = (imageUrl?: string) => {
+  if (!imageUrl) return imageUrl;
+
+  const normalizedImage = imageUrl.trim();
+
+  if (normalizedImage.startsWith('/') || normalizedImage.startsWith('data:')) {
+    return normalizedImage;
+  }
+
+  if (productImageCutouts[normalizedImage]) {
+    return `${productImageCutouts[normalizedImage]}?v=3`;
+  }
+
+  const imageId = extractNikeImageId(normalizedImage);
+  if (imageId) {
+    const fallbackEntry = Object.entries(productImageCutouts).find(([key]) =>
+      extractNikeImageId(key) === imageId,
+    );
+    if (fallbackEntry) {
+      return `${fallbackEntry[1]}?v=3`;
+    }
+  }
+
+  return normalizedImage;
+};

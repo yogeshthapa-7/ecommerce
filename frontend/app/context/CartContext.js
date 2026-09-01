@@ -107,11 +107,41 @@ export const CartProvider = ({ children }) => {
     return cartItems.reduce((count, item) => count + item.quantity, 0);
   };
 
+  const addOrderItemsToCart = (orderItems = []) => {
+    setCartItems((prevItems) => {
+      const nextItems = [...prevItems];
+      orderItems.forEach((item) => {
+        const productId = item.productId || item._id || `order-${Date.now()}-${Math.random()}`;
+        const cartItemId = `${productId}-${item.color || 'default'}-${item.size || 'default'}`;
+        const existingIndex = nextItems.findIndex((cartItem) => cartItem.cartItemId === cartItemId);
+        const normalizedItem = {
+          cartItemId,
+          productId,
+          name: item.name,
+          price: Number(item.price || 0),
+          currency: item.currency || '$',
+          image: item.image || '',
+          color: item.color || 'Default',
+          size: item.size || '',
+          quantity: Number(item.quantity || 1),
+          category: item.category || '',
+        };
+        if (existingIndex > -1) {
+          nextItems[existingIndex] = normalizedItem;
+        } else {
+          nextItems.push(normalizedItem);
+        }
+      });
+      return nextItems;
+    });
+  };
+
   const value = {
     cartItems,
     isCartOpen,
     setIsCartOpen,
     addToCart,
+    addOrderItemsToCart,
     removeFromCart,
     updateQuantity,
     clearCart,

@@ -152,6 +152,9 @@ export const NikeOrderEmail = ({
 
                     <Section style={productsCard}>
                         <Text style={sectionTitle}>Your Gear</Text>
+                        <Text style={{ ...mutedText, marginBottom: '16px' }}>
+                            {items.length} item{items.length === 1 ? '' : 's'} in this order
+                        </Text>
 
                         {items.length > 0 ? (
                             items.map((item, index) => {
@@ -159,37 +162,39 @@ export const NikeOrderEmail = ({
 
                                 return (
                                     <Section key={`${item.name}-${index}`} style={productRow}>
-                                        {item.image ? (
-                                            <Section className="email-stack-image" style={productImageWrap}>
-                                                <Img
-                                                    src={item.image}
-                                                    alt={item.name}
-                                                    width="84"
-                                                    height="84"
-                                                    style={productImage}
-                                                />
-                                            </Section>
-                                        ) : (
-                                            <Section className="email-stack-image" style={productImageFallback}>
-                                                <Text style={productImageFallbackText}>NIKE</Text>
-                                            </Section>
-                                        )}
-                                        <Section className="email-stack" style={productInfo}>
-                                            <Text style={productName}>{item.name}</Text>
-                                            <Text style={productMeta}>
-                                                Qty {item.quantity || 1}
-                                                {item.size ? ` / Size ${item.size}` : ''}
-                                                {item.color ? ` / ${item.color}` : ''}
-                                            </Text>
-                                            <Text style={productPrice}>
-                                                {formatMoney(Number(item.price || 0), item.currency || currency)} each
-                                            </Text>
-                                        </Section>
-                                        <Section className="email-stack-total" style={productTotalWrap}>
-                                            <Text style={productTotal}>
-                                                {formatMoney(lineTotal, item.currency || currency)}
-                                            </Text>
-                                        </Section>
+                                        <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} border={0} style={{ borderCollapse: 'collapse' }}>
+                                            <tr>
+                                                <td width="84" valign="top" style={{ paddingRight: '16px', textAlign: 'left' }}>
+                                                    {item.image ? (
+                                                        <Img
+                                                            src={item.image}
+                                                            alt={item.name}
+                                                            width="84"
+                                                            height="84"
+                                                            style={{ display: 'block', width: '84px', height: '84px', objectFit: 'contain', borderRadius: '16px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}
+                                                        />
+                                                    ) : (
+                                                        <div style={{ display: 'inline-block', width: '84px', height: '84px', lineHeight: '84px', textAlign: 'center', borderRadius: '16px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff', color: '#a1a1aa', fontSize: '20px', fontWeight: '900', letterSpacing: '0.08em' }}>NIKE</div>
+                                                    )}
+                                                </td>
+                                                <td valign="top" style={{ textAlign: 'left', paddingRight: '16px' }}>
+                                                    <Text style={productName}>{item.name}</Text>
+                                                    <Text style={productMeta}>
+                                                        Qty {item.quantity || 1}
+                                                        {item.size ? ` / Size ${item.size}` : ''}
+                                                        {item.color ? ` / ${item.color}` : ''}
+                                                    </Text>
+                                                    <Text style={productPrice}>
+                                                        {formatMoney(Number(item.price || 0), item.currency || currency)} each
+                                                    </Text>
+                                                </td>
+                                                <td valign="top" style={{ textAlign: 'right' }}>
+                                                    <Text style={productTotal}>
+                                                        {formatMoney(lineTotal, item.currency || currency)}
+                                                    </Text>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </Section>
                                 );
                             })
