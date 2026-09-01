@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
     lastName: { type: String, default: '' },
     dateOfBirth: { type: String, default: '' },
     gender: { type: String, default: '' },
+    countryCode: { type: String, default: '+1' },
+    phone: { type: String, default: '' },
     profilePic: { type: String, default: 'https://wallpapers.com/images/hd/nike-logo-diuxayp2mn6ubbxd.jpg' },
     role: { type: String, enum: ['user', 'admin'], default: 'user' }
 }, { timestamps: true });

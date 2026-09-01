@@ -51,6 +51,30 @@ const MONTHS = [
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
+const COUNTRY_CODES = [
+  { code: "", name: "Select Country" },
+  { code: "+1", name: "Canada" },
+  { code: "+44", name: "United Kingdom" },
+  { code: "+91", name: "India" },
+  { code: "+977", name: "Nepal" },
+  { code: "+61", name: "Australia" },
+  { code: "+86", name: "China" },
+  { code: "+49", name: "Germany" },
+  { code: "+33", name: "France" },
+  { code: "+81", name: "Japan" },
+  { code: "+82", name: "South Korea" },
+  { code: "+55", name: "Brazil" },
+  { code: "+52", name: "Mexico" },
+  { code: "+7", name: "Russia" },
+  { code: "+971", name: "UAE" },
+  { code: "+65", name: "Singapore" },
+  { code: "+60", name: "Malaysia" },
+  { code: "+63", name: "Philippines" },
+  { code: "+64", name: "New Zealand" },
+  { code: "+27", name: "South Africa" },
+  { code: "+234", name: "Nigeria" },
+]
+
 function CustomDatePicker({
   value,
   onChange,
@@ -158,52 +182,52 @@ function CustomDatePicker({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         onBlur={onBlur}
         disabled={disabled}
-        className={`h-12 w-full rounded-sm border bg-white px-3 text-left text-sm flex items-center justify-between transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+        className={`h-12 w-full rounded-sm border bg-neutral-800 px-3 text-left text-sm flex items-center justify-between transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
           error
             ? "border-red-500 focus:border-red-500"
             : isOpen
-              ? "border-black"
-              : "border-gray-300 hover:border-gray-400"
-        } ${value ? "text-gray-900" : "text-gray-500"}`}
+              ? "border-white"
+              : "border-neutral-700 hover:border-neutral-600"
+        } ${value ? "text-white" : "text-neutral-500"}`}
       >
         <span>{value ? formatDisplayDate(value) : "Date of Birth"}</span>
-        <Calendar size={18} className="text-gray-500" />
+        <Calendar size={18} className="text-neutral-500" />
       </button>
 
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-20"
+            className="fixed inset-0 z-[9998]"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute z-30 mt-2 w-full bg-white border border-gray-200 rounded-sm shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="absolute z-[9999] mt-2 w-full bg-neutral-900 border border-neutral-700 rounded-sm shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="p-1.5 hover:bg-gray-100 rounded-sm transition-colors"
+                className="p-1.5 hover:bg-neutral-800 rounded-sm transition-colors"
                 aria-label="Previous month"
               >
-                <ChevronLeft size={18} className="text-gray-700" />
+                <ChevronLeft size={18} className="text-neutral-300" />
               </button>
 
               <div className="flex gap-2 flex-1 justify-center">
                 <select
                   value={viewDate.getMonth()}
                   onChange={(e) => handleMonthChange(Number(e.target.value))}
-                  className="text-sm font-semibold text-gray-900 bg-transparent border border-gray-200 rounded-sm px-2 py-1 cursor-pointer hover:border-gray-400 focus:outline-none focus:border-black"
+                  className="text-sm font-semibold text-white bg-neutral-800 border border-neutral-700 rounded-sm px-2 py-1 cursor-pointer hover:border-neutral-600 focus:outline-none focus:border-white"
                 >
                   {MONTHS.map((month, idx) => (
-                    <option key={month} value={idx}>{month.slice(0, 3)}</option>
+                    <option key={month} value={idx} className="bg-neutral-800 text-white">{month.slice(0, 3)}</option>
                   ))}
                 </select>
                 <select
                   value={viewDate.getFullYear()}
                   onChange={(e) => handleYearChange(Number(e.target.value))}
-                  className="text-sm font-semibold text-gray-900 bg-transparent border border-gray-200 rounded-sm px-2 py-1 cursor-pointer hover:border-gray-400 focus:outline-none focus:border-black"
+                  className="text-sm font-semibold text-white bg-neutral-800 border border-neutral-700 rounded-sm px-2 py-1 cursor-pointer hover:border-neutral-600 focus:outline-none focus:border-white"
                 >
                   {yearOptions.map((year) => (
-                    <option key={year} value={year}>{year}</option>
+                    <option key={year} value={year} className="bg-neutral-800 text-white">{year}</option>
                   ))}
                 </select>
               </div>
@@ -212,16 +236,16 @@ function CustomDatePicker({
                 type="button"
                 onClick={handleNextMonth}
                 disabled={viewDate.getFullYear() >= maxDate.getFullYear() && viewDate.getMonth() >= maxDate.getMonth()}
-                className="p-1.5 hover:bg-gray-100 rounded-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="p-1.5 hover:bg-neutral-800 rounded-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 aria-label="Next month"
               >
-                <ChevronRight size={18} className="text-gray-700" />
+                <ChevronRight size={18} className="text-neutral-300" />
               </button>
             </div>
 
             <div className="grid grid-cols-7 gap-1 mb-2">
               {DAYS.map((day) => (
-                <div key={day} className="text-center text-xs font-semibold text-gray-500 py-1">
+                <div key={day} className="text-center text-xs font-semibold text-neutral-500 py-1">
                   {day}
                 </div>
               ))}
@@ -243,12 +267,12 @@ function CustomDatePicker({
                     disabled={future}
                     className={`aspect-square text-sm font-medium rounded-sm transition-all flex items-center justify-center ${
                       selected
-                        ? "bg-black text-white"
+                        ? "bg-white text-black"
                         : todayDate
-                          ? "border border-black text-black hover:bg-gray-100"
+                          ? "border border-white text-white hover:bg-neutral-800"
                           : future
-                            ? "text-gray-300 cursor-not-allowed"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "text-neutral-700 cursor-not-allowed"
+                            : "text-neutral-300 hover:bg-neutral-800"
                     }`}
                   >
                     {day}
@@ -257,7 +281,7 @@ function CustomDatePicker({
               })}
             </div>
 
-            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+            <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center justify-between text-xs text-neutral-500">
               <span>Select your date of birth</span>
               <button
                 type="button"
@@ -266,7 +290,7 @@ function CustomDatePicker({
                   setIsOpen(false)
                   onBlur()
                 }}
-                className="text-gray-700 hover:text-black font-medium underline"
+                className="text-neutral-300 hover:text-white font-medium underline"
               >
                 Clear
               </button>
@@ -315,6 +339,11 @@ const validationSchema = Yup.object({
   gender: Yup.string()
     .oneOf(["male", "female"], "Please select your gender")
     .required("Please select your gender"),
+  countryCode: Yup.string()
+    .required("Country code is required"),
+  phoneNumber: Yup.string()
+    .matches(/^[0-9]{7,15}$/, "Please enter a valid phone number (7-15 digits)")
+    .required("Phone number is required"),
   emailUpdates: Yup.boolean()
 })
 
@@ -330,6 +359,8 @@ export default function RegisterPage() {
       lastName: "",
       dateOfBirth: "",
       gender: "",
+      countryCode: "+1",
+      phoneNumber: "",
       emailUpdates: false
     },
     validationSchema,
@@ -338,14 +369,16 @@ export default function RegisterPage() {
         const res = await fetch("/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: values.email,
-            password: values.password,
-            firstName: values.firstName,
-            lastName: values.lastName,
-            dateOfBirth: values.dateOfBirth,
-            gender: values.gender,
-          }),
+            body: JSON.stringify({
+              email: values.email,
+              password: values.password,
+              firstName: values.firstName,
+              lastName: values.lastName,
+              dateOfBirth: values.dateOfBirth,
+              gender: values.gender,
+              countryCode: values.countryCode,
+              phone: values.phoneNumber,
+            }),
         });
 
         const data = await res.json();
@@ -383,50 +416,51 @@ export default function RegisterPage() {
   })
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      {/* Stylish geometric background - CSS only for performance */}
+    <div className="min-h-screen w-full bg-neutral-950 overflow-x-hidden">
+      {/* Dark Nike-style background with transparent product images */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Gradient orbs */}
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-orange-100 to-transparent rounded-full blur-3xl opacity-30" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-blue-100 to-transparent rounded-full blur-3xl opacity-30" />
+        {/* Base dark gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black" />
 
-        {/* Grid pattern */}
+        {/* Transparent product images - scattered in background */}
+        <div className="absolute -top-20 -right-20 w-[500px] h-[500px] opacity-[0.07]">
+          <img src="/assets/nike-hero/nike1-transparent.png" alt="" className="w-full h-full object-contain" />
+        </div>
+        <div className="absolute top-1/3 -left-32 w-[400px] h-[400px] opacity-[0.05]">
+          <img src="/assets/nike-hero/nike2-transparent.png" alt="" className="w-full h-full object-contain" />
+        </div>
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] opacity-[0.04]">
+          <img src="/assets/nike-hero/nike3-transparent.png" alt="" className="w-full h-full object-contain" />
+        </div>
+        <div className="absolute top-2/3 -right-20 w-[350px] h-[350px] opacity-[0.06]">
+          <img src="/assets/nike-hero/nike6-transparent.png" alt="" className="w-full h-full object-contain" />
+        </div>
+
+        {/* Subtle grid overlay */}
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `
-              linear-gradient(to right, #000 1px, transparent 1px),
-              linear-gradient(to bottom, #000 1px, transparent 1px)
+              linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)
             `,
             backgroundSize: '80px 80px'
           }}
         />
 
-        {/* Diagonal accent lines */}
-        <div className="absolute top-0 left-0 w-full h-full opacity-5">
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 100px,
-                #000 100px,
-                #000 102px
-              )`
-            }}
-          />
-        </div>
+        {/* Gradient accent orbs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/3 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
       </div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-6">
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 md:p-6 scroll-smooth">
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
 
           {/* Left branding */}
           <div className="hidden lg:flex flex-col animate-slideRight">
             {/* Nike Swoosh */}
-            <div className="mb-12">
+            <div className="mb-12 animate-fade-in">
               <svg
                 width="78"
                 height="78"
@@ -441,7 +475,7 @@ export default function RegisterPage() {
               </svg>
             </div>
 
-            <h1 className="text-7xl font-black text-black leading-[0.9] mb-8 tracking-tight">
+            <h1 className="text-7xl font-black text-white leading-[0.9] mb-8 tracking-tight animate-fade-in-delayed">
               JOIN<br />
               THE<br />
               CLUB.<br />
@@ -449,303 +483,413 @@ export default function RegisterPage() {
               REWARDED.
             </h1>
 
-            <p className="text-lg text-gray-600 max-w-md leading-relaxed">
+            <p className="text-lg text-neutral-400 max-w-md leading-relaxed animate-fade-in-delayed-more">
               Create your Nike Member profile and get first access to the very best of Nike products, inspiration and community.
             </p>
           </div>
 
           {/* Register form */}
           <div className="w-full max-w-md mx-auto lg:mx-0 animate-slideUp">
-          {/* Mobile logo */}
-          <div className="lg:hidden mb-8 flex justify-center">
-            <svg
-              width="60"
-              height="60"
-              viewBox="0 0 24 24"
-              fill="none"
-            >
-              <path
-                d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z"
-                fill="#000"
-              />
-            </svg>
-          </div>
+            {/* Mobile logo */}
+            <div className="lg:hidden mb-8 flex justify-center animate-fade-in">
+              <svg
+                width="60"
+                height="60"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M23.906 8.809c-.209-.282-3.09-2.24-7.628-1.854-2.58.23-5.303 1.328-8.075 3.253-2.095 1.453-4.26 3.315-6.424 5.528-.354.361-.612.632-.777.822l-.02.022c-.063.071-.012.18.077.16 1.524-.346 4.382-.972 7.272-.972 1.627 0 3.298.165 4.972.49 4.52.876 8.59 2.925 9.063 3.148.18.086.367-.103.273-.277-.945-1.746-2.22-4.254-2.48-6.482-.26-2.227.29-3.5.747-3.838z"
+                  fill="#fff"
+                />
+              </svg>
+            </div>
 
-          {/* Floating card with backdrop */}
-          <div className="relative">
-            {/* Subtle shadow/glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-black/5 to-black/10 blur-xl transform translate-y-2" />
+            {/* Floating card with backdrop */}
+            <div className="relative animate-fade-in-delayed">
+              {/* Subtle shadow/glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-white/10 blur-xl transform translate-y-2" />
 
-            <Card className="relative border-[1.5px] border-gray-200 shadow-2xl rounded-sm bg-white/95 backdrop-blur-sm">
-              <CardHeader className="px-8 pt-10 pb-6 space-y-3">
-                <CardTitle className="text-2xl font-bold text-center">
-                  BECOME A NIKE MEMBER
-                </CardTitle>
-                <p className="text-sm text-gray-600 text-center leading-relaxed">
-                  Create your Nike Member profile and get first access to the very best of Nike products, inspiration and community.
-                </p>
-              </CardHeader>
+              <Card className="relative border-[1.5px] border-neutral-800 shadow-2xl rounded-sm bg-neutral-900/95 backdrop-blur-sm transition-all duration-300 hover:shadow-3xl">
+                <CardHeader className="px-8 pt-10 pb-6 space-y-3">
+                  <CardTitle className="text-2xl font-bold text-center text-white animate-fade-in-delayed-more">
+                    BECOME A NIKE MEMBER
+                  </CardTitle>
+                  <p className="text-sm text-neutral-400 text-center leading-relaxed">
+                    Create your Nike Member profile and get first access to the very best of Nike products, inspiration and community.
+                  </p>
+                </CardHeader>
 
-              <CardContent className="px-8 pb-8">
-                <form className="space-y-4" onSubmit={formik.handleSubmit}>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email" className="sr-only">Email address</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formik.values.email}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${formik.touched.email && formik.errors.email ? 'border-red-500 focus-visible:border-red-500' : ''
-                        }`}
-                      placeholder="Email address"
-                      disabled={formik.isSubmitting}
-                    />
-                    {formik.touched.email && formik.errors.email && (
-                      <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
-                        <AlertCircle size={14} />
-                        <span>{formik.errors.email}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="password" className="sr-only">Password</Label>
-                    <div className="relative">
+                <CardContent className="px-8 pb-8">
+                  <form className="space-y-4" onSubmit={formik.handleSubmit}>
+                    <div className="space-y-1.5 animate-stagger" style={{ animationDelay: '0.05s' }}>
+                      <Label htmlFor="email" className="sr-only">Email address</Label>
                       <Input
-                        id="password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formik.values.password}
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formik.values.email}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors pr-12 ${formik.touched.password && formik.errors.password ? 'border-red-500 focus-visible:border-red-500' : ''
+                        className={`h-12 rounded-sm border-neutral-700 bg-neutral-800 text-white placeholder:text-neutral-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white transition-all duration-200 ${formik.touched.email && formik.errors.email ? 'border-red-500 focus-visible:border-red-500' : ''
                           }`}
-                        placeholder="Password"
+                        placeholder="Email address"
                         disabled={formik.isSubmitting}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        disabled={formik.isSubmitting}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 disabled:opacity-50"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
+                      {formik.touched.email && formik.errors.email && (
+                        <div className="flex items-center gap-1.5 text-red-400 text-xs mt-1.5 animate-fade-in">
+                          <AlertCircle size={14} />
+                          <span>{formik.errors.email}</span>
+                        </div>
+                      )}
                     </div>
-                    {formik.touched.password && formik.errors.password && (
-                      <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
-                        <AlertCircle size={14} />
-                        <span>{formik.errors.password}</span>
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="firstName" className="sr-only">First Name</Label>
-                    <Input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      value={formik.values.firstName}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${formik.touched.firstName && formik.errors.firstName ? 'border-red-500 focus-visible:border-red-500' : ''
-                        }`}
-                      placeholder="First Name"
-                      disabled={formik.isSubmitting}
-                    />
-                    {formik.touched.firstName && formik.errors.firstName && (
-                      <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
-                        <AlertCircle size={14} />
-                        <span>{formik.errors.firstName}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="lastName" className="sr-only">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      name="lastName"
-                      type="text"
-                      value={formik.values.lastName}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`h-12 rounded-sm border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-black transition-colors ${formik.touched.lastName && formik.errors.lastName ? 'border-red-500 focus-visible:border-red-500' : ''
-                        }`}
-                      placeholder="Last Name"
-                      disabled={formik.isSubmitting}
-                    />
-                    {formik.touched.lastName && formik.errors.lastName && (
-                      <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
-                        <AlertCircle size={14} />
-                        <span>{formik.errors.lastName}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="dateOfBirth" className="sr-only">Date of Birth</Label>
-                    <CustomDatePicker
-                      value={formik.values.dateOfBirth}
-                      onChange={(value) => formik.setFieldValue("dateOfBirth", value)}
-                      onBlur={() => formik.setFieldTouched("dateOfBirth", true)}
-                      error={!!(formik.touched.dateOfBirth && formik.errors.dateOfBirth)}
-                      disabled={formik.isSubmitting}
-                    />
-                    {formik.touched.dateOfBirth && formik.errors.dateOfBirth ? (
-                      <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5">
-                        <AlertCircle size={14} />
-                        <span>{formik.errors.dateOfBirth}</span>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-gray-500 pt-1">
-                        Get a Nike Member Reward every year on your Birthday.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-xs text-gray-700">Gender</Label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <label className="cursor-pointer">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value="male"
-                          checked={formik.values.gender === "male"}
-                          onChange={(e) => {
-                            formik.handleChange(e)
-                            formik.setFieldTouched("gender", true)
-                          }}
-                          className="sr-only"
+                    <div className="space-y-1.5 animate-stagger" style={{ animationDelay: '0.1s' }}>
+                      <Label htmlFor="password" className="sr-only">Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          value={formik.values.password}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className={`h-12 rounded-sm border-neutral-700 bg-neutral-800 text-white placeholder:text-neutral-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white transition-all duration-200 pr-12 ${formik.touched.password && formik.errors.password ? 'border-red-500 focus-visible:border-red-500' : ''
+                            }`}
+                          placeholder="Password"
                           disabled={formik.isSubmitting}
                         />
-                        <div className={`h-12 border-[1.5px] rounded-sm text-sm font-medium flex items-center justify-center transition-colors ${formik.values.gender === "male"
-                            ? "border-black bg-black text-white"
-                            : "border-gray-300 hover:border-black text-gray-900"
-                          } ${formik.touched.gender && formik.errors.gender ? "border-red-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
-                          Male
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={formik.isSubmitting}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white disabled:opacity-50 transition-all duration-200 hover:scale-110"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      {formik.touched.password && formik.errors.password && (
+                        <div className="flex items-center gap-1.5 text-red-400 text-xs mt-1.5 animate-fade-in">
+                          <AlertCircle size={14} />
+                          <span>{formik.errors.password}</span>
                         </div>
-                      </label>
-                      <label className="cursor-pointer">
-                        <input
-                          type="radio"
-                          name="gender"
-                          value="female"
-                          checked={formik.values.gender === "female"}
-                          onChange={(e) => {
-                            formik.handleChange(e)
-                            formik.setFieldTouched("gender", true)
-                          }}
-                          className="sr-only"
+                      )}
+                    </div>
+
+                   <div className="space-y-1.5 animate-stagger" style={{ animationDelay: '0.15s' }}>
+                     <Label htmlFor="firstName" className="sr-only">First Name</Label>
+                     <Input
+                       id="firstName"
+                       name="firstName"
+                       type="text"
+                       value={formik.values.firstName}
+                       onChange={formik.handleChange}
+                       onBlur={formik.handleBlur}
+                       className={`h-12 rounded-sm border-neutral-700 bg-neutral-800 text-white placeholder:text-neutral-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white transition-all duration-200 ${formik.touched.firstName && formik.errors.firstName ? 'border-red-500 focus-visible:border-red-500' : ''
+                         }`}
+                       placeholder="First Name"
+                       disabled={formik.isSubmitting}
+                     />
+                     {formik.touched.firstName && formik.errors.firstName && (
+                       <div className="flex items-center gap-1.5 text-red-400 text-xs mt-1.5 animate-fade-in">
+                         <AlertCircle size={14} />
+                         <span>{formik.errors.firstName}</span>
+                       </div>
+                     )}
+                   </div>
+
+                   <div className="space-y-1.5 animate-stagger" style={{ animationDelay: '0.2s' }}>
+                     <Label htmlFor="lastName" className="sr-only">Last Name</Label>
+                     <Input
+                       id="lastName"
+                       name="lastName"
+                       type="text"
+                       value={formik.values.lastName}
+                       onChange={formik.handleChange}
+                       onBlur={formik.handleBlur}
+                       className={`h-12 rounded-sm border-neutral-700 bg-neutral-800 text-white placeholder:text-neutral-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white transition-all duration-200 ${formik.touched.lastName && formik.errors.lastName ? 'border-red-500 focus-visible:border-red-500' : ''
+                         }`}
+                       placeholder="Last Name"
+                       disabled={formik.isSubmitting}
+                     />
+                     {formik.touched.lastName && formik.errors.lastName && (
+                       <div className="flex items-center gap-1.5 text-red-400 text-xs mt-1.5 animate-fade-in">
+                         <AlertCircle size={14} />
+                         <span>{formik.errors.lastName}</span>
+                       </div>
+                     )}
+                   </div>
+
+                   <div className="space-y-1.5 animate-stagger" style={{ animationDelay: '0.25s' }}>
+                     <Label htmlFor="dateOfBirth" className="sr-only">Date of Birth</Label>
+                     <CustomDatePicker
+                       value={formik.values.dateOfBirth}
+                       onChange={(value) => formik.setFieldValue("dateOfBirth", value)}
+                       onBlur={() => formik.setFieldTouched("dateOfBirth", true)}
+                       error={!!(formik.touched.dateOfBirth && formik.errors.dateOfBirth)}
+                       disabled={formik.isSubmitting}
+                     />
+                     {formik.touched.dateOfBirth && formik.errors.dateOfBirth ? (
+                       <div className="flex items-center gap-1.5 text-red-400 text-xs mt-1.5 animate-fade-in">
+                         <AlertCircle size={14} />
+                         <span>{formik.errors.dateOfBirth}</span>
+                       </div>
+                     ) : (
+                       <p className="text-xs text-neutral-500 pt-1">
+                         Get a Nike Member Reward every year on your Birthday.
+                       </p>
+                     )}
+                   </div>
+
+                   <div className="space-y-3 animate-stagger" style={{ animationDelay: '0.3s' }}>
+                     <Label className="text-xs text-neutral-400">Gender</Label>
+                     <div className="grid grid-cols-2 gap-3">
+                       <label className="cursor-pointer">
+                         <input
+                           type="radio"
+                           name="gender"
+                           value="male"
+                           checked={formik.values.gender === "male"}
+                           onChange={(e) => {
+                             formik.handleChange(e)
+                             formik.setFieldTouched("gender", true)
+                           }}
+                           className="sr-only"
+                           disabled={formik.isSubmitting}
+                         />
+                         <div className={`h-12 border-[1.5px] rounded-sm text-sm font-medium flex items-center justify-center transition-all duration-200 ${formik.values.gender === "male"
+                             ? "border-white bg-white text-black"
+                             : "border-neutral-700 hover:border-white text-neutral-300"
+                           } ${formik.touched.gender && formik.errors.gender ? "border-red-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                           Male
+                         </div>
+                       </label>
+                       <label className="cursor-pointer">
+                         <input
+                           type="radio"
+                           name="gender"
+                           value="female"
+                           checked={formik.values.gender === "female"}
+                           onChange={(e) => {
+                             formik.handleChange(e)
+                             formik.setFieldTouched("gender", true)
+                           }}
+                           className="sr-only"
+                           disabled={formik.isSubmitting}
+                         />
+                         <div className={`h-12 border-[1.5px] rounded-sm text-sm font-medium flex items-center justify-center transition-all duration-200 ${formik.values.gender === "female"
+                             ? "border-white bg-white text-black"
+                             : "border-neutral-700 hover:border-white text-neutral-300"
+                           } ${formik.touched.gender && formik.errors.gender ? "border-red-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                           Female
+                         </div>
+                       </label>
+                     </div>
+                     {formik.touched.gender && formik.errors.gender && (
+                       <div className="flex items-center gap-1.5 text-red-400 text-xs animate-fade-in">
+                         <AlertCircle size={14} />
+                         <span>{formik.errors.gender}</span>
+                       </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5 animate-stagger" style={{ animationDelay: '0.35s' }}>
+                      <Label className="text-xs text-neutral-400">Phone Number</Label>
+                      <div className="flex gap-2">
+                        <select
+                          name="countryCode"
+                          value={formik.values.countryCode}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className={`h-12 w-32 rounded-sm border bg-neutral-800 px-2 text-sm text-white transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white ${formik.touched.countryCode && formik.errors.countryCode ? 'border-red-500' : 'border-neutral-700'}`}
+                          disabled={formik.isSubmitting}
+                        >
+                          {COUNTRY_CODES.map((c) => (
+                            <option key={`${c.code}-${c.name}`} value={c.code} className="bg-neutral-800 text-white">
+                              {c.name} ({c.code})
+                            </option>
+                          ))}
+                        </select>
+                        <Input
+                          id="phoneNumber"
+                          name="phoneNumber"
+                          type="tel"
+                          value={formik.values.phoneNumber}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          className={`h-12 rounded-sm border-neutral-700 bg-neutral-800 text-white placeholder:text-neutral-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-white transition-all duration-200 flex-1 ${formik.touched.phoneNumber && formik.errors.phoneNumber ? 'border-red-500 focus-visible:border-red-500' : ''
+                            }`}
+                          placeholder="Phone number"
                           disabled={formik.isSubmitting}
                         />
-                        <div className={`h-12 border-[1.5px] rounded-sm text-sm font-medium flex items-center justify-center transition-colors ${formik.values.gender === "female"
-                            ? "border-black bg-black text-white"
-                            : "border-gray-300 hover:border-black text-gray-900"
-                          } ${formik.touched.gender && formik.errors.gender ? "border-red-500" : ""} disabled:opacity-50 disabled:cursor-not-allowed`}>
-                          Female
+                      </div>
+                      {(formik.touched.countryCode && formik.errors.countryCode) || (formik.touched.phoneNumber && formik.errors.phoneNumber) ? (
+                        <div className="flex items-center gap-1.5 text-red-400 text-xs mt-1.5 animate-fade-in">
+                          <AlertCircle size={14} />
+                          <span>{formik.errors.countryCode || formik.errors.phoneNumber}</span>
                         </div>
-                      </label>
+                      ) : (
+                        <p className="text-xs text-neutral-500 pt-1">
+                            Used for order updates and delivery notifications.
+                          </p>
+                      )}
                     </div>
-                    {formik.touched.gender && formik.errors.gender && (
-                      <div className="flex items-center gap-1.5 text-red-600 text-xs">
-                        <AlertCircle size={14} />
-                        <span>{formik.errors.gender}</span>
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="flex items-start gap-3 py-2">
-                    <input
-                      type="checkbox"
-                      id="emailUpdates"
-                      name="emailUpdates"
-                      checked={formik.values.emailUpdates}
-                      onChange={formik.handleChange}
-                      className="w-5 h-5 mt-0.5 rounded-sm border-gray-300 flex-shrink-0"
-                      disabled={formik.isSubmitting}
-                    />
-                    <label htmlFor="emailUpdates" className="text-xs text-gray-600 leading-relaxed cursor-pointer">
-                      Sign up for emails to get updates from Nike on products, offers and your Member benefits
-                    </label>
-                  </div>
+                    <div className="flex items-start gap-3 py-2 animate-stagger" style={{ animationDelay: '0.4s' }}>
+                     <input
+                       type="checkbox"
+                       id="emailUpdates"
+                       name="emailUpdates"
+                       checked={formik.values.emailUpdates}
+                       onChange={formik.handleChange}
+                       className="w-5 h-5 mt-0.5 rounded-sm border-neutral-600 bg-neutral-800 transition-all duration-200 hover:border-neutral-500"
+                       disabled={formik.isSubmitting}
+                     />
+                     <label htmlFor="emailUpdates" className="text-xs text-neutral-400 leading-relaxed cursor-pointer transition-colors duration-200 hover:text-white">
+                       Sign up for emails to get updates from Nike on products, offers and your Member benefits
+                     </label>
+                   </div>
 
-                  <p className="text-xs text-gray-500 text-center leading-relaxed pt-2">
-                    By creating an account, you agree to Nike&apos;s{" "}
-                    <a href="#" className="underline hover:text-black">Privacy Policy</a>
-                    {" "}and{" "}
-                    <a href="#" className="underline hover:text-black">Terms of Use</a>.
-                  </p>
+                   <p className="text-xs text-neutral-400 text-center leading-relaxed pt-2 animate-stagger" style={{ animationDelay: '0.45s' }}>
+                     By creating an account, you agree to Nike&apos;s{" "}
+                     <a href="#" className="underline hover:text-white transition-colors duration-200 hover:underline-offset-2">Privacy Policy</a>
+                     {" "}and{" "}
+                     <a href="#" className="underline hover:text-white transition-colors duration-200 hover:underline-offset-2">Terms of Use</a>.
+                   </p>
 
-                  <Button
-                    type="submit"
-                    disabled={formik.isSubmitting}
-                    className="w-full h-12 bg-black hover:bg-black/80 text-white rounded-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {formik.isSubmitting ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        JOINING...
-                      </div>
-                    ) : (
-                      "JOIN US"
-                    )}
-                  </Button>
-                </form>
+                   <Button
+                     type="submit"
+                     disabled={formik.isSubmitting}
+                     className="w-full h-12 bg-white hover:bg-neutral-200 text-black rounded-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-white/20 active:scale-[0.98] animate-stagger"
+                     style={{ animationDelay: '0.5s' }}
+                   >
+                     {formik.isSubmitting ? (
+                       <div className="flex items-center gap-2">
+                         <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                         JOINING...
+                       </div>
+                     ) : (
+                       "JOIN US"
+                     )}
+                   </Button>
+                 </form>
 
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-gray-600">
-                    Already a Member?{" "}
-                    <button
-                      onClick={() => router.push("/login")}
-                      className="font-medium text-black underline hover:text-gray-600 transition-colors"
-                    >
-                      Sign In.
-                    </button>
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-      </div>
+                 <div className="mt-6 text-center animate-stagger" style={{ animationDelay: '0.55s' }}>
+                   <p className="text-sm text-neutral-300">
+                     Already a Member?{" "}
+                     <button
+                       onClick={() => router.push("/login")}
+                       className="font-medium text-white underline hover:text-neutral-300 transition-all duration-200 hover:underline-offset-2"
+                     >
+                       Sign In.
+                     </button>
+                   </p>
+                 </div>
+               </CardContent>
+             </Card>
+           </div>
+         </div>
+       </div>
+     </div>
 
-      <style jsx>{`
-        @keyframes slideUp {
-          from { 
-            opacity: 0; 
-            transform: translateY(20px); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateY(0); 
-          }
-        }
+     <style jsx>{`
+       html {
+         scroll-behavior: smooth;
+       }
 
-        @keyframes slideRight {
-          from { 
-            opacity: 0; 
-            transform: translateX(-20px); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateX(0); 
-          }
-        }
+       @keyframes slideUp {
+         from { 
+           opacity: 0; 
+           transform: translateY(20px); 
+         }
+         to { 
+           opacity: 1; 
+           transform: translateY(0); 
+         }
+       }
 
-        .animate-slideUp {
-          animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+       @keyframes slideRight {
+         from { 
+           opacity: 0; 
+           transform: translateX(-20px); 
+         }
+         to { 
+           opacity: 1; 
+           transform: translateX(0); 
+         }
+       }
 
-        .animate-slideRight {
-          animation: slideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+       @keyframes fadeIn {
+         from { 
+           opacity: 0; 
+           transform: translateY(10px); 
+         }
+         to { 
+           opacity: 1; 
+           transform: translateY(0); 
+         }
+       }
+
+       @keyframes float {
+         0%, 100% {
+           transform: translate(0, 0) scale(1);
+         }
+         33% {
+           transform: translate(30px, -30px) scale(1.05);
+         }
+         66% {
+           transform: translate(-20px, 20px) scale(0.95);
+         }
+       }
+
+       @keyframes floatDelayed {
+         0%, 100% {
+           transform: translate(0, 0) scale(1);
+         }
+         33% {
+           transform: translate(-30px, 20px) scale(0.95);
+         }
+         66% {
+           transform: translate(20px, -30px) scale(1.05);
+         }
+       }
+
+       .animate-slideUp {
+         animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+       }
+
+       .animate-slideRight {
+         animation: slideRight 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+       }
+
+       .animate-fade-in {
+         animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+         opacity: 0;
+       }
+
+       .animate-fade-in-delayed {
+         animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+         opacity: 0;
+       }
+
+       .animate-fade-in-delayed-more {
+         animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+         opacity: 0;
+       }
+
+       .animate-float {
+         animation: float 20s ease-in-out infinite;
+       }
+
+       .animate-float-delayed {
+         animation: floatDelayed 25s ease-in-out infinite;
+       }
+
+       .animate-stagger {
+         animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+         opacity: 0;
+       }
       `}</style>
     </div>
   )
