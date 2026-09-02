@@ -203,37 +203,28 @@ const ProductDetailPage = () => {
       <EcomNavbar />
 
       <main className="relative pt-24">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_18%,rgba(207,234,143,0.2),transparent_26%),linear-gradient(180deg,#223f34_0%,#102018_68%,#050807_100%)]" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-lime-200/50 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_18%,rgba(255,255,255,0.06),transparent_28%),linear-gradient(180deg,#0a0a0a_0%,#000000_68%,#000000_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
         <section className="relative mx-auto grid min-h-[calc(100vh-6rem)] max-w-7xl grid-cols-1 gap-10 px-6 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-16">
           <div className="relative">
             <Link
               href="/nike/products"
-              className="mb-8 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.24em] text-lime-100/60 transition hover:text-lime-200"
+              className="mb-8 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.24em] text-white/50 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to collection
             </Link>
 
-            <div className="relative min-h-[430px] overflow-hidden rounded-[2rem] border border-lime-100/20 bg-[#f4f6ef] px-6 py-10 shadow-2xl shadow-black/35 sm:min-h-[590px] sm:px-10">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_44%_42%,rgba(202,222,182,0.52),transparent_36%),linear-gradient(135deg,rgba(255,255,255,0.95),rgba(222,232,215,0.72)_72%,rgba(196,214,190,0.86))]" />
-              <div className="absolute left-[12%] top-12 h-[560px] w-[560px] rounded-full border-[34px] border-[#3f6755]/10" />
-              <div className="absolute bottom-10 left-1/2 h-24 w-[92%] -translate-x-1/2 rounded-[50%] border-[10px] border-[#3f6755]/18" />
-              <div className="absolute -left-12 top-12 h-44 w-[118%] -rotate-6 border-y border-[#3f6755]/12" />
-              <div className="absolute right-8 top-9 h-32 w-32 rounded-full border border-[#3f6755]/20" />
-              <div className="absolute left-8 top-7 text-[4.5rem] font-black uppercase italic leading-none text-[#1d3b2d]/10 sm:text-[8rem]">
-                {product.category || "Nike"}
-              </div>
-              <div className="absolute bottom-12 right-5 text-[4rem] font-black uppercase italic leading-none text-[#1d3b2d]/10 sm:text-[7rem]">
-                Move
-              </div>
+            <div className="relative min-h-[430px] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a0a0a] px-6 py-10 shadow-2xl shadow-black/60 sm:min-h-[590px] sm:px-10">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.08),transparent_50%)]" />
+              <div className="absolute left-1/2 top-1/2 h-[70%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.03] blur-3xl" />
 
               <button
                 type="button"
                 onClick={toggleWishlist}
                 aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                  className="absolute right-5 top-5 z-20 grid h-12 w-12 place-items-center rounded-full border border-[#1d3b2d]/15 bg-white/70 text-[#1d3b2d] shadow-lg shadow-black/10 transition hover:border-[#1d3b2d] hover:bg-[#1d3b2d] hover:text-white"
+                className="absolute right-5 top-5 z-20 grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/5 text-white shadow-lg shadow-black/40 transition hover:border-white/20 hover:bg-white hover:text-black"
               >
                 <Heart
                   className={`h-5 w-5 ${isWishlisted ? "fill-white text-white" : ""}`}
@@ -247,23 +238,20 @@ const ProductDetailPage = () => {
               )}
 
               <div className="relative z-10 flex h-full min-h-[340px] items-center justify-center sm:min-h-[480px]">
-                <div className="absolute left-1/2 top-1/2 h-[76%] w-[92%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.78),rgba(221,233,211,0.48)_45%,transparent_76%)] blur-2xl" />
-                <div className="absolute bottom-[15%] left-1/2 h-16 w-[76%] -translate-x-1/2 rounded-full bg-black/14 blur-2xl" />
+                <div className="absolute left-1/2 top-1/2 h-[60%] w-[60%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.06] blur-3xl" />
                 <img
                   src={productImage}
                   alt={product.name || "Product"}
                   loading="eager"
                   decoding="async"
-                  className="relative z-10 max-h-[440px] w-full max-w-[760px] object-contain [filter:contrast(1.04)_saturate(1.04)_drop-shadow(0_34px_42px_rgba(29,59,45,0.24))] sm:max-h-[560px]"
+                  className="relative z-10 max-h-[440px] w-full max-w-[760px] object-contain [filter:contrast(1.05)_saturate(1.05)_drop-shadow(0_30px_50px_rgba(0,0,0,0.6))] sm:max-h-[560px]"
                 />
               </div>
-
-              <div className="absolute bottom-8 left-1/2 h-8 w-2/3 -translate-x-1/2 rounded-full bg-black/12 blur-2xl" />
             </div>
 
             {availableColors.length > 0 && (
-              <div className="mt-6 rounded-[1.5rem] border border-lime-100/15 bg-[#203c30]/70 p-4 shadow-xl shadow-black/20">
-                <p className="mb-4 text-[10px] font-black uppercase tracking-[0.24em] text-lime-100/55">
+              <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4 shadow-xl shadow-black/20">
+                <p className="mb-4 text-[10px] font-black uppercase tracking-[0.24em] text-white/50">
                   Choose Color
                 </p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -278,13 +266,13 @@ const ProductDetailPage = () => {
                         onClick={() => handleColorChange(color)}
                         className={`group flex items-center gap-4 rounded-[1.25rem] border p-3 text-left transition ${
                           isSelected
-                            ? "border-lime-200 bg-lime-200 text-[#173529] shadow-[0_16px_35px_rgba(0,0,0,0.24)]"
-                            : "border-lime-100/12 bg-[#11261d] text-lime-100/70 hover:border-lime-100/30 hover:bg-[#183427] hover:text-white"
+                            ? "border-white bg-white text-black shadow-[0_16px_35px_rgba(255,255,255,0.15)]"
+                            : "border-white/10 bg-white/[0.04] text-white/70 hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
                         }`}
                       >
                         <span
                           className={`grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-2xl ${
-                            isSelected ? "bg-white/80" : "bg-[#4b6d5d]"
+                            isSelected ? "bg-black/10" : "bg-white/5"
                           }`}
                         >
                           <img
@@ -305,7 +293,7 @@ const ProductDetailPage = () => {
                             ))}
                         </span>
                         {isSelected && (
-                          <Check className="ml-auto h-5 w-5 shrink-0 text-[#173529]" />
+                          <Check className="ml-auto h-5 w-5 shrink-0 text-black" />
                         )}
                       </button>
                     );
@@ -316,11 +304,11 @@ const ProductDetailPage = () => {
           </div>
 
           <aside className="relative">
-            <div className="border-y border-lime-100/15 py-8 lg:border-y-0 lg:border-l lg:py-0 lg:pl-10">
-              <div className="mb-5 flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-[0.24em] text-lime-200">
+            <div className="border-y border-white/10 py-8 lg:border-y-0 lg:border-l lg:py-0 lg:pl-10">
+              <div className="mb-5 flex flex-wrap items-center gap-3 text-xs font-black uppercase tracking-[0.24em] text-white/50">
                 <span>{selectedMeta}</span>
                 {product.status === "active" && (
-                  <span className="rounded-full bg-lime-200 px-3 py-1 text-[10px] text-[#173529]">
+                  <span className="rounded-full bg-white px-3 py-1 text-[10px] text-black">
                     New Edit
                   </span>
                 )}
@@ -336,7 +324,7 @@ const ProductDetailPage = () => {
                     {formatPrice(product)}
                   </div>
                   {Number(product.reviews_count) > 0 && (
-                    <p className="mt-2 text-sm text-gray-500">
+                    <p className="mt-2 text-sm text-white/40">
                       {product.reviews_count} verified reviews
                     </p>
                   )}
@@ -366,13 +354,13 @@ const ProductDetailPage = () => {
               </div>
 
               {!product.in_stock && isWishlisted && (
-                <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-gray-400">
+                <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-white/40">
                   <Check className="h-4 w-4 text-red-400" />
                   Added to wishlist. We will notify you when it is back in stock.
                 </p>
               )}
 
-              <p className="mt-7 max-w-xl text-base leading-8 text-gray-400">
+              <p className="mt-7 max-w-xl text-base leading-8 text-white/60">
                 {product.description ||
                   "Premium quality product designed for comfort, daily movement, and sharp athletic style."}
               </p>
@@ -380,7 +368,7 @@ const ProductDetailPage = () => {
               {availableSizes.length > 0 && (
                 <div className="mt-9">
                   <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-xs font-black uppercase tracking-[0.24em] text-lime-100/50">
+                    <h2 className="text-xs font-black uppercase tracking-[0.24em] text-white/50">
                       Select Size
                     </h2>
                     {selectedSize && (
@@ -397,8 +385,8 @@ const ProductDetailPage = () => {
                         onClick={() => setSelectedSize(size)}
                         className={`h-12 rounded-full border text-sm font-black uppercase transition ${
                           selectedSize === size
-                            ? "border-lime-200 bg-lime-200 text-[#173529]"
-                            : "border-lime-100/10 bg-white/[0.04] text-gray-300 hover:border-lime-100/40 hover:bg-white/[0.08]"
+                            ? "border-white bg-white text-black"
+                            : "border-white/10 bg-white/[0.04] text-gray-300 hover:border-white/20 hover:bg-white/[0.08]"
                         }`}
                       >
                         {size}
@@ -436,7 +424,7 @@ const ProductDetailPage = () => {
                     className={`h-14 flex-1 rounded-full px-8 text-sm font-black uppercase tracking-[0.18em] text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${
                       addedToCart
                         ? "bg-emerald-600 hover:bg-emerald-700"
-                        : "bg-lime-200 text-[#173529] hover:bg-white"
+                        : "bg-white text-black hover:bg-white/90"
                     }`}
                   >
                     {addedToCart ? (
@@ -456,8 +444,8 @@ const ProductDetailPage = () => {
                     onClick={toggleWishlist}
                     className={`h-14 flex-1 rounded-full px-8 text-sm font-black uppercase tracking-[0.18em] transition active:scale-[0.99] ${
                       isWishlisted
-                        ? "bg-lime-200 text-[#173529] hover:bg-white"
-                        : "bg-white text-black hover:bg-lime-200"
+                        ? "bg-white text-black hover:bg-white/90"
+                        : "bg-white/10 text-white hover:bg-white/20"
                     }`}
                   >
                     <span className="flex items-center gap-2">
@@ -468,7 +456,7 @@ const ProductDetailPage = () => {
                 )}
               </div>
 
-              <div className="mt-9 grid gap-3 text-sm text-gray-400 sm:grid-cols-3">
+              <div className="mt-9 grid gap-3 text-sm text-white/60 sm:grid-cols-3">
                 {[
                   { icon: Truck, label: "Fast delivery" },
                   { icon: ShieldCheck, label: "Secure checkout" },
@@ -476,9 +464,9 @@ const ProductDetailPage = () => {
                 ].map(({ icon: Icon, label }) => (
                   <div
                     key={label}
-                    className="flex items-center gap-3 rounded-2xl border border-lime-100/10 bg-white/[0.035] px-4 py-4"
+                    className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4"
                   >
-                    <Icon className="h-5 w-5 text-lime-200" />
+                    <Icon className="h-5 w-5 text-white/70" />
                     <span className="font-bold">{label}</span>
                   </div>
                 ))}
