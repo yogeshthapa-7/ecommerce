@@ -627,9 +627,9 @@ const PaymentDetailsPage = () => {
               </SectionPanel>
             </div>
 
-            <aside className="lg:col-span-2">
-              <div className="sticky top-24 rounded-3xl border border-white/10 bg-zinc-950 p-6 shadow-xl shadow-black/30 md:p-8">
-                <div className="mb-8 flex items-start justify-between gap-4">
+            <aside className="lg:col-span-2 space-y-8">
+              <div className="rounded-3xl border border-white/10 bg-zinc-950 p-6 shadow-xl shadow-black/30 md:p-8">
+                <div className="flex items-start justify-between gap-4">
                   <div>
                     <h2 className="text-2xl font-black uppercase tracking-tight">
                       Order Summary
@@ -643,7 +643,7 @@ const PaymentDetailsPage = () => {
                   </div>
                 </div>
 
-                <div className="custom-scrollbar mb-8 max-h-[400px] space-y-5 overflow-y-auto pr-2">
+                <div className="custom-scrollbar my-6 max-h-[220px] space-y-5 overflow-y-auto pr-2">
                   {typedCartItems.map((item, index) => (
                     <div
                       key={item.cartItemId || `${item.productId}-${index}`}
@@ -676,7 +676,7 @@ const PaymentDetailsPage = () => {
                   ))}
                 </div>
 
-                <div className="mb-8 space-y-5 rounded-2xl border border-white/10 bg-black p-6">
+                <div className="space-y-5 rounded-2xl border border-white/10 bg-black p-6">
                   <div className="flex justify-between text-sm">
                     <span className="font-bold uppercase tracking-wider text-zinc-500">
                       Subtotal
@@ -701,16 +701,26 @@ const PaymentDetailsPage = () => {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="h-16 w-full rounded-full bg-white text-sm font-black uppercase tracking-[0.2em] text-black transition-transform hover:scale-[1.01] hover:bg-red-500 hover:text-white active:scale-[0.99]"
-                >
-                  Place Order
-                </Button>
+                <div className="mt-8">
+                  <Button
+                    type="submit"
+                    className="h-16 w-full rounded-full bg-white text-sm font-black uppercase tracking-[0.2em] text-black transition-transform hover:scale-[1.01] hover:bg-red-500 hover:text-white active:scale-[0.99]"
+                  >
+                    Place Order
+                  </Button>
 
-                <p className="mt-5 text-center text-xs font-bold uppercase tracking-wider text-zinc-600">
-                  Secure checkout powered by Nike
-                </p>
+                  <p className="mt-5 text-center text-xs font-bold uppercase tracking-wider text-zinc-600">
+                    Secure checkout powered by Nike
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex h-[560px] items-center justify-center rounded-3xl border border-white/10 bg-black p-6">
+                <img
+                  src="/nike_slogan.png"
+                  alt="Nike Slogan"
+                  className="h-[500px] w-400"
+                />
               </div>
             </aside>
           </form>
