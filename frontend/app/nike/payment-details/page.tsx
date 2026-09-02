@@ -719,7 +719,7 @@ const PaymentDetailsPage = () => {
                 <img
                   src="/nike_slogan.png"
                   alt="Nike Slogan"
-                  className="h-[500px] w-400"
+                  className="h-[500px] w-[800]"
                 />
               </div>
             </aside>
