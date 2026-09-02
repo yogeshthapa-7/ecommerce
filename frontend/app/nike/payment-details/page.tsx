@@ -299,6 +299,18 @@ const PaymentDetailsPage = () => {
           items: cartSnapshot,
         }),
       }).catch((err) => console.error("Error sending email:", err));
+
+      fetch("/api/send-sms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: formData.phone,
+          customerName: formData.fullName,
+          totalAmount: total,
+          orderId: createdOrder?.orderId || `NX-${Math.floor(100000 + Math.random() * 900000)}`,
+          items: cartSnapshot,
+        }),
+      }).catch((err) => console.error("Error sending SMS:", err));
     } catch (error) {
       console.error("Checkout Error:", error);
       alert("Something went wrong with your order. Please try again.");

@@ -36,6 +36,7 @@
     "swr": "^2.4.1",
     "tailwind-merge": "^3.4.0",
     "toastr": "^2.1.4",
+    "twilio": "^6.1.0",
     "yup": "^1.7.1"
   },
   "devDependencies": {
