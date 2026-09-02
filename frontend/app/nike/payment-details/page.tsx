@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  Banknote,
   Building2,
   CheckCircle,
   CreditCard,
@@ -38,7 +39,7 @@ type FormData = {
   bankName: string;
 };
 
-type PaymentMethod = "card" | "esewa" | "bank";
+type PaymentMethod = "card" | "esewa" | "bank" | "cod";
 
 type CartItem = {
   cartItemId?: string;
@@ -72,7 +73,7 @@ const initialFormData: FormData = {
 };
 
 const inputClass =
-  "h-[52px] w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-semibold text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-white";
+  "h-[52px] w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-semibold text-white outline-none transition-all duration-200 placeholder:text-zinc-600 focus:border-white focus:bg-white/[0.02] focus:shadow-[0_0_0_4px_rgba(255,255,255,0.05)]";
 
 const labelClass = "text-xs font-black uppercase tracking-[0.18em] text-zinc-500";
 
@@ -128,12 +129,14 @@ const SectionPanel = ({
   subtitle: string;
   children: ReactNode;
 }) => (
-  <section className="rounded-3xl border border-white/10 bg-zinc-950 p-5 shadow-xl shadow-black/30 md:p-7">
-    <div className="mb-7 border-b border-white/10 pb-5">
+  <section className="rounded-3xl border border-white/10 bg-zinc-950 p-6 shadow-xl shadow-black/30 md:p-8">
+    <div className="mb-8 border-b border-white/10 pb-6">
       <h2 className="text-2xl font-black uppercase tracking-tight text-white">{title}</h2>
-      <p className="mt-1 text-sm font-semibold text-zinc-500">{subtitle}</p>
+      <p className="mt-2 text-sm font-semibold text-zinc-500">{subtitle}</p>
     </div>
-    {children}
+    <div className="space-y-6">
+      {children}
+    </div>
   </section>
 );
 
@@ -192,7 +195,7 @@ const PaymentDetailsPage = () => {
       requiredFields.push("cardNumber", "cardName", "expiryDate", "cvv");
     } else if (paymentMethod === "esewa") {
       requiredFields.push("esewaId");
-    } else {
+    } else if (paymentMethod === "bank") {
       requiredFields.push("bankAccountName");
     }
 
@@ -327,15 +330,16 @@ const PaymentDetailsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen overflow-hidden bg-black text-white">
       <EcomNavbar />
 
-      <main className="px-4 pb-16 pt-28">
-        <div className="mx-auto max-w-[1400px]">
-          <div className="mb-9">
+      <main className="relative px-4 pb-16 pt-28">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.06),transparent_40%)]" />
+        <div className="relative mx-auto max-w-[1400px]">
+          <div className="mb-12">
             <Link
               href="/nike/products"
-              className="group mb-6 inline-flex items-center gap-2 text-sm font-black uppercase tracking-wider text-zinc-500 transition-colors hover:text-white"
+              className="group mb-8 inline-flex items-center gap-2 text-sm font-black uppercase tracking-wider text-zinc-500 transition-colors hover:text-white"
             >
               <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               Continue Shopping
@@ -343,7 +347,7 @@ const PaymentDetailsPage = () => {
 
             <div className="grid gap-6 border-b border-white/10 pb-8 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>
-                <p className="mb-3 text-xs font-black uppercase tracking-[0.32em] text-red-500">
+                <p className="mb-4 text-xs font-black uppercase tracking-[0.32em] text-red-500">
                   Secure Nike Checkout
                 </p>
                 <h1 className="text-5xl font-black uppercase leading-none tracking-tight md:text-7xl">
@@ -360,10 +364,10 @@ const PaymentDetailsPage = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="grid gap-8 lg:grid-cols-5">
-            <div className="space-y-6 lg:col-span-3">
+          <form onSubmit={handleSubmit} className="grid gap-10 lg:grid-cols-5">
+            <div className="space-y-8 lg:col-span-3">
               <SectionPanel title="Delivery" subtitle="Where should we send your order?">
-                <div className="grid gap-5 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2">
                   <Field
                     label="Full Name *"
                     name="fullName"
@@ -385,7 +389,7 @@ const PaymentDetailsPage = () => {
                   />
                 </div>
 
-                <div className="mt-5 space-y-5">
+                <div className="mt-6 space-y-6">
                   <Field
                     label="Phone *"
                     name="phone"
@@ -408,7 +412,7 @@ const PaymentDetailsPage = () => {
                   />
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-5 md:grid-cols-4">
+                <div className="mt-6 grid grid-cols-2 gap-6 md:grid-cols-4">
                   <div className="col-span-2">
                     <Field
                       label="City *"
@@ -437,9 +441,6 @@ const PaymentDetailsPage = () => {
                     required
                     autoComplete="postal-code"
                   />
-                </div>
-
-                <div className="mt-5">
                   <Field
                     label="Country"
                     name="country"
@@ -452,19 +453,20 @@ const PaymentDetailsPage = () => {
               </SectionPanel>
 
               <SectionPanel title="Payment" subtitle="Choose how you want to pay.">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {[
                     { id: "card" as const, label: "Card", Icon: CreditCard },
                     { id: "esewa" as const, label: "eSewa", Icon: Smartphone },
                     { id: "bank" as const, label: "Bank", Icon: Building2 },
+                    { id: "cod" as const, label: "COD", Icon: Banknote },
                   ].map(({ id, label, Icon }) => (
                     <button
                       key={id}
                       type="button"
                       onClick={() => setPaymentMethod(id)}
-                      className={`flex min-h-24 flex-col items-center justify-center gap-2 rounded-2xl border p-4 transition-colors ${
+                      className={`flex min-h-24 flex-col items-center justify-center gap-2 rounded-2xl border p-4 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                         paymentMethod === id
-                          ? "border-white bg-white text-black"
+                          ? "border-white bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.15)]"
                           : "border-white/10 bg-black text-zinc-500 hover:border-white/40 hover:text-white"
                       }`}
                     >
@@ -474,29 +476,31 @@ const PaymentDetailsPage = () => {
                   ))}
                 </div>
 
-                <div className="mt-7">
+                <div className="mt-8">
                   {paymentMethod === "card" && (
-                    <div className="space-y-5">
-                      <Field
-                        label="Card Number *"
-                        name="cardNumber"
-                        value={formData.cardNumber}
-                        onChange={handleInputChange}
-                        placeholder="1234 5678 9012 3456"
-                        maxLength={19}
-                        required
-                        autoComplete="cc-number"
-                        inputMode="numeric"
-                      />
-                      <Field
-                        label="Cardholder Name *"
-                        name="cardName"
-                        value={formData.cardName}
-                        onChange={handleInputChange}
-                        placeholder="JOHN DOE"
-                        required
-                        autoComplete="cc-name"
-                      />
+                    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="grid gap-5 md:grid-cols-2">
+                        <Field
+                          label="Card Number *"
+                          name="cardNumber"
+                          value={formData.cardNumber}
+                          onChange={handleInputChange}
+                          placeholder="1234 5678 9012 3456"
+                          maxLength={19}
+                          required
+                          autoComplete="cc-number"
+                          inputMode="numeric"
+                        />
+                        <Field
+                          label="Cardholder Name *"
+                          name="cardName"
+                          value={formData.cardName}
+                          onChange={handleInputChange}
+                          placeholder="JOHN DOE"
+                          required
+                          autoComplete="cc-name"
+                        />
+                      </div>
                       <div className="grid grid-cols-2 gap-5">
                         <Field
                           label="Expiry *"
@@ -525,7 +529,7 @@ const PaymentDetailsPage = () => {
                   )}
 
                   {paymentMethod === "esewa" && (
-                    <div className="space-y-5">
+                    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
                       <div className="rounded-2xl border border-[#60bb46]/30 bg-[#60bb46]/10 p-5">
                         <h3 className="font-black uppercase tracking-tight">eSewa Payment</h3>
                         <p className="mt-1 text-xs font-bold uppercase tracking-wider text-[#77d65a]">
@@ -550,7 +554,7 @@ const PaymentDetailsPage = () => {
                   )}
 
                   {paymentMethod === "bank" && (
-                    <div className="space-y-5">
+                    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
                       <div className="rounded-2xl border border-blue-500/25 bg-blue-500/10 p-5">
                         <h3 className="font-black uppercase tracking-tight">Bank Transfer</h3>
                         <p className="mt-1 text-xs font-bold uppercase tracking-wider text-blue-400">
@@ -589,9 +593,34 @@ const PaymentDetailsPage = () => {
                       </p>
                     </div>
                   )}
+
+                  {paymentMethod === "cod" && (
+                    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-5">
+                        <h3 className="font-black uppercase tracking-tight">Cash On Delivery</h3>
+                        <p className="mt-1 text-xs font-bold uppercase tracking-wider text-emerald-400">
+                          Pay when you receive
+                        </p>
+                      </div>
+                      <div className="rounded-2xl border border-white/10 bg-black p-5">
+                        <div className="flex items-start gap-3">
+                          <Banknote className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
+                          <div>
+                            <p className="text-sm font-bold text-white">
+                              Pay with cash when your order arrives
+                            </p>
+                            <p className="mt-1 text-xs font-semibold text-zinc-500">
+                              Please keep the exact amount ready for the delivery partner.
+                              COD orders may take 1-2 extra business days for processing.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-7 flex items-center gap-3 rounded-2xl border border-white/10 bg-black p-4 text-xs font-bold uppercase tracking-wider text-zinc-500">
+                <div className="mt-8 flex items-center gap-3 rounded-2xl border border-white/10 bg-black p-4 text-xs font-bold uppercase tracking-wider text-zinc-500">
                   <Lock className="h-4 w-4 shrink-0" />
                   256-bit SSL encryption
                 </div>
@@ -599,13 +628,13 @@ const PaymentDetailsPage = () => {
             </div>
 
             <aside className="lg:col-span-2">
-              <div className="sticky top-24 rounded-3xl border border-white/10 bg-zinc-950 p-5 shadow-xl shadow-black/30 md:p-7">
-                <div className="mb-6 flex items-start justify-between gap-4">
+              <div className="sticky top-24 rounded-3xl border border-white/10 bg-zinc-950 p-6 shadow-xl shadow-black/30 md:p-8">
+                <div className="mb-8 flex items-start justify-between gap-4">
                   <div>
                     <h2 className="text-2xl font-black uppercase tracking-tight">
                       Order Summary
                     </h2>
-                    <p className="mt-1 text-sm font-semibold text-zinc-500">
+                    <p className="mt-2 text-sm font-semibold text-zinc-500">
                       {typedCartItems.length} {typedCartItems.length === 1 ? "item" : "items"}
                     </p>
                   </div>
@@ -614,13 +643,13 @@ const PaymentDetailsPage = () => {
                   </div>
                 </div>
 
-                <div className="custom-scrollbar mb-6 max-h-[360px] space-y-4 overflow-y-auto pr-2">
+                <div className="custom-scrollbar mb-8 max-h-[400px] space-y-5 overflow-y-auto pr-2">
                   {typedCartItems.map((item, index) => (
                     <div
                       key={item.cartItemId || `${item.productId}-${index}`}
-                      className="flex gap-4 border-b border-white/10 pb-4 last:border-0"
+                      className="flex gap-4 border-b border-white/10 pb-5 last:border-0"
                     >
-                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black">
+                      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black">
                         <img
                           src={item.image || "/assets/products.png"}
                           alt={item.name}
@@ -633,7 +662,7 @@ const PaymentDetailsPage = () => {
                         <h3 className="truncate text-sm font-black uppercase tracking-tight">
                           {item.name}
                         </h3>
-                        <p className="mt-1 text-xs font-semibold text-zinc-500">
+                        <p className="mt-2 text-xs font-semibold text-zinc-500">
                           {[item.color, item.size, `Qty ${item.quantity}`]
                             .filter(Boolean)
                             .join(" / ")}
@@ -647,7 +676,7 @@ const PaymentDetailsPage = () => {
                   ))}
                 </div>
 
-                <div className="mb-6 space-y-4 rounded-2xl border border-white/10 bg-black p-5">
+                <div className="mb-8 space-y-5 rounded-2xl border border-white/10 bg-black p-6">
                   <div className="flex justify-between text-sm">
                     <span className="font-bold uppercase tracking-wider text-zinc-500">
                       Subtotal
@@ -664,7 +693,7 @@ const PaymentDetailsPage = () => {
                     <span className="font-bold uppercase tracking-wider text-zinc-500">Tax</span>
                     <span className="font-black">${tax.toFixed(2)}</span>
                   </div>
-                  <div className="border-t border-white/10 pt-4">
+                  <div className="border-t border-white/10 pt-5">
                     <div className="flex items-end justify-between">
                       <span className="font-black uppercase tracking-wider">Total</span>
                       <span className="text-4xl font-black">${total.toFixed(2)}</span>
