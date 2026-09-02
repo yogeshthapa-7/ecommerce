@@ -292,7 +292,7 @@ const ProductDetailPage = () => {
                             alt=""
                             loading="lazy"
                             decoding="async"
-                            className="h-full w-full object-contain p-1.5 mix-blend-darken"
+                            className="h-full w-full object-contain p-1.5"
                           />
                         </span>
                         <span className="min-w-0 text-sm font-black uppercase leading-tight">

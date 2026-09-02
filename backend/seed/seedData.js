@@ -356,12 +356,12 @@ const products = [
         rating: 4.7,
         reviews_count: 890,
         colors: [
-            { name: "Black/Hyper", image_url: "/product-cutouts-transparent/nike-mind-001-b9dfb60a.png" },
-            { name: "Light Smoke Grey", image_url: "/product-cutouts-transparent/nike-mind-001-ff2c3065.png" },
-            { name: "Solar Red/Hyper Crimson", image_url: "/product-cutouts-transparent/nike-mind-001-538903af.png" }
+            { name: "Black/Hyper", image_url: "/product-cutouts/nike-mind-001-b9dfb60a.png" },
+            { name: "Light Smoke Grey", image_url: "/product-cutouts/nike-mind-001-ff2c3065.png" },
+            { name: "Solar Red/Hyper Crimson", image_url: "/product-cutouts/nike-mind-001-538903af.png" }
         ],
         description: "Step into effortless comfort with the Nike Mind 001 Slipper.",
-        image_url: "/product-cutouts-transparent/nike-mind-001-ca9d09e2.png",
+        image_url: "/product-cutouts/nike-mind-001-ca9d09e2.png",
         in_stock: true,
         sizes: [8, 9, 10, 11]
     },
