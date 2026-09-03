@@ -205,31 +205,51 @@ export const NikeOrderEmail = ({
 
                     <Section style={totalsCard}>
                         <Text style={sectionTitle}>Receipt</Text>
-                        <Section style={totalLine}>
-                            <Text style={totalLabel}>Subtotal</Text>
-                            <Text style={totalAmountText}>{formatMoney(resolvedSubtotal, currency)}</Text>
-                        </Section>
-                        <Section style={totalLine}>
-                            <Text style={totalLabel}>Discount</Text>
-                            <Text style={discountText}>
-                                {discount > 0 ? `-${formatMoney(discount, currency)}` : formatMoney(0, currency)}
-                            </Text>
-                        </Section>
-                        <Section style={totalLine}>
-                            <Text style={totalLabel}>Tax</Text>
-                            <Text style={totalAmountText}>{formatMoney(tax, currency)}</Text>
-                        </Section>
-                        <Section style={totalLine}>
-                            <Text style={totalLabel}>Shipping</Text>
-                            <Text style={shippingText}>
-                                {shipping > 0 ? formatMoney(shipping, currency) : 'FREE'}
-                            </Text>
-                        </Section>
+                        <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} border={0} style={{ borderCollapse: 'collapse' }}>
+                            <tr>
+                                <td style={{ padding: '6px 0', color: '#a1a1aa', fontSize: '14px', fontWeight: '800', lineHeight: '20px', whiteSpace: 'nowrap' }}>
+                                    Subtotal
+                                </td>
+                                <td style={{ padding: '6px 0', color: '#ffffff', fontSize: '14px', fontWeight: '900', lineHeight: '20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                    {formatMoney(resolvedSubtotal, currency)}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style={{ padding: '6px 0', color: '#a1a1aa', fontSize: '14px', fontWeight: '800', lineHeight: '20px', whiteSpace: 'nowrap' }}>
+                                    Discount
+                                </td>
+                                <td style={{ padding: '6px 0', color: '#22c55e', fontSize: '14px', fontWeight: '900', lineHeight: '20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                    {discount > 0 ? `-${formatMoney(discount, currency)}` : formatMoney(0, currency)}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style={{ padding: '6px 0', color: '#a1a1aa', fontSize: '14px', fontWeight: '800', lineHeight: '20px', whiteSpace: 'nowrap' }}>
+                                    Tax
+                                </td>
+                                <td style={{ padding: '6px 0', color: '#ffffff', fontSize: '14px', fontWeight: '900', lineHeight: '20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                    {formatMoney(tax, currency)}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style={{ padding: '6px 0', color: '#a1a1aa', fontSize: '14px', fontWeight: '800', lineHeight: '20px', whiteSpace: 'nowrap' }}>
+                                    Shipping
+                                </td>
+                                <td style={{ padding: '6px 0', color: '#22c55e', fontSize: '14px', fontWeight: '900', lineHeight: '20px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                    {shipping > 0 ? formatMoney(shipping, currency) : 'FREE'}
+                                </td>
+                            </tr>
+                        </table>
                         <Hr style={hr} />
-                        <Section style={totalLine}>
-                            <Text style={grandTotalLabel}>Total Paid</Text>
-                            <Text style={grandTotal}>{formatMoney(resolvedTotal, currency)}</Text>
-                        </Section>
+                        <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} border={0} style={{ borderCollapse: 'collapse' }}>
+                            <tr>
+                                <td style={{ padding: '0', color: '#ffffff', fontSize: '16px', fontWeight: '900', lineHeight: '20px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                                    Total Paid
+                                </td>
+                                <td style={{ padding: '0', color: '#ffffff', fontSize: '34px', fontWeight: '900', letterSpacing: '-0.04em', lineHeight: '1', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                    {formatMoney(resolvedTotal, currency)}
+                                </td>
+                            </tr>
+                        </table>
                     </Section>
 
                     <Section style={regardsCard}>
