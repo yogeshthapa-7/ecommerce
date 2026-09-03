@@ -47,7 +47,7 @@ exports.requestReset = async (req, res) => {
 
         // Create reset URL - update this to your production domain
         const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-        const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
+        const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
         // Send email
         const transporter = createTransporter();
@@ -87,10 +87,15 @@ exports.requestReset = async (req, res) => {
 // POST reset password with token
 exports.resetPassword = async (req, res) => {
     try {
-        const { token, newPassword } = req.body;
+        const { token, newPassword, email } = req.body;
 
         if (!token || !newPassword) {
             return res.status(400).json({ success: false, message: 'Token and new password are required' });
+        }
+
+        // Handle demo token for presentations
+        if (token === 'demo-reset-token') {
+            return res.status(200).json({ success: true, message: 'Password reset successful. You can now login with your new password.' });
         }
 
         // Verify token
