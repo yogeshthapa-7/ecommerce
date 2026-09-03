@@ -46,10 +46,6 @@ export default function ForgotPasswordPage() {
 
         if (data.success) {
           setEmailSent(true);
-          // Demo mode: auto-redirect to reset page with mock token after short delay
-          setTimeout(() => {
-            router.push(`/reset-password?token=demo-reset-token&email=${encodeURIComponent(values.email)}`);
-          }, 2500);
         } else {
           setFieldError("email", data.message || "Unable to send reset email. Please try again.");
         }
@@ -249,9 +245,9 @@ export default function ForgotPasswordPage() {
                             </div>
                           </div>
                           <div>
-                            <h4 className="font-bold text-sm text-white mb-1">Email sent successfully</h4>
+                            <h4 className="font-bold text-sm text-white mb-1">OTP sent successfully</h4>
                             <p className="text-neutral-300 text-xs leading-relaxed">
-                              Please check your inbox and click the reset link. The link will expire in 1 hour.
+                              Please check your inbox for the 6-digit OTP. The OTP will expire in 10 minutes.
                             </p>
                           </div>
                         </div>
@@ -260,7 +256,7 @@ export default function ForgotPasswordPage() {
                       {/* Resend button */}
                       <Button
                         type="button"
-                        onClick={handleResend}
+                        onClick={() => router.push(`/otp-verification?email=${encodeURIComponent(formik.values.email)}`)}
                         disabled={isResending}
                         variant="outline"
                         className="w-full h-12 border-neutral-700 hover:border-white hover:bg-white/10 text-white rounded-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -271,7 +267,7 @@ export default function ForgotPasswordPage() {
                             RESENDING...
                           </div>
                         ) : (
-                          "RESEND EMAIL"
+                          "ENTER OTP"
                         )}
                       </Button>
                     </div>

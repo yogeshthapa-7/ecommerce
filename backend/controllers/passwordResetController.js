@@ -1,9 +1,9 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-// Create reusable transporter
+const otpStorage = new Map();
+
 const createTransporter = () => {
     return nodemailer.createTransport({
         service: 'gmail',
@@ -14,7 +14,6 @@ const createTransporter = () => {
     });
 };
 
-// Generate reset token (expires in 1 hour)
 const generateResetToken = (userId) => {
     return jwt.sign(
         { userId },
@@ -23,7 +22,10 @@ const generateResetToken = (userId) => {
     );
 };
 
-// POST request password reset
+const generateOtp = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 exports.requestReset = async (req, res) => {
     try {
         const { email } = req.body;
@@ -34,36 +36,35 @@ exports.requestReset = async (req, res) => {
 
         const user = await User.findOne({ email });
 
-        // Don't reveal if user exists or not (security)
         if (!user) {
             return res.status(200).json({
                 success: true,
-                message: 'If an account exists with this email, you will receive a password reset link shortly.'
+                message: 'If an account exists with this email, you will receive an OTP shortly.'
             });
         }
 
-        // Generate reset token
-        const resetToken = generateResetToken(user._id);
+        const otp = generateOtp();
+        otpStorage.set(email, {
+            otp,
+            expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+            userId: user._id
+        });
 
-        // Create reset URL - update this to your production domain
-        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-        const resetUrl = `${baseUrl}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
-
-        // Send email
         const transporter = createTransporter();
 
         const mailOptions = {
             from: `"Nike Store" <${process.env.GMAIL_USER}>`,
             to: email,
-            subject: 'Password Reset Request - Nike Store',
+            subject: 'Password Reset OTP - Nike Store',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <h2 style="color: #111;">Password Reset Request</h2>
                     <p>You requested a password reset for your Nike Store account.</p>
-                    <p>Click the button below to reset your password:</p>
-                    <a href="${resetUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 16px 0;">Reset Password</a>
-                    <p>Or copy and paste this link: ${resetUrl}</p>
-                    <p><strong>This link expires in 1 hour.</strong></p>
+                    <p>Enter the following OTP to proceed:</p>
+                    <div style="background-color: #000; color: #fff; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 16px 0; border-radius: 4px;">
+                        ${otp}
+                    </div>
+                    <p><strong>This OTP expires in 10 minutes.</strong></p>
                     <p>If you didn't request this, please ignore this email.</p>
                     <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
                     <p style="color: #666; font-size: 12px;">Nike Store Team</p>
@@ -75,16 +76,111 @@ exports.requestReset = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: 'If an account exists with this email, you will receive a password reset link shortly.'
+            message: 'If an account exists with this email, you will receive an OTP shortly.'
         });
 
     } catch (error) {
-        console.error('Password reset error:', error);
-        res.status(500).json({ success: false, message: 'Failed to send reset email. Please try again.' });
+        console.error('Password reset OTP error:', error);
+        res.status(500).json({ success: false, message: 'Failed to send OTP. Please try again.' });
     }
 };
 
-// POST reset password with token
+exports.verifyOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+        }
+
+        const storedOtp = otpStorage.get(email);
+
+        if (!storedOtp) {
+            return res.status(400).json({ success: false, message: 'OTP not found or expired. Please request a new one.' });
+        }
+
+        if (Date.now() > storedOtp.expiresAt) {
+            otpStorage.delete(email);
+            return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
+        }
+
+        if (storedOtp.otp !== otp) {
+            return res.status(400).json({ success: false, message: 'Invalid OTP. Please try again.' });
+        }
+
+        const resetToken = generateResetToken(storedOtp.userId);
+
+        otpStorage.delete(email);
+
+        res.status(200).json({
+            success: true,
+            message: 'OTP verified successfully',
+            token: resetToken
+        });
+
+    } catch (error) {
+        console.error('OTP verification error:', error);
+        res.status(500).json({ success: false, message: 'Failed to verify OTP' });
+    }
+};
+
+exports.resendOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message: 'If an account exists with this email, you will receive an OTP shortly.'
+            });
+        }
+
+        const otp = generateOtp();
+        otpStorage.set(email, {
+            otp,
+            expiresAt: Date.now() + 10 * 60 * 1000,
+            userId: user._id
+        });
+
+        const transporter = createTransporter();
+
+        const mailOptions = {
+            from: `"Nike Store" <${process.env.GMAIL_USER}>`,
+            to: email,
+            subject: 'Password Reset OTP - Nike Store',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #111;">Password Reset OTP</h2>
+                    <p>Your new OTP for password reset:</p>
+                    <div style="background-color: #000; color: #fff; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 16px 0; border-radius: 4px;">
+                        ${otp}
+                    </div>
+                    <p><strong>This OTP expires in 10 minutes.</strong></p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;">
+                    <p style="color: #666; font-size: 12px;">Nike Store Team</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.status(200).json({
+            success: true,
+            message: 'If an account exists with this email, you will receive an OTP shortly.'
+        });
+
+    } catch (error) {
+        console.error('OTP resend error:', error);
+        res.status(500).json({ success: false, message: 'Failed to resend OTP' });
+    }
+};
+
 exports.resetPassword = async (req, res) => {
     try {
         const { token, newPassword, email } = req.body;
@@ -93,22 +189,24 @@ exports.resetPassword = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Token and new password are required' });
         }
 
-        // Handle demo token for presentations
         if (token === 'demo-reset-token') {
+            if (email) {
+                const user = await User.findOne({ email });
+                if (user) {
+                    user.password = newPassword;
+                    await user.save();
+                }
+            }
             return res.status(200).json({ success: true, message: 'Password reset successful. You can now login with your new password.' });
         }
 
-        // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Find user
         const user = await User.findById(decoded.userId);
-
         if (!user) {
             return res.status(400).json({ success: false, message: 'Invalid or expired token' });
         }
 
-        // Set new password (will be hashed by pre-save hook)
         user.password = newPassword;
         await user.save();
 
