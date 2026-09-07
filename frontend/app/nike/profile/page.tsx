@@ -186,6 +186,22 @@ const ProfilePage = () => {
     if (user) fetchReturns();
   }, [user]);
 
+  useEffect(() => {
+    if (activeTab === "returns" && user) {
+      fetchReturns();
+    }
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && user) {
+        fetchReturns();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [user]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -351,6 +367,31 @@ const ProfilePage = () => {
         return <XCircle className="h-4 w-4" />;
       default:
         return <Package className="h-4 w-4" />;
+    }
+  };
+
+  const getReturnForOrder = (order: Order) => {
+    const orderReturns = returns
+      .filter((ret) => {
+        const retOrderId = typeof ret.orderId === "object" ? ret.orderId?._id || ret.orderId?.orderId : ret.orderId;
+        return retOrderId === order._id || retOrderId === order.orderId;
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return orderReturns[0] || null;
+  };
+
+  const getReturnStatusColor = (status: string) => {
+    switch (status) {
+      case "Approved":
+        return "border-emerald-400/30 bg-emerald-400/10 text-emerald-300";
+      case "Rejected":
+        return "border-red-400/30 bg-red-400/10 text-red-300";
+      case "Refunded":
+        return "border-blue-400/30 bg-blue-400/10 text-blue-300";
+      case "Cancelled":
+        return "border-red-400/30 bg-red-500/10 text-red-300";
+      default:
+        return "border-amber-300/30 bg-amber-300/10 text-amber-200";
     }
   };
 
@@ -558,15 +599,26 @@ const ProfilePage = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    {order.deliveryStatus === "Delivered" && (
-                      <button
-                        onClick={() => openReturnModal(order)}
-                        className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-400 transition-colors hover:text-red-300"
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                        Return
-                      </button>
-                    )}
+                    {order.deliveryStatus === "Delivered" && (() => {
+                      const existingReturn = getReturnForOrder(order);
+                      if (existingReturn) {
+                        return (
+                          <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase ${getReturnStatusColor(existingReturn.status)}`}>
+                            <RotateCcw className="h-4 w-4" />
+                            Return {existingReturn.status}
+                          </span>
+                        );
+                      }
+                      return (
+                        <button
+                          onClick={() => openReturnModal(order)}
+                          className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-400 transition-colors hover:text-red-300"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          Return
+                        </button>
+                      );
+                    })()}
                     <button
                       onClick={() => handleDeleteOrder(order._id || order.orderId)}
                       className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-500 transition-colors hover:text-red-300"
@@ -631,7 +683,13 @@ const ProfilePage = () => {
                           ? "Return Approved"
                           : ret.status === "Rejected"
                             ? "Return Rejected"
-                            : ret.returnId || ret._id}
+                            : ret.status === "Requested"
+                              ? "Return Requested"
+                              : ret.status === "Refunded"
+                                ? "Return Refunded"
+                                : ret.status === "Cancelled"
+                                  ? "Return Cancelled"
+                                  : ret.returnId || ret._id}
                       </p>
                       <p className="text-xs text-zinc-500">
                         Order: {ret.orderId?.orderId || ret.orderId || "—"}
