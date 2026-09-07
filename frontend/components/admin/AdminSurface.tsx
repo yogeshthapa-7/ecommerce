@@ -49,7 +49,7 @@ export const modalBodyClass =
 export const statusClass = (status?: string) => {
   const normalized = (status || "").toLowerCase()
 
-  if (["active", "paid", "delivered", "in stock"].includes(normalized)) {
+  if (["active", "paid", "delivered", "in stock", "approved"].includes(normalized)) {
     return "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
   }
 
@@ -57,7 +57,7 @@ export const statusClass = (status?: string) => {
     return "border-amber-300/30 bg-amber-300/10 text-amber-200"
   }
 
-  if (["failed", "cancelled", "banned", "out of stock"].includes(normalized)) {
+  if (["failed", "cancelled", "banned", "out of stock", "rejected"].includes(normalized)) {
     return "border-red-400/30 bg-red-400/10 text-red-300"
   }
 

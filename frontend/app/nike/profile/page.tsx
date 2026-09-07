@@ -627,7 +627,11 @@ const ProfilePage = () => {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-sm font-black uppercase text-white">
-                        {ret.returnId || ret._id}
+                        {ret.status === "Approved"
+                          ? "Return Approved"
+                          : ret.status === "Rejected"
+                            ? "Return Rejected"
+                            : ret.returnId || ret._id}
                       </p>
                       <p className="text-xs text-zinc-500">
                         Order: {ret.orderId?.orderId || ret.orderId || "—"}

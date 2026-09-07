@@ -27,6 +27,7 @@ const ReturnsPage = () => {
   const [activeReturn, setActiveReturn] = useState<any | null>(null)
   const [statusAction, setStatusAction] = useState<{ returnId: string; status: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
+  const [rejectionReason, setRejectionReason] = useState("")
 
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : ""
 
@@ -71,15 +72,22 @@ const ReturnsPage = () => {
     if (!statusAction) return
     try {
       const ret = returns.find((r) => r._id === statusAction.returnId)
+      const payload: any = {
+        status: statusAction.status,
+        resolution: ret?.resolution || `Marked as ${statusAction.status} by admin`,
+      }
+
+      if (statusAction.status === "Rejected") {
+        payload.resolution = rejectionReason || payload.resolution
+      }
+
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/returns/${statusAction.returnId}`,
-        {
-          status: statusAction.status,
-          resolution: ret?.resolution || `Marked as ${statusAction.status} by admin`,
-        },
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setStatusAction(null)
+      setRejectionReason("")
       fetchReturns()
       fetchStats()
     } catch (err) {
@@ -219,7 +227,24 @@ const ReturnsPage = () => {
                       </td>
                       <td className={`${adminCell} sticky right-0 z-10 bg-[#111111] shadow-[-12px_0_20px_rgba(0,0,0,0.28)]`}>
                         <div className="flex gap-2">
-                          <QuickStatusActions currentStatus={ret.status} returnId={ret._id || ret.id} onSelect={(status) => setStatusAction({ returnId: ret._id || ret.id, status })} />
+                          {ret.status === "Requested" && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setStatusAction({ returnId: ret._id || ret.id, status: "Approved" })}
+                                className="inline-flex items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-emerald-300 transition-colors hover:bg-emerald-400/20"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setStatusAction({ returnId: ret._id || ret.id, status: "Rejected" })}
+                                className="inline-flex items-center justify-center rounded-full border border-red-400/30 bg-red-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-red-300 transition-colors hover:bg-red-400/20"
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={() => setDeleteTarget(ret)}
                             className={iconButton}
@@ -263,15 +288,63 @@ const ReturnsPage = () => {
       </PageBody>
 
       {/* Status update confirmation dialog */}
-      <AdminConfirmDialog
-        open={!!statusAction}
-        onClose={() => setStatusAction(null)}
-        onConfirm={handleStatusUpdate}
-        title={`Mark as ${statusAction?.status}`}
-        message={`This will update the return status to "${statusAction?.status}". This action can be changed later until the return is finalized.`}
-        confirmLabel={statusAction?.status || "Update"}
-        tone="default"
-      />
+      {statusAction && (
+        <div className={adminPanel?.includes("rounded-2xl") ? "fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" : "fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"}>
+          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0b] shadow-[0_24px_90px_rgba(0,0,0,0.55)]">
+            <div className="border-b border-white/10 bg-[#090909] px-5 py-5 sm:px-7 sm:py-6">
+              <div className="mb-3 inline-flex rounded-full border border-white/15 bg-white/[0.06] px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-white/78">
+                Confirm Action
+              </div>
+              <h2 className="max-w-[720px] text-3xl font-black uppercase leading-none tracking-normal text-white sm:text-4xl">
+                {statusAction.status === "Approved" ? "Approve" : "Reject"} Return
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm font-semibold text-white/45">
+                {statusAction.status === "Approved"
+                  ? "This will approve the return request and notify the customer. The return can no longer be modified."
+                  : "This will reject the return request and notify the customer. The return can no longer be modified."}
+              </p>
+            </div>
+
+            <div className="p-5 sm:p-7 space-y-4">
+              {statusAction.status === "Rejected" && (
+                <div>
+                  <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                    Rejection Reason <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/25 focus:border-white/40"
+                    placeholder="Enter the reason for rejecting this return..."
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-white/10 bg-[#0b0b0b]/95 p-4 backdrop-blur-md sm:flex-row">
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusAction(null)
+                  setRejectionReason("")
+                }}
+                className="inline-flex flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleStatusUpdate}
+                disabled={statusAction.status === "Rejected" && !rejectionReason.trim()}
+                className="inline-flex flex-1 items-center justify-center rounded-xl bg-white px-5 py-4 text-sm font-black uppercase tracking-[0.14em] text-black transition-colors hover:bg-lime-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {statusAction.status || "Update"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation */}
       <AdminConfirmDialog
@@ -341,36 +414,6 @@ const ReturnsPage = () => {
 const TableHeader = ({ label, hidden, className = "" }: { label: string; hidden?: string; className?: string }) => (
   <th className={`${adminHeaderCell} ${hidden ? `hidden ${hidden}:table-cell` : ""} ${className}`}>{label}</th>
 )
-
-const QuickStatusActions = ({ currentStatus, returnId, onSelect }: { currentStatus?: string; returnId?: string; onSelect: (status: string) => void }) => {
-  const nextSteps: Record<string, string[]> = {
-    Requested: ["Approved", "Rejected"],
-    Approved: ["Refunded", "Cancelled"],
-    Rejected: [],
-    Refunded: [],
-    Cancelled: [],
-  }
-
-  const options = nextSteps[currentStatus || ""] || []
-
-  if (options.length === 0) return null
-
-  return (
-    <div className="flex gap-1">
-      {options.map((s) => (
-        <button
-          key={s}
-          type="button"
-          onClick={() => onSelect(s)}
-          title={`Mark as ${s}`}
-          className={`inline-flex h-8 items-center rounded-lg border border-white/10 bg-white/[0.04] px-2 text-[10px] font-black uppercase tracking-wider text-white/65 transition-colors hover:border-white/20 hover:bg-white hover:text-black`}
-        >
-          {s}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 const DetailRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">

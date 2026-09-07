@@ -13,6 +13,7 @@ import {
   Users,
   User,
   LogOut,
+  FileText,
 } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { useRouter } from 'next/navigation';
@@ -172,15 +173,23 @@ const EcomNavbar = () => {
                         </p>
                         <p className="text-xs text-gray-400">Member</p>
                       </div>
-                      <Link
-                        href="/nike/profile"
-                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <User className="w-4 h-4" />
-                        My Profile
-                      </Link>
-                      <button
+                       <Link
+                         href="/nike/profile"
+                         className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                         onClick={() => setShowUserMenu(false)}
+                       >
+                         <User className="w-4 h-4" />
+                         My Profile
+                       </Link>
+                       <Link
+                         href="/nike/return-policy"
+                         className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                         onClick={() => setShowUserMenu(false)}
+                       >
+                         <FileText className="w-4 h-4" />
+                         Return Policy
+                       </Link>
+                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
                       >
@@ -233,15 +242,21 @@ const EcomNavbar = () => {
               <Link href="/nike/products/category/Kids" className="hover:text-gray-300 transition-colors">
                 Kids
               </Link>
-              <Link
-                href="/nike/products"
-                className="text-red-500 hover:text-red-400 transition-colors font-semibold"
-              >
-                Sale
-              </Link>
+               <Link
+                 href="/nike/products"
+                 className="text-red-500 hover:text-red-400 transition-colors font-semibold"
+               >
+                 Sale
+               </Link>
+               <Link
+                 href="/nike/return-policy"
+                 className="hover:text-gray-300 transition-colors"
+               >
+                 Return Policy
+               </Link>
 
-              {/* Mobile Cart Button */}
-              <button
+               {/* Mobile Cart Button */}
+               <button
                 onClick={() => {
                   setIsCartOpen(true);
                   setMobileMenuOpen(false);
