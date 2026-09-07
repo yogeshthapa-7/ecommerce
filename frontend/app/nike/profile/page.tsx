@@ -21,6 +21,7 @@ import {
   MapPin,
   Package,
   Phone,
+  RotateCcw,
   Settings,
   Shield,
   ShoppingBag,
@@ -79,7 +80,7 @@ interface Order {
   date: string;
 }
 
-type TabType = "orders" | "account" | "address" | "payment" | "wishlist" | "settings";
+type TabType = "orders" | "returns" | "account" | "address" | "payment" | "wishlist" | "settings";
 
 const panelClass = "rounded-3xl border border-white/10 bg-zinc-950 p-5 shadow-xl shadow-black/30 md:p-6";
 const labelClass = "text-xs font-black uppercase tracking-[0.18em] text-zinc-500";
@@ -91,6 +92,13 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [orderFilter, setOrderFilter] = useState("all");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [returns, setReturns] = useState<any[]>([]);
+  const [returnModalOrder, setReturnModalOrder] = useState<Order | null>(null);
+  const [returnReason, setReturnReason] = useState("");
+  const [returnDescription, setReturnDescription] = useState("");
+  const [selectedReturnItems, setSelectedReturnItems] = useState<string[]>([]);
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+  const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const router = useRouter();
   const { addOrderItemsToCart } = useCart();
 
@@ -155,6 +163,29 @@ const ProfilePage = () => {
     }
   };
 
+  const fetchReturns = async () => {
+    if (!user) return;
+    const userId = user._id || user.id;
+    if (!userId) return;
+
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/returns/user/${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReturns(data);
+      }
+    } catch (error) {
+      console.error("Error fetching returns:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) fetchReturns();
+  }, [user]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -199,6 +230,81 @@ const ProfilePage = () => {
       console.error("Error deleting order:", error);
     } finally {
       setDeleteTargetId(null);
+    }
+  };
+
+  const openReturnModal = (order: Order) => {
+    setReturnModalOrder(order);
+    setSelectedReturnItems(order.items.map((_, idx) => String(idx)));
+    setReturnReason("");
+    setReturnDescription("");
+  };
+
+  const toggleReturnItem = (idx: number) => {
+    const key = String(idx);
+    setSelectedReturnItems((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
+
+  const submitReturn = async () => {
+    if (!returnModalOrder || !returnReason || selectedReturnItems.length === 0) return;
+    setSubmittingReturn(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const selectedItems = selectedReturnItems
+        .map((idx) => returnModalOrder.items[Number(idx)])
+        .filter(Boolean);
+
+      const totalAmount = selectedItems.reduce(
+        (sum, item) => sum + Number(item.price) * Number(item.quantity),
+        0,
+      );
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/returns`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          orderId: returnModalOrder._id || returnModalOrder.orderId,
+          items: selectedItems.map((item) => ({
+            productId: item.productId,
+            name: item.name,
+            price: Number(item.price),
+            quantity: Number(item.quantity),
+            color: item.color || "",
+            size: item.size || "",
+            image: item.image || "",
+            reason: returnReason,
+          })),
+          totalAmount,
+          reason: returnReason,
+          description: returnDescription,
+          customerName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
+          customerEmail: user?.email || "",
+          userId: user?._id || user?.id,
+        }),
+      });
+
+      if (res.ok) {
+        setReturnModalOrder(null);
+        setSelectedReturnItems([]);
+        setReturnReason("");
+        setReturnDescription("");
+        fetchReturns();
+        setNotification({ message: "Return request submitted successfully", type: "success" });
+      } else {
+        const err = await res.json();
+        setNotification({ message: err.message || "Failed to submit return", type: "error" });
+      }
+    } catch (error) {
+      console.error("Error submitting return:", error);
+      setNotification({ message: "Something went wrong", type: "error" });
+    } finally {
+      setSubmittingReturn(false);
     }
   };
 
@@ -451,7 +557,16 @@ const ProfilePage = () => {
                       {order.paymentStatus}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    {order.deliveryStatus === "Delivered" && (
+                      <button
+                        onClick={() => openReturnModal(order)}
+                        className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-400 transition-colors hover:text-red-300"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Return
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDeleteOrder(order._id || order.orderId)}
                       className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-500 transition-colors hover:text-red-300"
@@ -474,6 +589,78 @@ const ProfilePage = () => {
       )}
     </div>
   );
+
+  const renderReturns = () => {
+    const deliveredOrders = orders.filter((o) => o.deliveryStatus === "Delivered");
+    const returnableItems = deliveredOrders.flatMap((order) =>
+      order.items.map((item, idx) => ({
+        order,
+        item,
+        idx,
+        key: `${order._id || order.orderId}-${idx}`,
+      })),
+    );
+
+    return (
+      <div className="space-y-6">
+        <div className="rounded-3xl border border-white/10 bg-zinc-950 p-6">
+          <h3 className="text-xl font-black uppercase text-white mb-2">My Returns</h3>
+          <p className="text-sm text-zinc-500 mb-6">
+            Returns are only available for orders that have been successfully delivered.
+          </p>
+
+          {returns.length === 0 && returnableItems.length === 0 ? (
+            <div className="py-10 text-center">
+              <RotateCcw className="mx-auto mb-4 h-10 w-10 text-zinc-600" />
+              <p className="text-lg font-black uppercase text-white">No returns yet</p>
+              <p className="mt-2 text-sm text-zinc-500">
+                Once you receive a delivered order, you can request a return from the Orders tab.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {returns.map((ret) => (
+                <div
+                  key={ret._id}
+                  className="rounded-2xl border border-white/10 bg-black px-5 py-4"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-black uppercase text-white">
+                        {ret.returnId || ret._id}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        Order: {ret.orderId?.orderId || ret.orderId || "—"}
+                      </p>
+                    </div>
+                    <StatusBadge status={ret.status} />
+                  </div>
+                  <div className="mt-3 space-y-1">
+                    {ret.items?.map((item: any, idx: number) => (
+                      <p key={idx} className="text-xs text-zinc-400">
+                        {item.quantity}x {item.name || "Product"}
+                        {item.color ? ` (${item.color}` : ""}
+                        {item.size ? ` / ${item.size}` : ""}
+                        {item.color ? ")" : ""}
+                      </p>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Reason: {ret.reason || "—"}
+                  </p>
+                  {ret.resolution && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      Resolution: {ret.resolution}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const renderAccount = () => (
     <div className="space-y-6">
@@ -674,6 +861,7 @@ const ProfilePage = () => {
 
   const tabs = [
     { id: "orders", label: "Orders", icon: Package },
+    { id: "returns", label: "Returns", icon: RotateCcw },
     { id: "account", label: "Account", icon: User },
     { id: "address", label: "Addresses", icon: MapPin },
     { id: "payment", label: "Payment", icon: CreditCard },
@@ -682,6 +870,45 @@ const ProfilePage = () => {
   ];
 
   const activeLabel = tabs.find((tab) => tab.id === activeTab)?.label;
+
+  const NotificationModal = () => {
+    if (!notification) return null;
+    const isSuccess = notification.type === "success";
+
+    return (
+      <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 p-4">
+        <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60">
+          <div className={`border-b border-white/10 px-6 py-5 ${isSuccess ? "bg-emerald-500/10" : "bg-red-500/10"}`}>
+            <div className="flex items-center gap-3">
+              <div
+                className={`grid h-10 w-10 place-items-center rounded-full border ${
+                  isSuccess ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-red-400/30 bg-red-400/10 text-red-300"
+                }`}
+              >
+                {isSuccess ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+              </div>
+              <div>
+                <h3 className="text-lg font-black uppercase text-white">{isSuccess ? "Success" : "Error"}</h3>
+                <p className="text-xs font-semibold text-zinc-500">{notification.message}</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-3 border-t border-white/10 px-6 py-4">
+            <button
+              onClick={() => setNotification(null)}
+              className={`h-11 rounded-full px-5 text-sm font-black uppercase transition-colors ${
+                isSuccess
+                  ? "border border-white/10 bg-white text-black hover:bg-emerald-400"
+                  : "border border-white/10 bg-white text-black hover:bg-red-500 hover:text-white"
+              }`}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -726,6 +953,111 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
+
+      {returnModalOrder && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60">
+            <div className="border-b border-white/10 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-red-500/30 bg-red-500/10">
+                  <RotateCcw className="h-4 w-4 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">Request Return</h3>
+                  <p className="text-xs font-semibold text-zinc-500">
+                    Order {returnModalOrder.orderId}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-xs font-black uppercase tracking-wider text-zinc-400">
+                Select Items to Return
+              </p>
+              <div className="space-y-2">
+                {returnModalOrder.items.map((item: any, idx: number) => {
+                  const checked = selectedReturnItems.includes(String(idx));
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => toggleReturnItem(idx)}
+                      className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-colors ${
+                        checked
+                          ? "border-white bg-white text-black"
+                          : "border-white/10 bg-black text-zinc-300 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black uppercase">{item.name}</p>
+                        <p className={`text-xs ${checked ? "text-black/70" : "text-zinc-500"}`}>
+                          Qty: {item.quantity} {item.color ? `· ${item.color}` : ""} {item.size ? `· ${item.size}` : ""}
+                        </p>
+                      </div>
+                      <p className="text-sm font-black">${(Number(item.price) * Number(item.quantity)).toFixed(2)}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Reason <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors focus:border-white/40"
+                >
+                  <option value="">Select a reason</option>
+                  <option value="Damaged">Damaged</option>
+                  <option value="Wrong item">Wrong item</option>
+                  <option value="No longer needed">No longer needed</option>
+                  <option value="Poor quality">Poor quality</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Description
+                </label>
+                <textarea
+                  value={returnDescription}
+                  onChange={(e) => setReturnDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/25 focus:border-white/40"
+                  placeholder="Add more details about your return..."
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-white/10 px-6 py-4">
+              <button
+                onClick={() => {
+                  setReturnModalOrder(null);
+                  setSelectedReturnItems([]);
+                  setReturnReason("");
+                  setReturnDescription("");
+                }}
+                className="h-11 rounded-full border border-white/10 px-5 text-sm font-black uppercase text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReturn}
+                disabled={!returnReason || selectedReturnItems.length === 0 || submittingReturn}
+                className="h-11 rounded-full bg-red-500 px-5 text-sm font-black uppercase text-white transition-colors hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingReturn ? "Submitting..." : "Submit Return"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <NotificationModal />
 
       <section className="border-b border-white/10 bg-[linear-gradient(120deg,#09090b_0%,#000_52%,rgba(239,68,68,0.16)_100%)] pt-28">
         <div className="mx-auto max-w-7xl px-6 py-12">
@@ -808,6 +1140,7 @@ const ProfilePage = () => {
             </div>
 
             {activeTab === "orders" && renderOrders()}
+            {activeTab === "returns" && renderReturns()}
             {activeTab === "account" && renderAccount()}
             {activeTab === "address" && renderAddress()}
             {activeTab === "payment" && renderPayment()}
@@ -842,5 +1175,37 @@ const EmptyState = ({
     {action}
   </div>
 );
+
+const StatusBadge = ({ status }: { status?: string }) => {
+  const normalized = (status || "").toLowerCase();
+  const cls =
+    ["paid", "delivered", "refunded", "approved"].includes(normalized) ||
+    status === "Delivered" ||
+    status === "Paid" ||
+    status === "Refunded" ||
+    status === "Approved"
+      ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+      : ["pending", "processing", "shipped", "requested"].includes(normalized) ||
+        status === "Pending" ||
+        status === "Processing" ||
+        status === "Shipped" ||
+        status === "Requested"
+        ? "border-amber-300/30 bg-amber-300/10 text-amber-200"
+        : ["failed", "cancelled", "rejected", "banned"].includes(normalized) ||
+          status === "Failed" ||
+          status === "Cancelled" ||
+          status === "Rejected" ||
+          status === "Banned"
+          ? "border-red-400/30 bg-red-400/10 text-red-300"
+          : "border-white/10 bg-white/[0.06] text-white/60";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${cls}`}
+    >
+      {status || "Unknown"}
+    </span>
+  );
+};
 
 export default ProfilePage;

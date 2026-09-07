@@ -4,6 +4,7 @@ import {
   Home,
   Inbox,
   PackageSearch,
+  RotateCcw,
   Settings,
   UsersRound,
 } from "lucide-react"
@@ -24,6 +25,7 @@ const items = [
   { title: "Category", url: "/admin/categories", icon: Inbox },
   { title: "Customers", url: "/admin/customers", icon: UsersRound },
   { title: "Orders", url: "/admin/orders", icon: ClipboardCheck },
+  { title: "Returns", url: "/admin/returns", icon: RotateCcw },
   { title: "Products", url: "/admin/products", icon: PackageSearch },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ]

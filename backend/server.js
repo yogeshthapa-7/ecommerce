@@ -43,6 +43,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/returns', require('./routes/returnRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
