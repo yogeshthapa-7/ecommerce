@@ -1,6 +1,7 @@
 import {
   ArrowLeftRight,
   ClipboardCheck,
+  ClipboardList,
   Home,
   Inbox,
   PackageSearch,
@@ -21,6 +22,7 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/admin", icon: Home },
+  { title: "Audit Log", url: "/admin/audit", icon: ClipboardList },
   { title: "Category", url: "/admin/categories", icon: Inbox },
   { title: "Customers", url: "/admin/customers", icon: UsersRound },
   { title: "Orders", url: "/admin/orders", icon: ClipboardCheck },

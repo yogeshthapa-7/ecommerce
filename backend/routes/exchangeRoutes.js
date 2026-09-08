@@ -12,6 +12,7 @@ const {
 } = require('../controllers/exchangeController');
 const auth = require('../middleware/authMiddleware');
 const adminAuth = require('../middleware/adminMiddleware');
+const audit = require('../middleware/auditMiddleware');
 
 // Public stats
 router.get('/stats', getStats);
@@ -24,13 +25,13 @@ router.get('/', auth, getExchanges);
 router.get('/:id', auth, getExchange);
 
 // Create an exchange request (auth required)
-router.post('/', auth, createExchange);
+router.post('/', auth, audit('Exchange'), createExchange);
 
 // User can update requested items for approved exchange
 router.put('/:id/request-items', auth, updateExchangeRequest);
 
 // Admin only mutates
-router.put('/:id', auth, adminAuth, updateExchange);
-router.delete('/:id', auth, adminAuth, deleteExchange);
+router.put('/:id', auth, adminAuth, audit('Exchange'), updateExchange);
+router.delete('/:id', auth, adminAuth, audit('Exchange'), deleteExchange);
 
 module.exports = router;
