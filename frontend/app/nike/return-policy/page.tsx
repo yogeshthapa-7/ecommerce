@@ -65,9 +65,14 @@ export default function ReturnPolicyPage() {
 
           <Section icon={<ShieldCheck className="h-5 w-5" />} title="Exchange Policy">
             <ul className="space-y-2 text-sm text-white/70">
-              <li>• We currently offer <strong className="text-white">refunds only</strong>; direct exchanges are not available.</li>
-              <li>• To exchange for a different size or color, please return the original item and place a new order.</li>
-              <li>• Refunded amounts will reflect the price paid at the time of purchase.</li>
+              <li>• We offer <strong className="text-white">exchanges</strong> for size, color, or style changes within 30 days of delivery.</li>
+              <li>• Items must be <strong className="text-white">unworn, unwashed, and unaltered</strong> with original tags and packaging intact.</li>
+              <li>• You can select a replacement product during the exchange request. If the exact item is unavailable, we will contact you with alternatives or issue a refund.</li>
+              <li>• If the requested item costs more, you will be charged the price difference. If it costs less, you will receive a refund.</li>
+              <li>• Exchanges are subject to product availability. We make every effort to fulfill your request, but if an item is out of stock, we will notify you promptly.</li>
+              <li>• To request an exchange, go to <strong className="text-white">Profile &rarr; Exchanges</strong> tab, select a delivered order, choose items to exchange, pick a replacement, and submit.</li>
+              <li>• Once approved, a prepaid return shipping label will be provided. Ship back the original item(s) in their original packaging.</li>
+              <li>• Exchanges are completed within 5–10 business days after we receive the returned item(s).</li>
             </ul>
           </Section>
         </div>
@@ -75,7 +80,7 @@ export default function ReturnPolicyPage() {
         <div className="mt-12 rounded-3xl border border-white/10 bg-zinc-950 p-6">
           <h3 className="text-lg font-black uppercase text-white mb-2">Need Help?</h3>
           <p className="text-sm text-white/60">
-            If you have questions about a return, contact our support team at{" "}
+            If you have questions about a return or exchange, contact our support team at{" "}
             <Link href="mailto:support@nikestore.com" className="text-red-500 underline">
               support@nikestore.com
             </Link>

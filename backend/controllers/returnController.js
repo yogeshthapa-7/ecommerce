@@ -178,7 +178,7 @@ exports.updateReturn = async (req, res) => {
                                 <p style="margin: 0 0 8px 0;"><strong style="color: #111;">Non-Returnable:</strong> Gift cards, promotional codes, personalized products, and items marked as Final Sale cannot be returned.</p>
                                 <p style="margin: 0 0 8px 0;"><strong style="color: #111;">How to Return:</strong> Go to Profile → Returns tab, select delivered order, choose items, provide reason, and submit.</p>
                                 <p style="margin: 0 0 8px 0;"><strong style="color: #111;">Shipping:</strong> Once approved, a prepaid return label is provided. Refunds processed to original payment method within 5–10 business days.</p>
-                                <p style="margin: 0;"><strong style="color: #111;">Exchanges:</strong> We offer refunds only. For size/color changes, return original item and place a new order.</p>
+                                <p style="margin: 0;"><strong style="color: #111;">Exchanges:</strong> We offer exchanges for size, color, or style changes within 30 days of delivery. To exchange, submit an exchange request from your Profile. If the new item costs more, you will be charged the difference; if less, you will receive a refund. Exchanges are subject to product availability.</p>
                             </div>
                         </div>
                     ` : '';

@@ -1,9 +1,11 @@
 import {
+  ArrowLeftRight,
   Calendar,
   ClipboardCheck,
   Home,
   Inbox,
   PackageSearch,
+  RefreshCcw,
   RotateCcw,
   Settings,
   UsersRound,
@@ -26,6 +28,7 @@ const items = [
   { title: "Customers", url: "/admin/customers", icon: UsersRound },
   { title: "Orders", url: "/admin/orders", icon: ClipboardCheck },
   { title: "Returns", url: "/admin/returns", icon: RotateCcw },
+  { title: "Exchanges", url: "/admin/exchanges", icon: ArrowLeftRight },
   { title: "Products", url: "/admin/products", icon: PackageSearch },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ]
