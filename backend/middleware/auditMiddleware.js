@@ -1,7 +1,37 @@
 const AuditLog = require('../models/AuditLog');
+const Order = require('../models/Order');
+const Product = require('../models/Product');
+const Return = require('../models/Return');
+const Exchange = require('../models/Exchange');
+const Customer = require('../models/Customer');
+const Category = require('../models/Category');
+const User = require('../models/User');
+
+const modelMap = {
+    Order,
+    Product,
+    Return,
+    Exchange,
+    Customer,
+    Category,
+    User,
+};
 
 const auditMiddleware = (entityType) => {
     return async (req, res, next) => {
+        let oldEntity = null;
+
+        if (req.method === 'PUT' || req.method === 'PATCH') {
+            try {
+                const Model = modelMap[entityType];
+                if (Model && req.params.id) {
+                    oldEntity = await Model.findById(req.params.id).lean();
+                }
+            } catch (e) {
+                oldEntity = null;
+            }
+        }
+
         const originalSend = res.send.bind(res);
 
         res.send = async function (data) {
@@ -28,7 +58,9 @@ const auditMiddleware = (entityType) => {
                     const responseData = typeof data === 'string' ? JSON.parse(data) : data;
                     const entityId = req.params.id || responseData?._id || responseData?.id || '';
 
-                    const admin = req.user;
+                    const actor = req.user;
+                    const role = actor.role === 'user' ? 'user' : 'admin';
+
                     let entityName = '';
                     if (entityType === 'Order' && responseData?.orderId) entityName = responseData.orderId;
                     else if (entityType === 'Return' && responseData?.returnId) entityName = responseData.returnId;
@@ -38,10 +70,23 @@ const auditMiddleware = (entityType) => {
                     else if (responseData?.customer) entityName = typeof responseData.customer === 'string' ? responseData.customer : responseData.customer?.name || '';
 
                     let changes = null;
-                    if (method === 'PUT' || method === 'PATCH') {
+                    if (method === 'POST') {
                         changes = {
-                            updatedFields: Object.keys(req.body || {}),
+                            type: 'created',
+                            values: responseData
+                        };
+                    } else if (method === 'PUT' || method === 'PATCH') {
+                        const updatedFields = Object.keys(req.body || {});
+                        changes = {
+                            type: 'updated',
+                            updatedFields,
+                            oldValues: oldEntity || {},
                             newValues: req.body
+                        };
+                    } else if (method === 'DELETE') {
+                        changes = {
+                            type: 'deleted',
+                            values: oldEntity || responseData
                         };
                     }
 
@@ -52,13 +97,15 @@ const auditMiddleware = (entityType) => {
                         'Exchange': `${action} exchange`,
                         'Customer': `${action} customer`,
                         'Category': `${action} category`,
-                        'User': `${action} user`
+                        'User': `${action} user`,
+                        'Stock': `${action} stock`
                     };
 
                     await AuditLog.create({
-                        adminId: admin.id || admin._id,
-                        adminName: `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || admin.email,
-                        adminEmail: admin.email,
+                        adminId: actor.id || actor._id,
+                        adminName: `${actor.firstName || ''} ${actor.lastName || ''}`.trim() || actor.email,
+                        adminEmail: actor.email,
+                        role,
                         action,
                         entityType,
                         entityId: String(entityId),

@@ -4,6 +4,7 @@ const auditLogSchema = new mongoose.Schema({
     adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     adminName: { type: String, required: true },
     adminEmail: { type: String, required: true },
+    role: { type: String, required: true, enum: ['user', 'admin'] },
     action: {
         type: String,
         required: true,

@@ -13,6 +13,8 @@ import axios from "axios"
 import Link from "next/link"
 import { AdminModal, PageBody, PageHeader, MetricCard, StatusBadge, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, secondaryButton } from "@/components/admin/AdminSurface"
 import { NikeDatePicker } from "@/components/ui/nike-date-picker"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 const ACTIONS = ["CREATE", "UPDATE", "DELETE", "APPROVE", "REJECT", "CANCEL", "COMPLETE", "RESTOCK", "ADJUST_STOCK"]
 const ENTITY_TYPES = ["Order", "Product", "Return", "Exchange", "Customer", "Category", "User", "Stock"]
@@ -106,6 +108,98 @@ const AuditPage = () => {
 
   const hasActiveFilters = filterAction || filterEntity || startDate || endDate || search
 
+  const downloadAuditPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" })
+    const pageWidth = doc.internal.pageSize.getWidth()
+
+    doc.setFillColor(0, 0, 0)
+    doc.rect(0, 0, pageWidth, 60, "F")
+
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(20)
+    doc.setFont("helvetica", "bold")
+    doc.text("NIKE", 40, 38)
+
+    doc.setFontSize(9)
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(163, 163, 163)
+    doc.text("ADMIN PANEL — AUDIT REPORT", 40, 52)
+
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(14)
+    doc.setFont("helvetica", "bold")
+    doc.text("Audit Log Report", pageWidth - 40, 38, { align: "right" })
+
+    doc.setFontSize(9)
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(163, 163, 163)
+    const generatedOn = new Date().toLocaleString()
+    doc.text(`Generated: ${generatedOn}`, pageWidth - 40, 52, { align: "right" })
+
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(9)
+    doc.setFont("helvetica", "bold")
+    doc.text(`Total Logs: ${stats?.totalLogs ?? logs.length}`, 40, 85)
+    doc.text(`Filters: ${[filterAction, filterEntity, startDate, endDate].filter(Boolean).join(", ") || "None"}`, 40, 98)
+    doc.text(`Search: ${search || "None"}`, 40, 111)
+
+    const tableColumn = ["Timestamp", "Username", "Action", "Entity", "Entity ID", "Description"]
+    const tableRows = visibleLogs.map((log) => [
+      log.createdAt ? new Date(log.createdAt).toLocaleString() : "—",
+      `${log.adminName || "—"} (${log.adminEmail || "—"})`,
+      log.action || "—",
+      log.entityType || "—",
+      log.entityId || "—",
+      log.description || "—",
+    ])
+
+    autoTable(doc as any, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 125,
+      theme: "grid",
+      headStyles: {
+        fillColor: [24, 24, 24],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+        fontSize: 9,
+        cellPadding: 8,
+      },
+      bodyStyles: {
+        fillColor: [11, 11, 11],
+        textColor: [200, 200, 200],
+        fontSize: 8,
+        cellPadding: 6,
+      },
+      alternateRowStyles: {
+        fillColor: [17, 17, 17],
+      },
+      styles: {
+        lineColor: [255, 255, 255] as [number, number, number],
+        lineWidth: 0.5,
+      },
+      margin: { left: 40, right: 40 },
+    })
+
+    const afterTableY = (doc as any).lastAutoTable.finalY + 24
+
+    ;(doc as any).getNumberOfPages = () => (doc as any).getNumberOfPages()
+
+    const pageCount = (doc as any).getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFillColor(0, 0, 0)
+      doc.rect(0, doc.internal.pageSize.getHeight() - 30, pageWidth, 30, "F")
+      doc.setTextColor(163, 163, 163)
+      doc.setFontSize(8)
+      doc.setFont("helvetica", "normal")
+      doc.text(`Nike Admin — Audit Report — Page ${i} of ${pageCount}`, 40, doc.internal.pageSize.getHeight() - 10)
+      doc.text("CONFIDENTIAL", pageWidth - 40, doc.internal.pageSize.getHeight() - 10, { align: "right" })
+    }
+
+    doc.save(`audit-report-${new Date().toISOString().split("T")[0]}.pdf`)
+  }
+
   return (
     <div className="min-h-screen bg-[#080808]">
       <PageHeader
@@ -113,10 +207,24 @@ const AuditPage = () => {
         label="Audit Report"
         description="Track all admin actions across orders, products, returns, exchanges, customers, and more."
         action={
-          <Link href="/admin" className={secondaryButton}>
-            <ArrowLeft size={16} />
-            Back to Dashboard
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={downloadAuditPDF}
+              className={secondaryButton}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download PDF
+            </button>
+            <Link href="/admin" className={secondaryButton}>
+              <ArrowLeft size={16} />
+              Back to Dashboard
+            </Link>
+          </div>
         }
       />
 
@@ -223,12 +331,11 @@ const AuditPage = () => {
               <thead>
                 <tr>
                   <TableHeader label="Timestamp" />
-                  <TableHeader label="Admin" />
+                  <TableHeader label="Username" />
                   <TableHeader label="Action" />
                   <TableHeader label="Entity" />
                   <TableHeader label="Entity ID" />
                   <TableHeader label="Description" />
-                  <TableHeader label="IP Address" />
                   <TableHeader
                     label="Details"
                     className="sticky right-0 z-20 bg-black/95 shadow-[-12px_0_20px_rgba(0,0,0,0.35)]"
@@ -238,7 +345,7 @@ const AuditPage = () => {
               <tbody>
                 {loading ? (
                   <tr key="loading">
-                    <td colSpan={8} className="px-4 py-12 text-center text-white/35">
+                    <td colSpan={7} className="px-4 py-12 text-center text-white/35">
                       <div className="flex items-center justify-center gap-3">
                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
                         <span className="text-sm font-medium">Loading audit logs...</span>
@@ -247,7 +354,7 @@ const AuditPage = () => {
                   </tr>
                 ) : visibleLogs.length === 0 ? (
                   <tr key="empty">
-                    <td colSpan={8} className="px-4 py-12 text-center text-white/35">
+                    <td colSpan={7} className="px-4 py-12 text-center text-white/35">
                       <div className="flex flex-col items-center gap-3">
                         <FileText size={32} className="text-white/20" />
                         <div>
@@ -284,9 +391,6 @@ const AuditPage = () => {
                       </td>
                       <td className={`${adminCell} max-w-[200px] truncate text-xs text-gray-300`} title={log.description}>
                         {log.description || "—"}
-                      </td>
-                      <td className={`${adminCell} text-xs text-gray-400`}>
-                        {log.ipAddress || "—"}
                       </td>
                       <td className={`${adminCell} sticky right-0 z-10 bg-[#111111] shadow-[-12px_0_20px_rgba(0,0,0,0.28)]`}>
                         <button
@@ -349,20 +453,50 @@ const AuditPage = () => {
       >
         {activeLog && (
           <div className="space-y-4">
-            <DetailRow label="Admin" value={`${activeLog.adminName || "—"} <${activeLog.adminEmail || "—"}>`} />
+            <DetailRow label="Username" value={`${activeLog.adminName || "—"} <${activeLog.adminEmail || "—"}>`} />
             <DetailRow label="Action" value={<StatusBadge status={activeLog.action} />} />
             <DetailRow label="Entity Type" value={activeLog.entityType} />
             <DetailRow label="Entity ID" value={activeLog.entityId} />
             <DetailRow label="Entity Name" value={activeLog.entityName || "—"} />
             <DetailRow label="Description" value={activeLog.description || "—"} />
-            <DetailRow label="IP Address" value={activeLog.ipAddress || "—"} />
             <DetailRow label="Timestamp" value={activeLog.createdAt ? new Date(activeLog.createdAt).toLocaleString() : "—"} />
             {activeLog.changes && (
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/40">Changes</p>
-                <pre className="mt-2 text-xs font-medium text-white/70 whitespace-pre-wrap break-words">
-                  {JSON.stringify(activeLog.changes, null, 2)}
-                </pre>
+                <div className="mt-3 space-y-3">
+                  {(activeLog.changes as any).updatedFields?.length > 0 ? (
+                    <>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/50">Updated Fields</p>
+                      <div className="flex flex-wrap gap-2">
+                        {(activeLog.changes as any).updatedFields.map((field: string) => (
+                          <span key={field} className="inline-flex items-center rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs font-bold text-white/70">{field}</span>
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+                  {(activeLog.changes as any).values ? (
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/50">Values</p>
+                      <pre className="mt-2 text-xs font-medium text-white/70 whitespace-pre-wrap break-words">{(activeLog.changes as any).values ? JSON.stringify((activeLog.changes as any).values, null, 2) : ''}</pre>
+                    </div>
+                  ) : null}
+                  {(activeLog.changes as any).oldValues || (activeLog.changes as any).newValues ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {(activeLog.changes as any).oldValues ? (
+                        <div className="rounded-xl border border-white/10 bg-black/40 p-3">
+                          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-red-300/80 mb-2">Before</p>
+                          <pre className="text-xs font-medium text-white/70 whitespace-pre-wrap break-words">{(activeLog.changes as any).oldValues ? JSON.stringify((activeLog.changes as any).oldValues, null, 2) : ''}</pre>
+                        </div>
+                      ) : null}
+                      {(activeLog.changes as any).newValues ? (
+                        <div className="rounded-xl border border-white/10 bg-black/40 p-3">
+                          <p className="text-[10px] font-black uppercase tracking-[0.14em] text-emerald-300/80 mb-2">After</p>
+                          <pre className="text-xs font-medium text-white/70 whitespace-pre-wrap break-words">{(activeLog.changes as any).newValues ? JSON.stringify((activeLog.changes as any).newValues, null, 2) : ''}</pre>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             )}
           </div>
