@@ -280,7 +280,7 @@ exports.createExchange = async (req, res) => {
     try {
         const { orderId, originalItems, requestedItems, reason, description, customerName, customerEmail, userId } = req.body;
 
-        if (!orderId || !originalItems || !requestedItems || !reason) {
+        if (!orderId || !originalItems || !Array.isArray(requestedItems) || !reason) {
             return res.status(400).json({ message: 'Order id, original items, requested items, and reason are required' });
         }
 
@@ -323,7 +323,9 @@ exports.createExchange = async (req, res) => {
             }
         }
 
-        const priceDifference = calculatePriceDifference(originalItems, requestedItems);
+        const priceDifference = requestedItems.length > 0
+            ? calculatePriceDifference(originalItems, requestedItems)
+            : 0;
 
         const exchangeId = `EXC-${Date.now().toString().slice(-6)}`;
 
@@ -415,6 +417,79 @@ exports.deleteExchange = async (req, res) => {
         res.json({ message: 'Exchange deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// PUT update exchange request items (user action when approved)
+exports.updateExchangeRequest = async (req, res) => {
+    try {
+        const { requestedItems, description } = req.body;
+
+        if (!requestedItems || !Array.isArray(requestedItems) || requestedItems.length === 0) {
+            return res.status(400).json({ message: 'Requested items are required' });
+        }
+
+        const exchange = await Exchange.findById(req.params.id);
+        if (!exchange) return res.status(404).json({ message: 'Exchange not found' });
+
+        if (exchange.status !== 'Approved') {
+            return res.status(400).json({ message: 'You can only select replacement items for approved exchanges' });
+        }
+
+        const currentUserId = req.user?.id || req.user?._id;
+        if (exchange.userId && String(exchange.userId) !== String(currentUserId)) {
+            return res.status(403).json({ message: 'You can only update your own exchange requests' });
+        }
+
+        const productIds = requestedItems
+            .map(item => item.productId)
+            .filter(Boolean);
+
+        let allRequestedItemsAvailable = true;
+        const unavailableRequestedItems = [];
+
+        if (productIds.length > 0) {
+            const products = await Product.find({ _id: { $in: productIds } });
+            const productMap = new Map(products.map(p => [String(p._id), p]));
+
+            for (const item of requestedItems) {
+                if (!item.productId) continue;
+                const product = productMap.get(String(item.productId));
+                if (!product) {
+                    allRequestedItemsAvailable = false;
+                    unavailableRequestedItems.push({
+                        productId: item.productId,
+                        name: item.name,
+                        reason: 'Product not found'
+                    });
+                } else if (product.in_stock === false) {
+                    allRequestedItemsAvailable = false;
+                    unavailableRequestedItems.push({
+                        productId: item.productId,
+                        name: item.name || product.name,
+                        reason: 'Out of stock'
+                    });
+                }
+            }
+        }
+
+        const priceDifference = calculatePriceDifference(exchange.originalItems, requestedItems);
+
+        const updated = await Exchange.findByIdAndUpdate(
+            req.params.id,
+            {
+                requestedItems,
+                priceDifference,
+                allRequestedItemsAvailable,
+                unavailableRequestedItems,
+                ...(description !== undefined && { description: description || exchange.description })
+            },
+            { new: true, runValidators: true }
+        );
+
+        res.json(updated);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
     }
 };
 

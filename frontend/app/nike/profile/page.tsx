@@ -440,30 +440,6 @@ const ProfilePage = () => {
         image: item.image || "",
       }));
 
-      const requestedItems = selectedItems.map((item, i) => {
-        const replacement = selectedReplacements[String(i)];
-        if (replacement) {
-          return {
-            productId: replacement._id || replacement.id,
-            name: replacement.name,
-            price: Number(replacement.price || 0),
-            quantity: Number(item.quantity),
-            color: replacement.colors?.[0]?.name || item.color || "",
-            size: replacement.sizes?.[0] || item.size || "",
-            image: replacement.image_url || item.image || "",
-          };
-        }
-        return {
-          productId: item.productId,
-          name: item.name,
-          price: Number(item.price),
-          quantity: Number(item.quantity),
-          color: item.color || "",
-          size: item.size || "",
-          image: item.image || "",
-        };
-      });
-
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exchanges`, {
         method: "POST",
         headers: {
@@ -473,7 +449,7 @@ const ProfilePage = () => {
         body: JSON.stringify({
           orderId: exchangeModalOrder._id || exchangeModalOrder.orderId,
           originalItems,
-          requestedItems,
+          requestedItems: [],
           reason: exchangeReason,
           description: exchangeDescription,
           customerName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
@@ -1116,13 +1092,26 @@ const ProfilePage = () => {
   const renderExchanges = () => {
     const deliveredOrders = orders.filter((o) => o.deliveryStatus === "Delivered");
 
+    const areRequestedItemsPlaceholders = (exc: any) => {
+      if (!exc.originalItems || !exc.requestedItems || exc.requestedItems.length === 0) return true;
+      if (exc.originalItems.length !== exc.requestedItems.length) return false;
+      return exc.originalItems.every(
+        (orig: any, idx: number) => orig.productId === exc.requestedItems[idx]?.productId
+      );
+    };
+
     return (
       <div className="space-y-6">
         <div className="rounded-3xl border border-white/10 bg-zinc-950 p-6">
-          <h3 className="text-xl font-black uppercase text-white mb-2">My Exchanges</h3>
-          <p className="text-sm text-zinc-500 mb-6">
-            Exchanges are only available for orders that have been successfully delivered.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-black uppercase text-white mb-2">My Exchanges</h3>
+              <p className="text-sm text-zinc-500">
+                Exchanges are only available for orders that have been successfully delivered.
+              </p>
+            </div>
+            <RotateCcw className="hidden h-8 w-8 text-zinc-700 sm:block" />
+          </div>
 
           {exchanges.length === 0 && deliveredOrders.length === 0 ? (
             <div className="py-10 text-center">
@@ -1133,7 +1122,7 @@ const ProfilePage = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="mt-6 space-y-4">
               {exchanges.map((exc) => (
                 <div
                   key={exc._id}
@@ -1180,16 +1169,24 @@ const ProfilePage = () => {
                       <p className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-2">
                         Requested Items
                       </p>
-                      <div className="space-y-1">
-                        {exc.requestedItems?.map((item: any, idx: number) => (
-                          <p key={idx} className="text-xs text-zinc-400">
-                            {item.quantity}x {item.name || "Product"}
-                            {item.color ? ` (${item.color}` : ""}
-                            {item.size ? ` / ${item.size}` : ""}
-                            {item.color ? ")" : ""}
+                      {exc.status === "Approved" && areRequestedItemsPlaceholders(exc) ? (
+                        <div className="rounded-xl border border-blue-400/20 bg-blue-400/5 px-3 py-2">
+                          <p className="text-xs text-blue-300">
+                            Awaiting your selection. Choose a replacement product.
                           </p>
-                        ))}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {exc.requestedItems?.map((item: any, idx: number) => (
+                            <p key={idx} className="text-xs text-zinc-400">
+                              {item.quantity}x {item.name || "Product"}
+                              {item.color ? ` (${item.color}` : ""}
+                              {item.size ? ` / ${item.size}` : ""}
+                              {item.color ? ")" : ""}
+                            </p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <p className="mt-2 text-xs text-zinc-500">
@@ -1207,6 +1204,17 @@ const ProfilePage = () => {
                     <p className="mt-1 text-xs text-zinc-400">
                       Resolution: {exc.resolution}
                     </p>
+                  )}
+
+                  {exc.status === "Approved" && areRequestedItemsPlaceholders(exc) && (
+                    <div className="mt-4">
+                      <Link
+                        href="/nike/exchanges"
+                        className="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-blue-300 transition-colors hover:bg-blue-400/20"
+                      >
+                        Choose Replacement Product
+                      </Link>
+                    </div>
                   )}
                 </div>
               ))}

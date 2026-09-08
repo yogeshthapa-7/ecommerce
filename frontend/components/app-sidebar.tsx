@@ -1,11 +1,9 @@
 import {
   ArrowLeftRight,
-  Calendar,
   ClipboardCheck,
   Home,
   Inbox,
   PackageSearch,
-  RefreshCcw,
   RotateCcw,
   Settings,
   UsersRound,
@@ -16,7 +14,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -53,7 +50,7 @@ export function AppSidebar() {
           <SidebarGroupContent className="px-3 py-4 group-data-[collapsible=icon]:px-2">
 
             <SidebarMenu className="space-y-1">
-              {items.map((item, idx) => (
+              {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <a
