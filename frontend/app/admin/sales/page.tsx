@@ -195,6 +195,14 @@ const SalesPage = () => {
       cursorY += 32
     }
 
+    const ensureSpace = () => {
+      const pageHeight = doc.internal.pageSize.getHeight()
+      if (cursorY + 110 > pageHeight - 30) {
+        doc.addPage()
+        cursorY = 72
+      }
+    }
+
     header()
 
     doc.setTextColor(255, 255, 255)
@@ -203,62 +211,71 @@ const SalesPage = () => {
     doc.text(`Period: ${period}     |     Total Revenue: $${totals.totalRevenue.toLocaleString()}     |     Total Orders: ${totals.totalOrders}     |     Avg Order Value: $${totals.avgOrderValue}`, 40, 88, { align: "left" })
     cursorY = 108
 
+    ensureSpace()
     sectionTitle("Revenue Trend")
     autoTable(doc as any, {
       head: [["Period", "Revenue", "Orders", "Paid", "Pending", "Cancelled", "Avg Value"]],
       body: report.map(r => [r.label, `$${r.revenue.toLocaleString()}`, r.orders, r.paidOrders, r.pendingOrders, r.cancelledOrders, `$${r.avgOrderValue}`]),
       startY: cursorY,
       theme: "grid",
+      repeatHeaders: true,
       headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
       bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
       alternateRowStyles: { fillColor: [17, 17, 17] },
       styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
       margin: { left: 40, right: 40 },
-    })
+    } as any)
     cursorY = (doc as any).lastAutoTable.finalY + 24
 
+    ensureSpace()
     sectionTitle("Top Products")
     autoTable(doc as any, {
       head: [["Product", "Category", "Price", "Units Sold", "Revenue"]],
       body: topProducts.map(p => [p.name, p.category, `$${p.price.toLocaleString()}`, p.totalQuantity, `$${p.totalRevenue.toLocaleString()}`]),
       startY: cursorY,
       theme: "grid",
+      repeatHeaders: true,
       headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
       bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
       alternateRowStyles: { fillColor: [17, 17, 17] },
       styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
       margin: { left: 40, right: 40 },
-    })
+    } as any)
     cursorY = (doc as any).lastAutoTable.finalY + 24
 
+    ensureSpace()
     sectionTitle("Category Breakdown")
     autoTable(doc as any, {
       head: [["Category", "Revenue", "Orders", "Quantity", "Share"]],
       body: categories.map(c => [c.name, `$${c.revenue.toLocaleString()}`, c.orderCount, c.quantity, `${c.percentage}%`]),
       startY: cursorY,
       theme: "grid",
+      repeatHeaders: true,
       headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
       bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
       alternateRowStyles: { fillColor: [17, 17, 17] },
       styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
       margin: { left: 40, right: 40 },
-    })
+    } as any)
     cursorY = (doc as any).lastAutoTable.finalY + 24
 
+    ensureSpace()
     sectionTitle("Payment Methods")
     autoTable(doc as any, {
       head: [["Method", "Count", "Revenue", "Share"]],
       body: paymentMethods.map(p => [p.method, p.count, `$${p.revenue.toLocaleString()}`, `${p.percentage}%`]),
       startY: cursorY,
       theme: "grid",
+      repeatHeaders: true,
       headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
       bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
       alternateRowStyles: { fillColor: [17, 17, 17] },
       styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
       margin: { left: 40, right: 40 },
-    })
+    } as any)
     cursorY = (doc as any).lastAutoTable.finalY + 24
 
+    ensureSpace()
     sectionTitle("Delivery & Payment Status")
     autoTable(doc as any, {
       head: [["Delivery Status", "Count", "Revenue", "Payment Status", "Count", "Revenue"]],
@@ -269,26 +286,29 @@ const SalesPage = () => {
       }),
       startY: cursorY,
       theme: "grid",
+      repeatHeaders: true,
       headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
       bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
       alternateRowStyles: { fillColor: [17, 17, 17] },
       styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
       margin: { left: 40, right: 40 },
-    })
+    } as any)
     cursorY = (doc as any).lastAutoTable.finalY + 24
 
+    ensureSpace()
     sectionTitle("Top Customers")
     autoTable(doc as any, {
       head: [["Customer", "Email", "Orders", "Total Spent"]],
       body: topCustomers.map(c => [c.name, c.email, c.orders, `$${c.totalSpent.toLocaleString()}`]),
       startY: cursorY,
       theme: "grid",
+      repeatHeaders: true,
       headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
       bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
       alternateRowStyles: { fillColor: [17, 17, 17] },
       styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
       margin: { left: 40, right: 40 },
-    })
+    } as any)
 
     const pageCount = (doc as any).getNumberOfPages()
     for (let i = 1; i <= pageCount; i++) {
