@@ -51,6 +51,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/password-reset', require('./routes/passwordResetRoutes'));
 app.use('/api/audit', require('./routes/auditRoutes'));
+app.use('/api/sales', require('./routes/salesRoutes'));
 
 // Health check
 app.get('/', (req, res) => {

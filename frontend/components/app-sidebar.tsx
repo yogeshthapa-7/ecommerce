@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  BarChart3,
   ClipboardCheck,
   ClipboardList,
   Home,
@@ -22,6 +23,7 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/admin", icon: Home },
+  { title: "Sales", url: "/admin/sales", icon: BarChart3 },
   { title: "Audit Log", url: "/admin/audit", icon: ClipboardList },
   { title: "Category", url: "/admin/categories", icon: Inbox },
   { title: "Customers", url: "/admin/customers", icon: UsersRound },
