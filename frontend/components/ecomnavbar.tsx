@@ -19,6 +19,7 @@ import { useCart } from '@/app/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { getUser, clearAuth } from '@/lib/auth';
 
 const EcomNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -26,6 +27,7 @@ const EcomNavbar = () => {
   const [user, setUser] = useState<{ firstName?: string; lastName?: string; role?: string } | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   // Cart functionality
   const { setIsCartOpen, getCartCount } = useCart();
@@ -33,7 +35,7 @@ const EcomNavbar = () => {
 
   useEffect(() => {
     // Check for logged in user
-    const userStr = localStorage.getItem("user");
+    const userStr = getUser();
     if (userStr) {
       try {
         const userData = JSON.parse(userStr);
@@ -41,6 +43,8 @@ const EcomNavbar = () => {
       } catch (e) {
         console.error("Error parsing user data", e);
       }
+    } else {
+      setUser(null);
     }
 
     const handleScroll = () => {
@@ -48,11 +52,10 @@ const EcomNavbar = () => {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearAuth();
     setUser(null);
     setShowUserMenu(false);
     router.push("/login");

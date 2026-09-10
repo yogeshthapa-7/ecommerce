@@ -116,7 +116,7 @@ export default function LoginPage() {
         // Redirect based on user role or redirect param
         setTimeout(() => {
           if (data.user.role === "admin") {
-            router.push("/admin");
+            window.location.href = "/admin";
           } else if (redirectTo) {
             router.push(redirectTo);
           } else {

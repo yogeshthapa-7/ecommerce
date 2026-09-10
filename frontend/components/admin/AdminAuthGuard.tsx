@@ -6,13 +6,13 @@ import { getUser, clearAuth } from "@/lib/auth"
 
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const [checking, setChecking] = useState(true)
+  const [checked, setChecked] = useState(false)
 
   useEffect(() => {
     const userStr = getUser()
     if (!userStr) {
       clearAuth()
-      setChecking(false)
+      setChecked(true)
       router.push("/login")
       return
     }
@@ -21,21 +21,21 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
       const user = JSON.parse(userStr)
       if (user.role !== "admin") {
         clearAuth()
-        setChecking(false)
+        setChecked(true)
         router.push("/nike/products")
         return
       }
     } catch {
       clearAuth()
-      setChecking(false)
+      setChecked(true)
       router.push("/login")
       return
     }
 
-    setChecking(false)
+    setChecked(true)
   }, [router])
 
-  if (checking) {
+  if (!checked) {
     return null
   }
 

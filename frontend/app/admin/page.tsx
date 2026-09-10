@@ -12,7 +12,8 @@ import {
   CreditCard,
   Calendar,
   Truck,
-  ReceiptText
+  ReceiptText,
+  LogOut
 } from "lucide-react"
 
 import axios from "axios"
@@ -33,7 +34,7 @@ import {
   getOrderDisplayId,
   getOrderItems,
 } from "@/lib/order-helpers"
-import { getUser } from "@/lib/auth";
+import { getUser, clearAuth } from "@/lib/auth";
 
 const AdminDashboardPage = () => {
   // --- STATE ---
@@ -142,10 +143,22 @@ const AdminDashboardPage = () => {
         label="Admin Portal"
         description="Performance overview for revenue, orders, customers, products, and live commerce movement."
         action={
-          <button onClick={handleRefresh} className={secondaryButton}>
-            <RefreshCcw size={18} className={isRefreshing ? "animate-spin" : ""} />
-            {isRefreshing ? "Updating" : "Refresh Data"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={handleRefresh} className={secondaryButton}>
+              <RefreshCcw size={18} className={isRefreshing ? "animate-spin" : ""} />
+              {isRefreshing ? "Updating" : "Refresh Data"}
+            </button>
+            <button
+              onClick={() => {
+                clearAuth()
+                router.push("/login")
+              }}
+              className={secondaryButton}
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          </div>
         }
       />
 
