@@ -20,12 +20,14 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { getUser, clearAuth } from '@/lib/auth';
+import { ConfirmDialog } from '@/components/ui/sharedcomponents';
 
 const EcomNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<{ firstName?: string; lastName?: string; role?: string } | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -55,9 +57,14 @@ const EcomNavbar = () => {
   }, [pathname]);
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     clearAuth();
     setUser(null);
     setShowUserMenu(false);
+    setShowLogoutConfirm(false);
     router.push("/login");
   };
 
@@ -192,10 +199,10 @@ const EcomNavbar = () => {
                          <FileText className="w-4 h-4" />
                          Return Policy
                        </Link>
-                       <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                      >
+                        <button
+                         onClick={() => setShowLogoutConfirm(true)}
+                         className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                       >
                         <LogOut className="w-4 h-4" />
                         Sign Out
                       </button>
@@ -280,6 +287,15 @@ const EcomNavbar = () => {
           </div>
         )}
       </header>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to sign out of your account?"
+        type="danger"
+      />
     </div>
   );
 };

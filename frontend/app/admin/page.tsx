@@ -23,6 +23,7 @@ import BarGraph from "@/components/bargraph"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { PageBody, PageHeader, MetricCard, adminPanel, adminTable, adminHeaderCell, adminCell, secondaryButton, StatusBadge } from "@/components/admin/AdminSurface"
+import { AdminConfirmDialog } from "@/components/admin/AdminSurface"
 import {
   DashboardOrder,
   formatCurrency,
@@ -41,6 +42,7 @@ const AdminDashboardPage = () => {
   const router = useRouter()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<DashboardOrder | null>(null)
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
 
   const [stats, setStats] = useState([
     { title: "Total Revenue", value: 0, prefix: "$", icon: DollarSign, change: "...", bg: "from-orange-500 to-red-600" },
@@ -149,10 +151,7 @@ const AdminDashboardPage = () => {
               {isRefreshing ? "Updating" : "Refresh Data"}
             </button>
             <button
-              onClick={() => {
-                clearAuth()
-                router.push("/login")
-              }}
+              onClick={() => setIsLogoutDialogOpen(true)}
               className={secondaryButton}
             >
               <LogOut size={18} />
@@ -332,6 +331,21 @@ const AdminDashboardPage = () => {
           <BarGraph />
         </div>
       </PageBody>
+
+      <AdminConfirmDialog
+        open={isLogoutDialogOpen}
+        title="Confirm Logout"
+        message="Are you sure you want to sign out of the admin panel?"
+        confirmLabel="Logout"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          clearAuth()
+          setIsLogoutDialogOpen(false)
+          router.push("/login")
+        }}
+        onClose={() => setIsLogoutDialogOpen(false)}
+        tone="danger"
+      />
 
       {/* ORDER DETAILS MODAL */}
       {selectedOrder && (
