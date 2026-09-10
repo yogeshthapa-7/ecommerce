@@ -16,6 +16,7 @@ import {
 import { AlertCircle, Eye, EyeOff } from "lucide-react"
 import { useEffect, useRef } from "react"
 import toastr from "toastr"
+import { clearAuth, getToken, setAuth } from "@/lib/auth";
 import "toastr/build/toastr.min.css"
 
 // Configure toastr options
@@ -76,6 +77,8 @@ export default function LoginPage() {
       localStorage.removeItem("registeredUser");
       showToast('success', 'Account created! Please sign in.', 'Welcome!')
     }
+
+    clearAuth()
   }, [])
 
 
@@ -105,9 +108,8 @@ export default function LoginPage() {
           return;
         }
 
-        // Login success - save token and user
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // Login success - save token and user based on keepSignedIn preference
+        setAuth(data.token, data.user, values.keepSignedIn);
 
         showToast('success', 'Login successful! Redirecting...', 'Welcome');
 

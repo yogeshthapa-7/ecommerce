@@ -33,6 +33,7 @@ import {
   getOrderDisplayId,
   getOrderItems,
 } from "@/lib/order-helpers"
+import { getUser } from "@/lib/auth";
 
 const AdminDashboardPage = () => {
   // --- STATE ---
@@ -52,7 +53,7 @@ const AdminDashboardPage = () => {
   // --- FETCH DATA ---
   useEffect(() => {
     // Admin access check
-    const userStr = localStorage.getItem("user")
+    const userStr = getUser();
     if (!userStr) {
       router.push("/login")
       return
