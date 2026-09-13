@@ -559,12 +559,12 @@ const StockPage = () => {
                 <form onSubmit={handleAdjustStock} className="space-y-4">
                   <div>
                     <label className={fieldClass}>Product</label>
-                    <select value={adjustProductId} onChange={(e) => setAdjustProductId(e.target.value)} className={fieldClass} required>
-                      <option value="">Select a product</option>
-                      {products.map((p) => (
-                        <option key={p._id} value={p._id}>{p.name} (Current: {p.stockQuantity})</option>
-                      ))}
-                    </select>
+                     <select value={adjustProductId} onChange={(e) => setAdjustProductId(e.target.value)} className={fieldClass} required>
+                       <option value="">Select a product</option>
+                       {lowStockProducts.map((p) => (
+                         <option key={p._id} value={p._id}>{p.name} (Current: {p.stockQuantity})</option>
+                       ))}
+                     </select>
                   </div>
                   <div>
                     <label className={fieldClass}>Change Type</label>
