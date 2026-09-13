@@ -100,8 +100,7 @@ exports.getSummary = async (req, res) => {
 // GET low stock products
 exports.getLowStock = async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit) || 20;
-        const products = await Product.find({}).sort({ createdAt: -1 }).limit(limit || 20);
+        const products = await Product.find({}).sort({ createdAt: -1 });
 
         const filtered = products.filter((product) => {
             const colorTotal = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
