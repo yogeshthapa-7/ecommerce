@@ -45,7 +45,7 @@ const ProductsPage = () => {
   }, [currentPage])
   const fetchProducts = async (page = currentPage) => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products?showAll=true&page=${page}&limit=10`)
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products?showAll=true&page=${page}&limit=50`)
       setProducts(res.data.products || [])
       setPagination(res.data.pagination || null)
     } catch (err) {
