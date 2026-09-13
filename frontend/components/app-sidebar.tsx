@@ -10,6 +10,7 @@ import {
   Settings,
   UsersRound,
   Warehouse,
+  XCircle,
 } from "lucide-react"
 
 import {
@@ -32,6 +33,7 @@ const items = [
   { title: "Orders", url: "/admin/orders", icon: ClipboardCheck },
   { title: "Returns", url: "/admin/returns", icon: RotateCcw },
   { title: "Exchanges", url: "/admin/exchanges", icon: ArrowLeftRight },
+  { title: "Cancellations", url: "/admin/cancellations", icon: XCircle },
   { title: "Products", url: "/admin/products", icon: PackageSearch },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ]

@@ -28,21 +28,6 @@ const getPublicBaseUrl = (request: Request) => {
     return configuredUrl || requestOrigin || (host ? `${protocol}://${host}` : '');
 };
 
-async function fetchImageAsDataUri(url: string): Promise<string> {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch image');
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const contentType = response.headers.get('content-type') || 'image/png';
-        const base64 = buffer.toString('base64');
-        return `data:${contentType};base64,${base64}`;
-    } catch (error) {
-        console.error('Failed to convert image to data URI:', error);
-        return '';
-    }
-}
-
 const resolveEmailImage = async (image: string | undefined, baseUrl: string) => {
     if (!image) return '';
 
@@ -50,34 +35,19 @@ const resolveEmailImage = async (image: string | undefined, baseUrl: string) => 
 
     if (!normalizedImage) return '';
 
-    if (/^(https?:|cid:|data:)/i.test(normalizedImage)) return normalizedImage;
+    if (/^(https?:|cid:)/i.test(normalizedImage)) return normalizedImage;
 
-    if (normalizedImage.startsWith('/')) {
-        try {
-            const cleanPath = normalizedImage.split('?')[0];
-            const fullPath = path.join(process.cwd(), 'public', cleanPath);
-            const buffer = await fs.promises.readFile(fullPath);
-            
-            let contentType = 'image/png';
-            if (cleanPath.endsWith('.jpg') || cleanPath.endsWith('.jpeg')) contentType = 'image/jpeg';
-            else if (cleanPath.endsWith('.webp')) contentType = 'image/webp';
-            else if (cleanPath.endsWith('.svg')) contentType = 'image/svg+xml';
-            else if (cleanPath.endsWith('.gif')) contentType = 'image/gif';
-
-            const base64 = buffer.toString('base64');
-            return `data:${contentType};base64,${base64}`;
-        } catch (error) {
-            console.error('Failed to read local image for email:', error);
+    if (/^data:/i.test(normalizedImage)) {
+        const base64Data = normalizedImage.split(',')[1];
+        if (base64Data && base64Data.length > 10000) {
+            return '';
         }
+        return normalizedImage;
     }
 
     if (baseUrl) {
         try {
-            const resolved = new URL(normalizedImage, baseUrl).toString();
-            if (resolved.includes('localhost') || resolved.includes('127.0.0.1')) {
-                return await fetchImageAsDataUri(resolved);
-            }
-            return resolved;
+            return new URL(normalizedImage, baseUrl).toString();
         } catch {
             return normalizedImage;
         }

@@ -10,12 +10,17 @@ const STATUSES = ["Processing", "Shipped", "Delivered"] as const;
 
 type Status = typeof STATUSES[number];
 
+type CancelAction = "accepted" | "rejected";
+
 const TestEmailPage = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [previewHtml, setPreviewHtml] = useState<string>("");
     const [subject, setSubject] = useState<string>("");
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
+    const [cancelAction, setCancelAction] = useState<CancelAction | null>(null);
+    const [cancelPreviewHtml, setCancelPreviewHtml] = useState<string>("");
+    const [cancelSubject, setCancelSubject] = useState<string>("");
     const [log, setLog] = useState<string[]>([]);
     const [countdown, setCountdown] = useState(5);
     const countdownRef = useRef<NodeJS.Timeout | null>(null);
@@ -52,7 +57,32 @@ const TestEmailPage = () => {
 
     useEffect(() => {
         fetchPreview(currentStatus);
+        setCancelAction(null);
     }, [currentStatus, fetchPreview]);
+
+    useEffect(() => {
+        if (!cancelAction) return;
+        setLoading(true);
+        fetch("/api/preview-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                status: "Cancelled",
+                cancelReason: cancelAction === "accepted" ? "Customer request accepted" : "Customer request rejected",
+                refundAmount: cancelAction === "accepted" ? 150 : 0,
+                refundMethod: cancelAction === "accepted" ? "Original payment method" : "N/A",
+            }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.success) {
+                    setCancelPreviewHtml(data.html);
+                    setCancelSubject(data.subject);
+                }
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, [cancelAction]);
 
     useEffect(() => {
         countdownRef.current = setInterval(() => {
@@ -103,6 +133,41 @@ const TestEmailPage = () => {
             addLog(`✗ Send error: ${err instanceof Error ? err.message : "Unknown error"}`);
         } finally {
             setSending(false);
+        }
+    };
+
+    const handleCancellation = async (action: CancelAction) => {
+        setSending(true);
+        setCancelAction(action);
+        addLog(`Admin ${action} cancellation request...`);
+        try {
+            const res = await fetch("/api/send-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: "yogsthapa@gmail.com",
+                    customerName: "Test User",
+                    orderId: `NX-TEST-${Date.now()}`,
+                    status: "Cancelled",
+                    items: [
+                        { name: "Nike Air Max", price: 150, quantity: 1, size: "US 10", color: "Black/White", currency: "$" }
+                    ],
+                    cancelReason: action === "accepted" ? "Customer request accepted" : "Customer request rejected",
+                    refundAmount: action === "accepted" ? 150 : 0,
+                    refundMethod: action === "accepted" ? "Original payment method" : "N/A",
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                addLog(`✓ Cancellation ${action} email sent (${data.messageId})`);
+            } else {
+                addLog(`✗ Cancellation ${action} failed: ${data.error}`);
+            }
+        } catch (err) {
+            addLog(`✗ Cancellation ${action} error: ${err instanceof Error ? err.message : "Unknown error"}`);
+        } finally {
+            setSending(false);
+            setCancelAction(null);
         }
     };
 
@@ -159,6 +224,26 @@ const TestEmailPage = () => {
                                     ))}
                                 </div>
 
+                                <div className="mt-4">
+                                    <p className="mb-2 text-xs font-black uppercase tracking-widest text-zinc-500">Admin Cancellation Actions</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => handleCancellation("accepted")}
+                                            disabled={sending}
+                                            className="rounded-2xl border border-green-500/40 bg-green-500/10 px-4 py-3 text-xs font-black uppercase tracking-widest text-green-400 transition-all hover:bg-green-500 hover:text-black disabled:opacity-50"
+                                        >
+                                            {cancelAction === "accepted" && sending ? "Sending..." : "Accept Cancellation"}
+                                        </button>
+                                        <button
+                                            onClick={() => handleCancellation("rejected")}
+                                            disabled={sending}
+                                            className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-xs font-black uppercase tracking-widest text-red-400 transition-all hover:bg-red-500 hover:text-black disabled:opacity-50"
+                                        >
+                                            {cancelAction === "rejected" && sending ? "Sending..." : "Reject Cancellation"}
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div className="mt-6">
                                     <Button
                                         onClick={handleSend}
@@ -198,11 +283,11 @@ const TestEmailPage = () => {
                                     <div>
                                         <h2 className="text-2xl font-black uppercase tracking-tight">Preview</h2>
                                         <p className="mt-1 text-sm font-semibold text-zinc-500">
-                                            {subject || `Subject for ${currentStatus}`}
+                                            {cancelAction ? cancelSubject : (subject || `Subject for ${currentStatus}`)}
                                         </p>
                                     </div>
                                     <span className="rounded-full border border-white/10 px-4 py-2 text-xs font-black uppercase text-zinc-400">
-                                        {currentStatus}
+                                        {cancelAction ? `Cancelled (${cancelAction})` : currentStatus}
                                     </span>
                                 </div>
 
@@ -213,7 +298,7 @@ const TestEmailPage = () => {
                                         </div>
                                     ) : (
                                         <iframe
-                                            srcDoc={previewHtml}
+                                            srcDoc={cancelAction ? cancelPreviewHtml : previewHtml}
                                             title="Email Preview"
                                             className="h-[600px] w-full rounded-xl border border-zinc-200"
                                             sandbox=""

@@ -82,7 +82,7 @@ interface Order {
   date: string;
 }
 
-type TabType = "orders" | "returns" | "exchanges" | "account" | "address" | "payment" | "wishlist" | "settings";
+type TabType = "orders" | "returns" | "exchanges" | "cancellations" | "account" | "address" | "payment" | "wishlist" | "settings";
 
 const getTotalStock = (product: any) => {
   const colorStock = (product.colors || []).reduce((sum: number, c: any) => sum + (c.stockQuantity || 0), 0);
@@ -116,6 +116,11 @@ const ProfilePage = () => {
   const [pickerItemIndex, setPickerItemIndex] = useState<number | null>(null);
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [cancellations, setCancellations] = useState<any[]>([]);
+  const [cancelModalOrder, setCancelModalOrder] = useState<Order | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelDescription, setCancelDescription] = useState("");
+  const [submittingCancel, setSubmittingCancel] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const router = useRouter();
   const { addOrderItemsToCart } = useCart();
@@ -219,6 +224,25 @@ const ProfilePage = () => {
     }
   };
 
+  const fetchCancellations = async () => {
+    if (!user) return;
+    const userId = user._id || user.id;
+    if (!userId) return;
+
+    const token = getToken();
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cancellations/user/${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCancellations(data);
+      }
+    } catch (error) {
+      console.error("Error fetching cancellations:", error);
+    }
+  };
+
   useEffect(() => {
     if (user) fetchReturns();
   }, [user]);
@@ -232,6 +256,12 @@ const ProfilePage = () => {
   useEffect(() => {
     if (activeTab === "exchanges" && user) {
       fetchExchanges();
+    }
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    if (activeTab === "cancellations" && user) {
+      fetchCancellations();
     }
   }, [activeTab, user]);
 
@@ -483,6 +513,52 @@ const ProfilePage = () => {
     }
   };
 
+  const openCancelModal = (order: Order) => {
+    setCancelModalOrder(order);
+    setCancelReason("");
+    setCancelDescription("");
+  };
+
+  const submitCancellation = async () => {
+    if (!cancelModalOrder || !cancelReason) return;
+    setSubmittingCancel(true);
+
+    try {
+      const token = getToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cancellations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          orderId: cancelModalOrder._id || cancelModalOrder.orderId,
+          reason: cancelReason,
+          description: cancelDescription,
+          customerName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
+          customerEmail: user?.email || "",
+          userId: user?._id || user?.id,
+        }),
+      });
+
+      if (res.ok) {
+        setCancelModalOrder(null);
+        setCancelReason("");
+        setCancelDescription("");
+        fetchCancellations();
+        setNotification({ message: "Cancellation request submitted successfully", type: "success" });
+      } else {
+        const err = await res.json();
+        setNotification({ message: err.message || "Failed to submit cancellation", type: "error" });
+      }
+    } catch (error) {
+      console.error("Error submitting cancellation:", error);
+      setNotification({ message: "Something went wrong", type: "error" });
+    } finally {
+      setSubmittingCancel(false);
+    }
+  };
+
   const getUserInitials = () => {
     if (!user) return "?";
     const first = user.firstName?.charAt(0) || "";
@@ -547,6 +623,16 @@ const ProfilePage = () => {
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return orderExchanges[0] || null;
+  };
+
+  const getCancellationForOrder = (order: Order) => {
+    const orderCancellations = cancellations
+      .filter((can) => {
+        const canOrderId = typeof can.orderId === "object" ? can.orderId?._id || can.orderId?.orderId : can.orderId;
+        return canOrderId === order._id || canOrderId === order.orderId;
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return orderCancellations[0] || null;
   };
 
   const getReturnStatusColor = (status: string) => {
@@ -950,52 +1036,72 @@ const ProfilePage = () => {
                       {order.paymentStatus}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {order.deliveryStatus === "Delivered" && (() => {
-                      const existingReturn = getReturnForOrder(order);
-                      const existingExchange = getExchangeForOrder(order);
-                      if (existingReturn) {
-                        return (
-                          <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase ${getReturnStatusColor(existingReturn.status)}`}>
-                            <RotateCcw className="h-4 w-4" />
-                            Return {existingReturn.status}
-                          </span>
-                        );
-                      }
-                      if (existingExchange) {
-                        return (
-                          <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase ${getExchangeStatusColor(existingExchange.status)}`}>
-                            <RotateCcw className="h-4 w-4" />
-                            Exchange {existingExchange.status}
-                          </span>
-                        );
-                      }
-                      return (
-                        <>
-                          <button
-                            onClick={() => openExchangeModal(order)}
-                            className="inline-flex items-center gap-2 text-sm font-black uppercase text-blue-400 transition-colors hover:text-blue-300"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                            Exchange
-                          </button>
-                          <button
-                            onClick={() => openReturnModal(order)}
-                            className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-400 transition-colors hover:text-red-300"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                            Return
-                          </button>
-                        </>
-                      );
-                    })()}
-                    <button
-                      onClick={() => handleDeleteOrder(order._id || order.orderId)}
-                      className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-500 transition-colors hover:text-red-300"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
+                   <div className="flex items-center gap-3">
+                     {order.deliveryStatus === "Delivered" && (() => {
+                       const existingReturn = getReturnForOrder(order);
+                       const existingExchange = getExchangeForOrder(order);
+                       if (existingReturn) {
+                         return (
+                           <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase ${getReturnStatusColor(existingReturn.status)}`}>
+                             <RotateCcw className="h-4 w-4" />
+                             Return {existingReturn.status}
+                           </span>
+                         );
+                       }
+                       if (existingExchange) {
+                         return (
+                           <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase ${getExchangeStatusColor(existingExchange.status)}`}>
+                             <RotateCcw className="h-4 w-4" />
+                             Exchange {existingExchange.status}
+                           </span>
+                         );
+                       }
+                       return (
+                         <>
+                           <button
+                             onClick={() => openExchangeModal(order)}
+                             className="inline-flex items-center gap-2 text-sm font-black uppercase text-blue-400 transition-colors hover:text-blue-300"
+                           >
+                             <RotateCcw className="h-4 w-4" />
+                             Exchange
+                           </button>
+                           <button
+                             onClick={() => openReturnModal(order)}
+                             className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-400 transition-colors hover:text-red-300"
+                           >
+                             <RotateCcw className="h-4 w-4" />
+                             Return
+                           </button>
+                         </>
+                       );
+                     })()}
+                     {(order.deliveryStatus === "Processing" || order.deliveryStatus === "Shipped") && (() => {
+                       const existingCancellation = getCancellationForOrder(order);
+                       if (existingCancellation) {
+                         return (
+                           <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase ${getReturnStatusColor(existingCancellation.status)}`}>
+                             <XCircle className="h-4 w-4" />
+                             Cancel {existingCancellation.status}
+                           </span>
+                         );
+                       }
+                       return (
+                         <button
+                           onClick={() => openCancelModal(order)}
+                           className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-400 transition-colors hover:text-red-300"
+                         >
+                           <XCircle className="h-4 w-4" />
+                           Cancel
+                         </button>
+                       );
+                     })()}
+                     <button
+                       onClick={() => handleDeleteOrder(order._id || order.orderId)}
+                       className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-500 transition-colors hover:text-red-300"
+                     >
+                       <Trash2 className="h-4 w-4" />
+                       Delete
+                     </button>
                     <button
                       onClick={() => handleBuyAgain(order)}
                       className="inline-flex items-center gap-2 text-sm font-black uppercase text-zinc-500 transition-colors hover:text-white"
@@ -1230,6 +1336,69 @@ const ProfilePage = () => {
     );
   };
 
+  const renderCancellations = () => {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-3xl border border-white/10 bg-zinc-950 p-6">
+          <h3 className="text-xl font-black uppercase text-white mb-2">My Cancellations</h3>
+          <p className="text-sm text-zinc-500 mb-6">
+            Request to cancel orders that are still processing or shipped.
+          </p>
+
+          {cancellations.length === 0 ? (
+            <div className="py-10 text-center">
+              <XCircle className="mx-auto mb-4 h-10 w-10 text-zinc-600" />
+              <p className="text-lg font-black uppercase text-white">No cancellations yet</p>
+              <p className="mt-2 text-sm text-zinc-500">
+                You can request a cancellation from the Orders tab for orders that are processing or shipped.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {cancellations.map((can) => (
+                <div
+                  key={can._id}
+                  className="rounded-2xl border border-white/10 bg-black px-5 py-4"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-black uppercase text-white">
+                        {can.status === "Approved"
+                          ? "Cancellation Approved"
+                          : can.status === "Rejected"
+                            ? "Cancellation Rejected"
+                            : can.status === "Requested"
+                              ? "Cancellation Requested"
+                              : can.cancellationId || can._id}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        Order: {can.orderId?.orderId || can.orderId || "—"}
+                      </p>
+                    </div>
+                    <StatusBadge status={can.status} />
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Reason: {can.reason || "—"}
+                  </p>
+                  {can.description && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      {can.description}
+                    </p>
+                  )}
+                  {can.resolution && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      Resolution: {can.resolution}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderAccount = () => (
     <div className="space-y-6">
       <div className="rounded-3xl border border-white/10 bg-black p-6">
@@ -1431,6 +1600,7 @@ const ProfilePage = () => {
     { id: "orders", label: "Orders", icon: Package },
     { id: "returns", label: "Returns", icon: RotateCcw },
     { id: "exchanges", label: "Exchanges", icon: RotateCcw },
+    { id: "cancellations", label: "Cancellations", icon: XCircle },
     { id: "account", label: "Account", icon: User },
     { id: "address", label: "Addresses", icon: MapPin },
     { id: "payment", label: "Payment", icon: CreditCard },
@@ -1733,6 +1903,80 @@ const ProfilePage = () => {
         </div>
       )}
 
+      {cancelModalOrder && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60">
+            <div className="border-b border-white/10 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-red-500/30 bg-red-500/10">
+                  <XCircle className="h-4 w-4 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">Request Cancellation</h3>
+                  <p className="text-xs font-semibold text-zinc-500">
+                    Order {cancelModalOrder.orderId}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Reason <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors focus:border-white/40"
+                >
+                  <option value="">Select a reason</option>
+                  <option value="Changed my mind">Changed my mind</option>
+                  <option value="Ordered by mistake">Ordered by mistake</option>
+                  <option value="Found better price">Found better price</option>
+                  <option value="Need to change shipping address">Need to change shipping address</option>
+                  <option value="Item out of stock for too long">Item out of stock for too long</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Description
+                </label>
+                <textarea
+                  value={cancelDescription}
+                  onChange={(e) => setCancelDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/25 focus:border-white/40"
+                  placeholder="Add more details about your cancellation request..."
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-white/10 px-6 py-4">
+              <button
+                onClick={() => {
+                  setCancelModalOrder(null);
+                  setCancelReason("");
+                  setCancelDescription("");
+                }}
+                className="h-11 rounded-full border border-white/10 px-5 text-sm font-black uppercase text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitCancellation}
+                disabled={!cancelReason || submittingCancel}
+                className="h-11 rounded-full bg-red-500 px-5 text-sm font-black uppercase text-white transition-colors hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingCancel ? "Submitting..." : "Submit Cancellation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <NotificationModal />
 
       <section className="border-b border-white/10 bg-[linear-gradient(120deg,#09090b_0%,#000_52%,rgba(239,68,68,0.16)_100%)] pt-28">
@@ -1815,14 +2059,15 @@ const ProfilePage = () => {
               <ShoppingBag className="hidden h-8 w-8 text-zinc-700 sm:block" />
             </div>
 
-            {activeTab === "orders" && renderOrders()}
-            {activeTab === "returns" && renderReturns()}
-            {activeTab === "exchanges" && renderExchanges()}
-            {activeTab === "account" && renderAccount()}
-            {activeTab === "address" && renderAddress()}
-            {activeTab === "payment" && renderPayment()}
-            {activeTab === "wishlist" && renderWishlist()}
-            {activeTab === "settings" && renderSettings()}
+             {activeTab === "orders" && renderOrders()}
+             {activeTab === "returns" && renderReturns()}
+             {activeTab === "exchanges" && renderExchanges()}
+             {activeTab === "cancellations" && renderCancellations()}
+             {activeTab === "account" && renderAccount()}
+             {activeTab === "address" && renderAddress()}
+             {activeTab === "payment" && renderPayment()}
+             {activeTab === "wishlist" && renderWishlist()}
+             {activeTab === "settings" && renderSettings()}
           </section>
         </div>
       </main>
