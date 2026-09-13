@@ -253,14 +253,9 @@ const ProductDetailPage = () => {
                   className="relative z-10 max-h-[440px] w-full max-w-[760px] object-contain [filter:contrast(1.05)_saturate(1.05)_drop-shadow(0_30px_50px_rgba(0,0,0,0.6))] sm:max-h-[560px]"
                 />
               </div>
-            </div>
 
-            {availableColors.length > 0 && (
-              <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4 shadow-xl shadow-black/20">
-                <p className="mb-4 text-[10px] font-black uppercase tracking-[0.24em] text-white/50">
-                  Choose Color
-                </p>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {availableColors.length > 0 && (
+                <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
                   {availableColors.map((color, index) => {
                     const isSelected = selectedColor === color;
                     const colorImage = color.image_url || product.image_url || fallbackProductImage;
@@ -270,43 +265,26 @@ const ProductDetailPage = () => {
                         key={`${color.name || "color"}-${index}`}
                         type="button"
                         onClick={() => handleColorChange(color)}
-                        className={`group flex items-center gap-4 rounded-[1.25rem] border p-3 text-left transition ${
+                        className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 transition ${
                           isSelected
-                            ? "border-white bg-white text-black shadow-[0_16px_35px_rgba(255,255,255,0.15)]"
-                            : "border-white/10 bg-white/[0.04] text-white/70 hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+                            ? "border-white shadow-[0_0_12px_rgba(255,255,255,0.4)]"
+                            : "border-white/20 hover:border-white/60"
                         }`}
+                        title={color.name || `Color ${index + 1}`}
                       >
-                        <span
-                          className={`grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-2xl ${
-                            isSelected ? "bg-black/10" : "bg-white/5"
-                          }`}
-                        >
-                          <img
-                            src={colorImage}
-                            alt=""
-                            loading="lazy"
-                            decoding="async"
-                            className="h-full w-full object-contain p-1.5"
-                          />
-                        </span>
-                        <span className="min-w-0 text-sm font-black uppercase leading-tight">
-                          {(color.name || `Color ${index + 1}`)
-                            .split("/")
-                            .map((part, partIndex) => (
-                              <span key={`${part}-${partIndex}`} className="block">
-                                {part}
-                              </span>
-                            ))}
-                        </span>
-                        {isSelected && (
-                          <Check className="ml-auto h-5 w-5 shrink-0 text-black" />
-                        )}
+                        <img
+                          src={colorImage}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-cover"
+                        />
                       </button>
                     );
                   })}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           <aside className="relative">
@@ -323,6 +301,12 @@ const ProductDetailPage = () => {
               <h1 className="max-w-2xl text-5xl font-black uppercase leading-[0.88] tracking-tight sm:text-6xl lg:text-7xl">
                 {product.name || "Nike Product"}
               </h1>
+
+              {selectedColor && (
+                <p className="mt-3 text-sm font-black uppercase tracking-[0.18em] text-white/70">
+                  {selectedColor.name}
+                </p>
+              )}
 
               <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
                 <div>
