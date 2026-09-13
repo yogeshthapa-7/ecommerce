@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import EcomFooter from "@/components/ecomfooter";
 import EcomNavbar from "@/components/ecomnavbar";
+import { getToken, getUser } from "@/lib/auth";
 
 const panelClass = "rounded-3xl border border-white/10 bg-zinc-950 p-5 shadow-xl shadow-black/30 md:p-6";
 const labelClass = "text-xs font-black uppercase tracking-[0.18em] text-zinc-500";
@@ -51,18 +52,18 @@ const ExchangesPage = () => {
     const router = useRouter();
 
     useEffect(() => {
-        const userStr = localStorage.getItem("user");
-        if (!userStr) {
-            router.push("/login");
-            return;
-        }
-        try {
-            const userData = JSON.parse(userStr);
-            setUser(userData);
-            fetchExchanges(userData._id || userData.id);
-        } catch (e) {
-            router.push("/login");
-        }
+    const userStr = getUser();
+    if (!userStr) {
+        router.push("/login");
+        return;
+    }
+    try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+        fetchExchanges(userData._id || userData.id);
+    } catch (e) {
+        router.push("/login");
+    }
     }, [router]);
 
     const fetchExchanges = async (userId: string) => {
@@ -71,7 +72,7 @@ const ExchangesPage = () => {
             return;
         }
 
-        const token = localStorage.getItem("token");
+        const token = getToken();
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exchanges/user/${userId}`, {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -128,7 +129,7 @@ const ExchangesPage = () => {
         setSubmittingReplacement(true);
 
         try {
-            const token = localStorage.getItem("token");
+        const token = getToken();
             const exchange = exchanges.find((e) => e._id === pickerExchangeId);
             if (!exchange) return;
 

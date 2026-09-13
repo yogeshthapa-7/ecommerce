@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import EcomFooter from "@/components/ecomfooter";
 import EcomNavbar from "@/components/ecomnavbar";
+import { getToken, getUser, clearAuth } from "@/lib/auth";
 import { useCart } from "@/app/context/CartContext";
 
 interface UserData {
@@ -120,7 +121,7 @@ const ProfilePage = () => {
   const { addOrderItemsToCart } = useCart();
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
+    const userStr = getUser();
 
     if (!userStr) {
       router.push("/login");
@@ -147,7 +148,7 @@ const ProfilePage = () => {
       apiBaseUrl = apiBaseUrl.slice(0, -4);
     }
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/orders/user/${userId}`, {
@@ -159,7 +160,7 @@ const ProfilePage = () => {
 
         if (allOrdersResponse.ok) {
           const allOrders = await allOrdersResponse.json();
-          const userStr = localStorage.getItem("user");
+          const userStr = getUser();
 
           if (userStr) {
             const userData = JSON.parse(userStr);
@@ -185,7 +186,7 @@ const ProfilePage = () => {
     const userId = user._id || user.id;
     if (!userId) return;
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/returns/user/${userId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -204,7 +205,7 @@ const ProfilePage = () => {
     const userId = user._id || user.id;
     if (!userId) return;
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exchanges/user/${userId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -246,8 +247,7 @@ const ProfilePage = () => {
   }, [user]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearAuth();
     router.push("/login");
   };
 
@@ -269,7 +269,7 @@ const ProfilePage = () => {
       apiBaseUrl = apiBaseUrl.slice(0, -4);
     }
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/orders/${deleteTargetId}`, {
@@ -311,7 +311,7 @@ const ProfilePage = () => {
     setSubmittingReturn(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const selectedItems = selectedReturnItems
         .map((idx) => returnModalOrder.items[Number(idx)])
         .filter(Boolean);
@@ -430,7 +430,7 @@ const ProfilePage = () => {
     setSubmittingExchange(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const selectedItems = selectedExchangeItems
         .map((idx) => exchangeModalOrder.items[Number(idx)])
         .filter(Boolean);

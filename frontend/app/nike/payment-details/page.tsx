@@ -16,6 +16,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
+import { getToken, getUser } from "@/lib/auth";
 import EcomFooter from "@/components/ecomfooter";
 import EcomNavbar from "@/components/ecomnavbar";
 import { Button } from "@/components/ui/button";
@@ -154,8 +155,8 @@ const PaymentDetailsPage = () => {
   const typedCartItems = cartItems as CartItem[];
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
+    const userStr = getUser();
+    const token = getToken();
 
     if (!userStr || !token) {
       router.push("/login?redirect=/nike/payment-details");
@@ -207,7 +208,7 @@ const PaymentDetailsPage = () => {
     }
 
     try {
-      const userStr = localStorage.getItem("user");
+      const userStr = getUser();
       let userId = null;
 
       if (userStr) {
@@ -250,7 +251,7 @@ const PaymentDetailsPage = () => {
         },
       };
 
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
         method: "POST",
         headers: {

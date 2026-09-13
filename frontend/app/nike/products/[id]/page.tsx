@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import EcomFooter from "@/components/ecomfooter";
 import EcomNavbar from "@/components/ecomnavbar";
 import { useCart } from "@/app/context/CartContext";
+import { getToken } from "@/lib/auth";
 
 type ProductColor = {
   name?: string;
@@ -131,7 +132,7 @@ const ProductDetailPage = () => {
   }, [product]);
 
   const handleAddToCart = () => {
-    const token = localStorage.getItem("token");
+    const token = getToken();
 
     if (!token) {
       router.push("/login?redirect=/nike/products/" + id);
