@@ -83,6 +83,11 @@ interface Order {
 
 type TabType = "orders" | "returns" | "exchanges" | "account" | "address" | "payment" | "wishlist" | "settings";
 
+const getTotalStock = (product: any) => {
+  const colorStock = (product.colors || []).reduce((sum: number, c: any) => sum + (c.stockQuantity || 0), 0);
+  return colorStock + (product.stockQuantity || 0);
+};
+
 const panelClass = "rounded-3xl border border-white/10 bg-zinc-950 p-5 shadow-xl shadow-black/30 md:p-6";
 const labelClass = "text-xs font-black uppercase tracking-[0.18em] text-zinc-500";
 
@@ -837,14 +842,14 @@ const ProfilePage = () => {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-black uppercase text-white">{product.name}</p>
-                            <p className="text-xs text-zinc-500">
-                              {product.in_stock === false && (
-                                <span className="text-red-400">Out of stock</span>
-                              )}
-                              {product.in_stock !== false && (
-                                <span className="text-emerald-300">In stock</span>
-                              )}
-                            </p>
+                              <p className="text-xs text-zinc-500">
+                                {(product.in_stock === false || getTotalStock(product) <= 0) && (
+                                  <span className="text-red-400">Out of stock</span>
+                                )}
+                                {(product.in_stock !== false && getTotalStock(product) > 0) && (
+                                  <span className="text-emerald-300">In stock</span>
+                                )}
+                              </p>
                           </div>
                           <p className="text-sm font-black text-white">
                             ${Number(product.price || 0).toFixed(2)}

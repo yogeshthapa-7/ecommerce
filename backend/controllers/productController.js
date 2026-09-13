@@ -25,7 +25,7 @@ exports.getProducts = async (req, res) => {
             ? {}
             : includeOutOfStock
                 ? { status: 'active' }
-                : { status: 'active', in_stock: true };
+                : { status: 'active', in_stock: true, stockQuantity: { $gt: 0 } };
 
         const total = await Product.countDocuments(filter);
         const products = await Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit);

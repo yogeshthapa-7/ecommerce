@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import axios from "axios"
 import { AdminConfirmDialog, AdminModal, PageBody, PageHeader, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, iconButton, labelClass, primaryButton } from "@/components/admin/AdminSurface"
+import { getToken } from "@/lib/auth"
 const ProductsPage = () => {
   const [products, setProducts] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
@@ -28,6 +29,7 @@ const ProductsPage = () => {
     gender: "Unisex",
     price: "",
     stock: 0,
+    stockQuantity: 0,
     status: "active",
     image_url: "",
     description: "",
@@ -68,7 +70,7 @@ const ProductsPage = () => {
   const confirmDelete = async () => {
     try {
       const id = deleteConfirm._id || deleteConfirm.id;
-      const token = localStorage.getItem("token")
+      const token = getToken()
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -86,7 +88,7 @@ const ProductsPage = () => {
     setSizesInput("")
     setNewColor({ name: "", image_url: "" })
     setFormData({
-      name: "", category: "Shoes", gender: "Unisex", price: "", stock: 0,
+      name: "", category: "Shoes", gender: "Unisex", price: "", stock: 0, stockQuantity: 0,
       status: "active", image_url: "", description: "", colors: [],
       sizes: [], reviews_count: 0, in_stock: true
     })
@@ -103,6 +105,7 @@ const ProductsPage = () => {
       gender: product.gender || "Unisex",
       price: product.price,
       stock: product.sizes?.length || 0,
+      stockQuantity: product.stockQuantity ?? 0,
       status: product.status,
       image_url: product.image_url,
       description: product.description || "",
@@ -131,7 +134,7 @@ const ProductsPage = () => {
 
     setFormData(prev => ({
       ...prev,
-      colors: [...prev.colors, { name: colorName, image_url: imageUrl }]
+      colors: [...prev.colors, { name: colorName, image_url: imageUrl, stockQuantity: 0 }]
     }))
     setNewColor({ name: "", image_url: "" })
   }
@@ -153,11 +156,12 @@ const ProductsPage = () => {
       image_url: displayImage,
       description: formData.description,
       in_stock: formData.in_stock,
+      stockQuantity: parseInt(formData.stockQuantity) || 0,
       sizes: formData.sizes,
       colors: formData.colors,
       reviews_count: parseInt(formData.reviews_count) || 0
     }
-    const token = localStorage.getItem("token")
+    const token = getToken()
     const config = { headers: { Authorization: `Bearer ${token}` } }
     try {
       if (editingId) {
@@ -223,17 +227,18 @@ const ProductsPage = () => {
               <div className="overflow-x-auto">
                 <table className={adminTable}>
                   <thead>
-                    <tr>
-                      <th className={adminHeaderCell}>Product</th>
-                      <th className={`${adminHeaderCell} hidden md:table-cell`}>Category</th>
-                      <th className={adminHeaderCell}>Price</th>
-                      <th className={adminHeaderCell}>Status</th>
-                      <th className={adminHeaderCell}>Actions</th>
-                    </tr>
+                      <tr>
+                        <th className={adminHeaderCell}>Product</th>
+                        <th className={`${adminHeaderCell} hidden md:table-cell`}>Category</th>
+                        <th className={adminHeaderCell}>Price</th>
+                        <th className={adminHeaderCell}>Stock</th>
+                        <th className={adminHeaderCell}>Status</th>
+                        <th className={adminHeaderCell}>Actions</th>
+                      </tr>
                   </thead>
                   <tbody>
                     {(!Array.isArray(products) || products.length === 0) ? (
-                      <tr><td colSpan={5} className="px-6 py-12 text-center font-medium text-white/35">No products available in the catalog.</td></tr>
+                      <tr><td colSpan={6} className="px-6 py-12 text-center font-medium text-white/35">No products available in the catalog.</td></tr>
                     ) : (
                     products.map((product, idx) => {
                       const pId = product._id || product.id;
@@ -262,6 +267,11 @@ const ProductsPage = () => {
                               <span className="text-white font-black text-base">${product.price.toFixed(2)}</span>
                             </td>
                             <td className={adminCell}>
+                              <span className={`text-sm font-black ${((product.colors || []).reduce((sum, c) => sum + (c.stockQuantity ?? 0), 0) + (product.stockQuantity ?? 0)) <= 0 ? 'text-red-300' : 'text-emerald-300'}`}>
+                                {(product.colors || []).reduce((sum, c) => sum + (c.stockQuantity ?? 0), 0) + (product.stockQuantity ?? 0)}
+                              </span>
+                            </td>
+                            <td className={adminCell}>
                               <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.in_stock ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
                                 {product.in_stock ? "In Stock" : "Out of Stock"}
                               </span>
@@ -282,7 +292,7 @@ const ProductsPage = () => {
                           {/* EXPANDED DETAIL VIEW */}
                           {isExpanded && (
                             <tr className="border-b border-white/10 bg-black/35">
-                              <td colSpan={5} className="px-8 py-10">
+                               <td colSpan={6} className="px-8 py-10">
                                 <div className="flex flex-col lg:flex-row gap-12 items-start">
                                   <div className="group/image relative aspect-square w-full overflow-hidden rounded-2xl border border-white/10 bg-black lg:w-1/3">
                                     <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-4" />
@@ -326,6 +336,18 @@ const ProductsPage = () => {
                                         <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Description</span>
                                         <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">{product.description || "No description provided."}</p>
                                       </div>
+                                      {(product.colors || []).length > 0 && (
+                                        <div className="space-y-2">
+                                          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Stock by Color</span>
+                                          <div className="flex flex-wrap gap-2">
+                                            {(product.colors || []).map((color, idx) => (
+                                              <span key={idx} className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold ${(color.stockQuantity ?? 0) > 0 ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300' : 'border-red-500/20 bg-red-500/10 text-red-300'}`}>
+                                                    {color.name}: {color.stockQuantity ?? 0}
+                                                  </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -445,7 +467,7 @@ const ProductsPage = () => {
                 </div>
               </div>
 
-              {/* Price and In Stock Toggle */}
+              {/* Price, Stock Quantity, and In Stock Toggle */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Price ($) *</label>
@@ -458,6 +480,19 @@ const ProductsPage = () => {
                     className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
                   />
                 </div>
+                <div>
+                  <label className={labelClass}>Stock Quantity</label>
+                  <input
+                    type="number"
+                    value={formData.stockQuantity}
+                    onChange={e => setFormData({ ...formData, stockQuantity: e.target.value })}
+                    className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* In Stock Toggle and Status */}
+              <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col justify-center">
                   <label className={labelClass}>In Stock</label>
                   <button
@@ -473,9 +508,18 @@ const ProductsPage = () => {
                     </span>
                   </button>
                 </div>
+                <div>
+                  <label className={labelClass}>Status *</label>
+                  <select
+                    value={formData.status}
+                    onChange={e => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors appearance-none"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
               </div>
-
-              {/* Image URL */}
               <div>
                 <label className={labelClass}>Main Image URL</label>
                 <input
@@ -532,6 +576,19 @@ const ProductsPage = () => {
                         <div className="flex-1">
                           <div className="text-white text-sm font-bold">{color.name}</div>
                           <div className="text-gray-500 text-xs truncate">{color.image_url}</div>
+                        </div>
+                        <div className="w-24">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 block mb-1">Stock</label>
+                          <input
+                            type="number"
+                            value={color.stockQuantity ?? 0}
+                            onChange={(e) => {
+                              const updated = [...formData.colors];
+                              updated[index] = { ...updated[index], stockQuantity: parseInt(e.target.value) || 0 };
+                              setFormData({ ...formData, colors: updated });
+                            }}
+                            className="w-full bg-black border border-gray-800 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-white transition-colors"
+                          />
                         </div>
                         <button
                           type="button"

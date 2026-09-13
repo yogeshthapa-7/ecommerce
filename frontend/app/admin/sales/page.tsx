@@ -16,6 +16,7 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { AdminModal, PageBody, PageHeader, MetricCard, StatusBadge, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, secondaryButton } from "@/components/admin/AdminSurface"
 import { NikeDatePicker } from "@/components/ui/nike-date-picker"
+import { getToken } from "@/lib/auth"
 
 type Period = "daily" | "weekly" | "monthly" | "yearly"
 
@@ -84,7 +85,7 @@ const SalesPage = () => {
   const [customerSegments, setCustomerSegments] = useState({ new: 0, returning: 0, total: 0 })
   const [loading, setLoading] = useState(true)
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : ""
+  const token = getToken() || ""
 
   const fetchAll = async () => {
     setLoading(true)

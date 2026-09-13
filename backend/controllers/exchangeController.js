@@ -379,6 +379,83 @@ exports.updateExchange = async (req, res) => {
             { new: true, runValidators: true }
         );
 
+        // Handle stock when exchange is completed
+        if (status === 'Completed') {
+            try {
+                const StockLog = require('../models/StockLog');
+                const actor = req.user;
+                const actorName = `${actor.firstName || ''} ${actor.lastName || ''}`.trim() || actor.email;
+
+                // Restore stock for original items
+                for (const item of (exchange.originalItems || [])) {
+                    if (!item.productId) continue;
+                    const product = await Product.findById(item.productId);
+                    if (!product) continue;
+
+                    const previousQuantity = product.stockQuantity || 0;
+                    const quantityChange = item.quantity || 1;
+                    const newQuantity = previousQuantity + quantityChange;
+
+                    product.stockQuantity = newQuantity;
+                    product.lastStockUpdate = new Date();
+                    if (newQuantity > 0 && product.in_stock === false) {
+                        product.in_stock = true;
+                    }
+                    await product.save();
+
+                    await StockLog.create({
+                        productId: product._id,
+                        productName: product.name,
+                        changeType: 'exchange_in',
+                        quantityChange,
+                        previousQuantity,
+                        newQuantity,
+                        referenceId: exchange._id.toString(),
+                        referenceType: 'Exchange',
+                        performedBy: actor.id || actor._id,
+                        performedByName: actorName,
+                        notes: `Exchange ${exchange.exchangeId} - original item returned`
+                    });
+                }
+
+                // Deduct stock for requested items
+                for (const item of (exchange.requestedItems || [])) {
+                    if (!item.productId) continue;
+                    const product = await Product.findById(item.productId);
+                    if (!product) continue;
+
+                    const previousQuantity = product.stockQuantity || 0;
+                    const quantityChange = -(item.quantity || 1);
+                    const newQuantity = previousQuantity + quantityChange;
+
+                    if (newQuantity < 0) continue;
+
+                    product.stockQuantity = newQuantity;
+                    product.lastStockUpdate = new Date();
+                    if (newQuantity === 0) {
+                        product.in_stock = false;
+                    }
+                    await product.save();
+
+                    await StockLog.create({
+                        productId: product._id,
+                        productName: product.name,
+                        changeType: 'exchange_out',
+                        quantityChange,
+                        previousQuantity,
+                        newQuantity,
+                        referenceId: exchange._id.toString(),
+                        referenceType: 'Exchange',
+                        performedBy: actor.id || actor._id,
+                        performedByName: actorName,
+                        notes: `Exchange ${exchange.exchangeId} - new item shipped`
+                    });
+                }
+            } catch (stockError) {
+                console.error('Failed to update stock for exchange:', stockError);
+            }
+        }
+
         // Send email notification for status changes
         if (status && ['Approved', 'Rejected', 'Completed', 'Cancelled'].includes(status)) {
             try {

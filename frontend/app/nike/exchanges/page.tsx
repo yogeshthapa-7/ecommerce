@@ -504,7 +504,7 @@ const ExchangesPage = () => {
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-sm font-black uppercase text-white">{product.name}</p>
                                                 <p className="text-xs text-zinc-500">
-                                                    {product.in_stock === false ? (
+                                                    {(product.in_stock === false || (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0) + (product.stockQuantity || 0) <= 0) ? (
                                                         <span className="text-red-400">Out of stock</span>
                                                     ) : (
                                                         <span className="text-emerald-300">In stock</span>

@@ -97,6 +97,52 @@ exports.createOrder = async (req, res) => {
             if (!customerEmail && shippingInfo.email) customerEmail = shippingInfo.email;
         }
 
+        // Deduct stock for each item
+        const StockLog = require('../models/StockLog');
+        const actor = req.user;
+        const actorName = `${actor.firstName || ''} ${actor.lastName || ''}`.trim() || actor.email;
+
+        for (const item of (items || [])) {
+            if (!item.productId) continue;
+            const product = await Product.findById(item.productId);
+            if (!product) continue;
+
+            const matchedColor = (product.colors || []).find(
+                (c) => c.name && item.color && c.name.toLowerCase() === item.color.toLowerCase()
+            );
+
+            const colorStock = matchedColor ? (matchedColor.stockQuantity || 0) : (product.stockQuantity || 0);
+            const quantityChange = -(item.quantity || 1);
+            const newQuantity = colorStock + quantityChange;
+
+            if (newQuantity < 0) continue;
+
+            if (matchedColor) {
+                matchedColor.stockQuantity = newQuantity;
+            } else {
+                product.stockQuantity = newQuantity;
+            }
+            product.lastStockUpdate = new Date();
+            if (newQuantity === 0) {
+                product.in_stock = false;
+            }
+            await product.save();
+
+            await StockLog.create({
+                productId: product._id,
+                productName: product.name,
+                changeType: 'sale',
+                quantityChange,
+                previousQuantity: colorStock,
+                newQuantity,
+                referenceId: null,
+                referenceType: 'Order',
+                performedBy: actor.id || actor._id,
+                performedByName: actorName,
+                notes: `Order ${orderId}${matchedColor ? ` (Color: ${matchedColor.name})` : ''}`
+            });
+        }
+
         // Create the order
         const order = new Order({
             orderId,
@@ -105,7 +151,7 @@ exports.createOrder = async (req, res) => {
             customerEmail: customerEmail,
             items: items || [],
             total: total || 0,
-            paymentStatus: 'Paid', // Payment is successful when order is created
+            paymentStatus: 'Paid',
             deliveryStatus: 'Processing',
             paymentMethod: paymentMethod || 'card',
             shippingInfo: shippingInfo || {},
@@ -114,18 +160,24 @@ exports.createOrder = async (req, res) => {
 
         const saved = await order.save();
 
+        // Update stock log with order reference after order is saved
+        if (saved._id) {
+            await StockLog.updateMany(
+                { referenceId: null, referenceType: 'Order', notes: `Order ${orderId}` },
+                { referenceId: saved._id.toString() }
+            );
+        }
+
         // Update or create customer record
         if (customerEmail) {
             const existingCustomer = await Customer.findOne({ email: customerEmail });
 
             if (existingCustomer) {
-                // Update existing customer
                 existingCustomer.orders = (existingCustomer.orders || 0) + 1;
                 existingCustomer.totalSpent = (existingCustomer.totalSpent || 0) + (total || 0);
                 existingCustomer.name = customerName || existingCustomer.name;
                 await existingCustomer.save();
             } else {
-                // Create new customer
                 await Customer.create({
                     name: customerName || 'Unknown',
                     email: customerEmail,

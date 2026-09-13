@@ -18,6 +18,11 @@ const CategoryPage = () => {
   const params = useParams();
   const categoryParam = params?.category;
 
+  const getTotalStock = (product) => {
+    const colorStock = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
+    return colorStock + (product.stockQuantity || 0);
+  };
+
   const fetcher = async (url: string) => {
   const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch products');
@@ -132,9 +137,9 @@ const {
 
         {/* Stock Status */}
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${product?.in_stock ? 'bg-green-500' : 'bg-red-500'}`} />
+          <div className={`w-2 h-2 rounded-full ${(product?.in_stock !== false && getTotalStock(product) > 0) ? 'bg-green-500' : 'bg-red-500'}`} />
           <span className="text-xs text-gray-400">
-            {product?.in_stock ? 'In Stock' : 'Out of Stock'}
+            {(product?.in_stock !== false && getTotalStock(product) > 0) ? 'In Stock' : 'Out of Stock'}
           </span>
         </div>
 
@@ -149,12 +154,12 @@ const {
       </div>
 
       {/* Status Badge */}
-      {product?.status === 'active' && product?.in_stock && (
+      {product?.status === 'active' && product?.in_stock && getTotalStock(product) > 0 && (
         <div className="absolute top-4 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
           NEW
         </div>
       )}
-      {!product?.in_stock && (
+      {(product?.in_stock === false || getTotalStock(product) <= 0) && (
         <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
           SOLD OUT
         </div>

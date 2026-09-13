@@ -4,6 +4,7 @@ import { Edit, Trash2, Package, DollarSign, XCircle, TrendingUp, Plus } from "lu
 import axios from "axios"
 import Pagination from "@/components/ui/pagination"
 import { AdminConfirmDialog, AdminModal, PageBody, PageHeader, MetricCard, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, iconButton, labelClass, primaryButton } from "@/components/admin/AdminSurface"
+import { getToken } from "@/lib/auth"
 
 
 /* ================= ORDERS PAGE ================= */
@@ -42,7 +43,7 @@ const OrdersPage = () => {
 
   const handleDelete = async (order: any) => {
     const id = order._id || order.id;
-    const token = localStorage.getItem("token")
+    const token = getToken()
     try {
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/orders/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -90,7 +91,7 @@ const OrdersPage = () => {
       date: formData.date
     }
 
-    const token = localStorage.getItem("token")
+    const token = getToken()
     const config = { headers: { Authorization: `Bearer ${token}` } }
 
     try {

@@ -58,6 +58,11 @@ const formatPrice = (product: Product) => {
   return `${product.currency || "$"}${safePrice.toFixed(2)}`;
 };
 
+const getTotalStock = (product: Product) => {
+  const colorStock = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
+  return colorStock + (product.stockQuantity || 0);
+};
+
 const getProductId = (product: Product) => product._id || product.id || "";
 
 const ProductCard = ({ product, index }: { product: Product; index: number }) => {
@@ -91,12 +96,12 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/5 to-transparent" />
 
-          {product.status === "active" && product.in_stock && (
+          {(product.status === "active" && product.in_stock && getTotalStock(product) > 0) && (
             <div className="absolute left-4 top-4 z-10 rounded-full border border-emerald-300/30 bg-emerald-400 px-3 py-1 text-xs font-black uppercase text-black">
               New
             </div>
           )}
-          {product.in_stock === false && (
+          {(product.in_stock === false || getTotalStock(product) <= 0) && (
             <div className="absolute left-4 top-4 z-10 rounded-full border border-red-300/30 bg-red-500 px-3 py-1 text-xs font-black uppercase text-white">
               Sold Out
             </div>
@@ -131,12 +136,10 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
               )}
               <div className="flex items-center gap-2">
                 <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    product.in_stock ? "bg-emerald-400" : "bg-red-500"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full ${(product.in_stock !== false && getTotalStock(product) > 0) ? "bg-emerald-400" : "bg-red-500"}`}
                 />
                 <span className="text-xs font-bold uppercase text-gray-400">
-                  {product.in_stock ? "In Stock" : "Out of Stock"}
+                  {(product.in_stock !== false && getTotalStock(product) > 0) ? "In Stock" : "Out of Stock"}
                 </span>
               </div>
             </div>
@@ -270,10 +273,10 @@ const ProductsPage = () => {
               {[
                 { value: safeProducts.length, label: "Products" },
                 { value: allCategories.length, label: "Categories" },
-                {
-                  value: safeProducts.filter((product) => product.in_stock).length,
-                  label: "In Stock",
-                },
+                 {
+                   value: safeProducts.filter((product) => product.in_stock !== false && getTotalStock(product) > 0).length,
+                   label: "In Stock",
+                 },
               ].map((stat) => (
                 <div key={stat.label} className="border-r border-white/10 p-4 last:border-r-0">
                   <div className="text-2xl font-black">{stat.value}</div>

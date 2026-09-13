@@ -23,6 +23,7 @@ import { useCart } from "@/app/context/CartContext";
 type ProductColor = {
   name?: string;
   image_url?: string;
+  stockQuantity?: number;
 };
 
 type Product = {
@@ -46,6 +47,11 @@ type Product = {
 const fallbackProductImage = "/assets/nike-hero/nike6-transparent.png";
 
 const getProductId = (product: Product) => product._id || product.id || "";
+
+const getTotalStock = (product: Product) => {
+  const colorStock = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
+  return colorStock + (product.stockQuantity || 0);
+};
 
 const parseWishlist = (): Product[] => {
   try {
@@ -231,7 +237,7 @@ const ProductDetailPage = () => {
                 />
               </button>
 
-              {!product.in_stock && (
+              {(!product.in_stock || getTotalStock(product) <= 0) && (
                 <div className="absolute left-5 top-5 z-20 rounded-full bg-red-500 px-4 py-2 text-xs font-black uppercase text-white">
                   Sold Out
                 </div>
@@ -340,20 +346,16 @@ const ProductDetailPage = () => {
 
               <div className="mt-6 flex items-center gap-3">
                 <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    product.in_stock ? "bg-emerald-400" : "bg-red-500"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full ${(product.in_stock !== false && getTotalStock(product) > 0) ? "bg-emerald-400" : "bg-red-500"}`}
                 />
                 <span
-                  className={`text-sm font-black uppercase ${
-                    product.in_stock ? "text-emerald-300" : "text-red-400"
-                  }`}
+                  className={`text-sm font-black uppercase ${(product.in_stock !== false && getTotalStock(product) > 0) ? "text-emerald-300" : "text-red-400"}`}
                 >
-                  {product.in_stock ? "In Stock" : "Out of Stock"}
+                  {(product.in_stock !== false && getTotalStock(product) > 0) ? "In Stock" : "Out of Stock"}
                 </span>
               </div>
 
-              {!product.in_stock && isWishlisted && (
+              {(!product.in_stock || getTotalStock(product) <= 0) && isWishlisted && (
                 <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-white/40">
                   <Check className="h-4 w-4 text-red-400" />
                   Added to wishlist. We will notify you when it is back in stock.
@@ -417,20 +419,20 @@ const ProductDetailPage = () => {
                   </button>
                 </div>
 
-                {product.in_stock ? (
-                  <Button
-                    onClick={handleAddToCart}
-                    disabled={availableSizes.length > 0 && !selectedSize}
-                    className={`h-14 flex-1 rounded-full px-8 text-sm font-black uppercase tracking-[0.18em] text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${
-                      addedToCart
-                        ? "bg-emerald-600 hover:bg-emerald-700"
-                        : "bg-white text-black hover:bg-white/90"
-                    }`}
-                  >
-                    {addedToCart ? (
-                      <span className="flex items-center gap-2">
-                        <Check className="h-5 w-5" />
-                        Added
+                 {(product.in_stock !== false && getTotalStock(product) > 0) ? (
+                   <Button
+                     onClick={handleAddToCart}
+                     disabled={availableSizes.length > 0 && !selectedSize}
+                     className={`h-14 flex-1 rounded-full px-8 text-sm font-black uppercase tracking-[0.18em] text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${
+                       addedToCart
+                         ? "bg-emerald-600 hover:bg-emerald-700"
+                         : "bg-white text-black hover:bg-white/90"
+                     }`}
+                   >
+                     {addedToCart ? (
+                       <span className="flex items-center gap-2">
+                         <Check className="h-5 w-5" />
+                         Added
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">

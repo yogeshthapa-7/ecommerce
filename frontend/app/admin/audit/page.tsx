@@ -13,6 +13,7 @@ import axios from "axios"
 import Link from "next/link"
 import { AdminModal, PageBody, PageHeader, MetricCard, StatusBadge, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, secondaryButton } from "@/components/admin/AdminSurface"
 import { NikeDatePicker } from "@/components/ui/nike-date-picker"
+import { getToken } from "@/lib/auth"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
@@ -44,7 +45,7 @@ const AuditPage = () => {
   const [endDate, setEndDate] = useState("")
   const [activeLog, setActiveLog] = useState<any | null>(null)
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : ""
+  const token = getToken() || ""
 
   const fetchLogs = async () => {
     setLoading(true)

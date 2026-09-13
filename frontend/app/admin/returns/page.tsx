@@ -12,6 +12,7 @@ import {
 import axios from "axios"
 import Link from "next/link"
 import { AdminConfirmDialog, AdminModal, PageBody, PageHeader, MetricCard, StatusBadge, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, iconButton, labelClass, primaryButton, secondaryButton } from "@/components/admin/AdminSurface"
+import { getToken } from "@/lib/auth"
 
 const STATUS_OPTIONS = ["Requested", "Approved", "Rejected", "Refunded", "Cancelled"]
 
@@ -29,7 +30,7 @@ const ReturnsPage = () => {
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
   const [rejectionReason, setRejectionReason] = useState("")
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : ""
+  const token = getToken() || ""
 
   const fetchReturns = async () => {
     setLoading(true)

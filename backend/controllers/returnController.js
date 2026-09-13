@@ -153,6 +153,48 @@ exports.updateReturn = async (req, res) => {
 
         if (!ret) return res.status(404).json({ message: 'Return not found' });
 
+        // Restore stock if return is approved
+        if (status === 'Approved') {
+            try {
+                const StockLog = require('../models/StockLog');
+                const actor = req.user;
+                const actorName = `${actor.firstName || ''} ${actor.lastName || ''}`.trim() || actor.email;
+
+                for (const item of (ret.items || [])) {
+                    if (!item.productId) continue;
+                    const product = await Product.findById(item.productId);
+                    if (!product) continue;
+
+                    const previousQuantity = product.stockQuantity || 0;
+                    const quantityChange = item.quantity || 1;
+                    const newQuantity = previousQuantity + quantityChange;
+
+                    product.stockQuantity = newQuantity;
+                    product.lastStockUpdate = new Date();
+                    if (newQuantity > 0 && product.in_stock === false) {
+                        product.in_stock = true;
+                    }
+                    await product.save();
+
+                    await StockLog.create({
+                        productId: product._id,
+                        productName: product.name,
+                        changeType: 'return',
+                        quantityChange,
+                        previousQuantity,
+                        newQuantity,
+                        referenceId: ret._id.toString(),
+                        referenceType: 'Return',
+                        performedBy: actor.id || actor._id,
+                        performedByName: actorName,
+                        notes: `Return ${ret.returnId} approved`
+                    });
+                }
+            } catch (stockError) {
+                console.error('Failed to restore stock for return:', stockError);
+            }
+        }
+
         // Send email notification for Approved or Rejected status
         if (status === 'Approved' || status === 'Rejected') {
             try {

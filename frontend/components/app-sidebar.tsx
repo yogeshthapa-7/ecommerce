@@ -9,6 +9,7 @@ import {
   RotateCcw,
   Settings,
   UsersRound,
+  Warehouse,
 } from "lucide-react"
 
 import {
@@ -25,6 +26,7 @@ const items = [
   { title: "Dashboard", url: "/admin", icon: Home },
   { title: "Sales", url: "/admin/sales", icon: BarChart3 },
   { title: "Audit Log", url: "/admin/audit", icon: ClipboardList },
+  { title: "Stock", url: "/admin/stock", icon: Warehouse },
   { title: "Category", url: "/admin/categories", icon: Inbox },
   { title: "Customers", url: "/admin/customers", icon: UsersRound },
   { title: "Orders", url: "/admin/orders", icon: ClipboardCheck },

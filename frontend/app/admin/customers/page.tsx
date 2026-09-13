@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Edit, Trash2, UserCheck, UserX, Plus, TrendingUp, Award } from "lucide-react"
 import axios from "axios"
 import { AdminConfirmDialog, AdminModal, PageBody, PageHeader, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, iconButton, labelClass, primaryButton, StatusBadge } from "@/components/admin/AdminSurface"
+import { getToken } from "@/lib/auth"
 
 const CustomersPage = () => {
   const [customers, setCustomers] = useState<any[]>([])
@@ -38,7 +39,7 @@ const CustomersPage = () => {
 
   // Delete Customer
   const handleDelete = async (id: string | number) => {
-    const token = localStorage.getItem("token")
+    const token = getToken()
     try {
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -53,7 +54,7 @@ const CustomersPage = () => {
 
   // Toggle Ban/Active Status
   const handleStatusToggle = async (id: string | number, currentStatus: string) => {
-    const token = localStorage.getItem("token")
+    const token = getToken()
     try {
       const res = await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/customers/${id}/status`, {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -87,7 +88,7 @@ const CustomersPage = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const token = localStorage.getItem("token")
+    const token = getToken()
     const config = { headers: { Authorization: `Bearer ${token}` } }
 
     try {
