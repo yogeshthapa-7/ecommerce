@@ -32,7 +32,6 @@ import {
   XCircle,
 } from "lucide-react";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
 import { getToken, getUser, clearAuth } from "@/lib/auth";
 import { useCart } from "@/app/context/CartContext";
 
@@ -1657,7 +1656,6 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <EcomNavbar />
 
       {deleteTargetId && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4">

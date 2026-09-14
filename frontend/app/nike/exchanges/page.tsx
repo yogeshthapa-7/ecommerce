@@ -14,7 +14,6 @@ import {
     XCircle,
 } from "lucide-react";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
 import { getToken, getUser } from "@/lib/auth";
 
 const panelClass = "rounded-3xl border border-white/10 bg-zinc-950 p-5 shadow-xl shadow-black/30 md:p-6";
@@ -210,7 +209,6 @@ const ExchangesPage = () => {
 
     return (
         <div className="min-h-screen bg-black text-white">
-            <EcomNavbar />
 
             <section className="border-b border-white/10 bg-[linear-gradient(120deg,#09090b_0%,#000_52%,rgba(239,68,68,0.16)_100%)] pt-28">
                 <div className="mx-auto max-w-7xl px-6 py-12">

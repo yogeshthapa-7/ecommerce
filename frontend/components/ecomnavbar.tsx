@@ -18,7 +18,6 @@ import {
 import { useCart } from '@/app/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { getUser, clearAuth } from '@/lib/auth';
 import { ConfirmDialog } from '@/components/ui/sharedcomponents';
 
@@ -29,7 +28,6 @@ const EcomNavbar = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
 
   // Cart functionality
   const { setIsCartOpen, getCartCount } = useCart();
@@ -54,7 +52,7 @@ const EcomNavbar = () => {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [pathname]);
+  }, []);
 
   const handleLogout = () => {
     setShowLogoutConfirm(true);
@@ -83,7 +81,7 @@ const EcomNavbar = () => {
     <div>
       {/* NAVBAR */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-black/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${scrolled ? 'bg-black/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
           }`}
       >
         <div className="max-w-7xl mx-auto px-6 py-4">

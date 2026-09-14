@@ -18,7 +18,6 @@ import {
 import { useCart } from "@/app/context/CartContext";
 import { getToken, getUser } from "@/lib/auth";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
 import { Button } from "@/components/ui/button";
 
 type FormData = {
@@ -321,7 +320,6 @@ const PaymentDetailsPage = () => {
   if (cartItems.length === 0 && !orderPlaced) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <EcomNavbar />
         <main className="flex min-h-screen items-center justify-center px-6 pt-20">
           <div className="max-w-md text-center">
             <div className="mx-auto mb-8 grid h-24 w-24 place-items-center rounded-full border border-white/10 bg-zinc-950">
@@ -344,7 +342,6 @@ const PaymentDetailsPage = () => {
 
   return (
     <div className="min-h-screen overflow-hidden bg-black text-white">
-      <EcomNavbar />
 
       <main className="relative px-4 pb-16 pt-28">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.06),transparent_40%)]" />

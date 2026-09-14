@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
 import { useCart } from "@/app/context/CartContext";
 import { getToken } from "@/lib/auth";
 
@@ -207,7 +206,6 @@ const ProductDetailPage = () => {
 
   return (
     <div className="min-h-screen overflow-hidden bg-black text-white">
-      <EcomNavbar />
 
       <main className="relative pt-24">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_18%,rgba(255,255,255,0.06),transparent_28%),linear-gradient(180deg,#0a0a0a_0%,#000000_68%,#000000_100%)]" />

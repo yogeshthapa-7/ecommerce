@@ -2,13 +2,11 @@
 
 import { FileText, Truck, RotateCcw, ShieldCheck, AlertTriangle } from "lucide-react"
 import Link from "next/link"
-import EcomNavbar from "@/components/ecomnavbar"
 import EcomFooter from "@/components/ecomfooter"
 
 export default function ReturnPolicyPage() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <EcomNavbar />
 
       <main className="mx-auto max-w-4xl px-5 py-24 sm:px-8">
         <div className="mb-12">

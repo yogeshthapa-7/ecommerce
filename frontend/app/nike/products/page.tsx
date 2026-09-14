@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import useSWR from "swr";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
 
 type Product = {
   _id?: string;
@@ -238,7 +237,6 @@ const ProductsPage = () => {
 
   return (
     <div className="min-h-screen overflow-hidden bg-black text-white">
-      <EcomNavbar />
 
       <section className="relative min-h-[88vh] overflow-hidden bg-black pt-28">
         <div className="absolute inset-0">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import EcomNavbar from "@/components/ecomnavbar";
 import EcomFooter from "@/components/ecomfooter";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
@@ -190,7 +189,6 @@ const TestEmailPage = () => {
 
     return (
         <div className="min-h-screen bg-black text-white">
-            <EcomNavbar />
             <main className="relative px-4 pb-16 pt-28">
                 <div className="relative mx-auto max-w-[1400px]">
                     <div className="mb-12">
