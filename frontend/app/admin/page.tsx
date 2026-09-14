@@ -41,7 +41,7 @@ import { getUser, clearAuth } from "@/lib/auth";
 const AdminDashboardPage = () => {
   // --- STATE ---
   const router = useRouter()
-  const { clearCart } = useCart()
+  const { clearCart, clearLocalCart } = useCart()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<DashboardOrder | null>(null)
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
@@ -342,7 +342,7 @@ const AdminDashboardPage = () => {
         cancelLabel="Cancel"
         onConfirm={() => {
           clearAuth()
-          clearCart()
+          clearLocalCart()
           setIsLogoutDialogOpen(false)
           router.push("/login")
         }}

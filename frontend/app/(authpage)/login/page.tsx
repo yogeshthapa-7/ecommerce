@@ -51,7 +51,7 @@ export default function LoginPage() {
   const redirectTo = searchParams.get("redirect") || null
   const toastrInitialized = useRef(false)
   const [showPassword, setShowPassword] = useState(false)
-  const { clearCart } = useCart()
+  const { clearCart, refreshCart } = useCart()
 
   const showToast = (type: 'success' | 'error', message: string, title?: string) => {
     if (toastr) {
@@ -112,7 +112,7 @@ export default function LoginPage() {
 
         // Login success - save token and user based on keepSignedIn preference
         setAuth(data.token, data.user, values.keepSignedIn);
-        clearCart();
+        refreshCart();
 
         showToast('success', 'Login successful! Redirecting...', 'Welcome');
 

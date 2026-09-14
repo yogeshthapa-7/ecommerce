@@ -91,9 +91,9 @@ const CartSidebar = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {cartItems.map((item) => (
+              {cartItems.map((item, index) => (
                 <article
-                  key={item.cartItemId}
+                  key={item.cartItemId || `${item.productId || item._id || index}-${item.color || 'default'}-${item.size || 'default'}`}
                   className="group rounded-[22px] border border-white/[0.08] bg-white/[0.02] p-3 transition-colors hover:border-white/20"
                 >
                   <div className="flex gap-4">
