@@ -93,7 +93,7 @@ const EcomNavbar = () => {
                   <span className="text-white cursor-pointer">NIKE</span>
                 </h1>
               </Link>
-              <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium">
+              <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium text-white">
                 <Link
                   href="/nike/products"
                   className="hover:text-gray-300 transition-colors relative group"

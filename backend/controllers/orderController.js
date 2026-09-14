@@ -151,7 +151,7 @@ exports.createOrder = async (req, res) => {
             customerEmail: customerEmail,
             items: items || [],
             total: total || 0,
-            paymentStatus: 'Paid',
+            paymentStatus: paymentMethod === 'cod' ? 'COD' : 'Paid',
             deliveryStatus: 'Processing',
             paymentMethod: paymentMethod || 'card',
             shippingInfo: shippingInfo || {},
@@ -243,7 +243,7 @@ exports.getStats = async (req, res) => {
 
         const totalOrders = orders.length;
         const paidOrders = orders.filter(o => o.paymentStatus === 'Paid').length;
-        const pendingOrders = orders.filter(o => o.paymentStatus === 'Pending').length;
+        const pendingOrders = orders.filter(o => o.paymentStatus === 'Pending' || o.paymentStatus === 'COD').length;
         const cancelledOrders = orders.filter(o => o.deliveryStatus === 'Cancelled').length;
 
         // Count customers and products

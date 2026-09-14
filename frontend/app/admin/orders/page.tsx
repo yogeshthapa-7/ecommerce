@@ -148,7 +148,7 @@ const OrdersPage = () => {
     .reduce((sum, o) => sum + o.total, 0)
 
   const totalPending = orders
-    .filter(o => o.paymentStatus === "Pending")
+    .filter(o => o.paymentStatus === "Pending" || o.paymentStatus === "COD")
     .reduce((sum, o) => sum + o.total, 0)
 
   const cancelledOrders = orders.filter(o => o.deliveryStatus === "Cancelled")
@@ -356,6 +356,7 @@ const OrdersPage = () => {
                   >
                     <option value="Paid">Paid</option>
                     <option value="Pending">Pending</option>
+                    <option value="COD">COD</option>
                     <option value="Failed">Failed</option>
                   </select>
                 </div>

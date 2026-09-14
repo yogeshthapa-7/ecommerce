@@ -6,7 +6,7 @@ import CartSidebar from "@/components/ecomsidebar";
 import { CartProvider } from "./context/CartContext";
 import ChatBubble from "@/components/ui/chatbubble";
 import { LanguageProvider } from "./context/LanguageContext";
-import EcomNavbar from "@/components/ecomnavbar";
+import NavbarWrapper from "@/components/navbar-wrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +36,7 @@ export default function RootLayout({
 
         <LanguageProvider>
           <CartProvider>
-            <EcomNavbar />
+            <NavbarWrapper />
             {children}
             <ChatBubble />
             <CartSidebar />

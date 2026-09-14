@@ -219,25 +219,25 @@ const PaymentDetailsPage = () => {
         }
       }
 
-      const orderData = {
-        userId,
-        customer: {
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-        },
-        items: typedCartItems.map((item) => ({
-          productId: item.productId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          color: item.color || "",
-          size: item.size || "",
-          image: item.image || "",
-        })),
-        total,
-        paymentStatus: "Paid",
-        paymentMethod,
+        const orderData = {
+          userId,
+          customer: {
+            name: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+          },
+          items: typedCartItems.map((item) => ({
+            productId: item.productId,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            color: item.color || "",
+            size: item.size || "",
+            image: item.image || "",
+          })),
+          total,
+          paymentStatus: paymentMethod === "cod" ? "COD" : "Paid",
+          paymentMethod,
         shippingInfo: {
           fullName: formData.fullName,
           email: formData.email,
