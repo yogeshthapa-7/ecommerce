@@ -549,10 +549,16 @@ const ProfilePage = () => {
         setNotification({ message: "Cancellation request submitted successfully", type: "success" });
       } else {
         const err = await res.json();
+        setCancelModalOrder(null);
+        setCancelReason("");
+        setCancelDescription("");
         setNotification({ message: err.message || "Failed to submit cancellation", type: "error" });
       }
     } catch (error) {
       console.error("Error submitting cancellation:", error);
+      setCancelModalOrder(null);
+      setCancelReason("");
+      setCancelDescription("");
       setNotification({ message: "Something went wrong", type: "error" });
     } finally {
       setSubmittingCancel(false);

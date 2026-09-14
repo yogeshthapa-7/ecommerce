@@ -100,7 +100,8 @@ const TestEmailPage = () => {
         };
     }, []);
 
-    const handleSend = async () => {
+    const handleSend = useCallback(async () => {
+        if (sending) return;
         setSending(true);
         addLog(`Sending ${currentStatus} email...`);
         try {
@@ -134,9 +135,10 @@ const TestEmailPage = () => {
         } finally {
             setSending(false);
         }
-    };
+    }, [currentStatus, sending, addLog]);
 
-    const handleCancellation = async (action: CancelAction) => {
+    const handleCancellation = useCallback(async (action: CancelAction) => {
+        if (sending) return;
         setSending(true);
         setCancelAction(action);
         addLog(`Admin ${action} cancellation request...`);
@@ -169,7 +171,22 @@ const TestEmailPage = () => {
             setSending(false);
             setCancelAction(null);
         }
-    };
+    }, [sending, addLog, setCancelAction]);
+
+    const handleSendRef = useRef(handleSend)
+    handleSendRef.current = handleSend
+
+    const prevStatusRef = useRef<string | null>(null)
+
+    useEffect(() => {
+        if (currentStatus === "Processing") {
+            prevStatusRef.current = currentStatus
+            return
+        }
+        if (prevStatusRef.current === currentStatus) return
+        prevStatusRef.current = currentStatus
+        handleSendRef.current()
+    }, [currentStatus])
 
     return (
         <div className="min-h-screen bg-black text-white">

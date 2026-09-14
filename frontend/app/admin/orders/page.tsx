@@ -14,6 +14,7 @@ const OrdersPage = () => {
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null)
   const [currentPage, setCurrentPage] = useState(1); const [pagination, setPagination] = useState(null);
   const [editingId, setEditingId] = useState(null)
+  const [previousStatus, setPreviousStatus] = useState("")
 
   // Form State
   const [formData, setFormData] = useState({
@@ -70,6 +71,7 @@ const OrdersPage = () => {
 
   const handleOpenEdit = (order) => {
     setEditingId(order._id || order.id)
+    setPreviousStatus(order.deliveryStatus || "Processing")
     setFormData({
       customer: order.customer,
       total: order.total.toString(),
@@ -98,6 +100,38 @@ const OrdersPage = () => {
       if (editingId) {
         const res = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/orders/${editingId}`, orderData, config)
         setOrders(prev => prev.map(o => (o._id || o.id) === editingId ? res.data : o))
+        
+        if (formData.deliveryStatus !== previousStatus) {
+          const updatedOrder = res.data
+          const orderItems = (updatedOrder.items || []).map(item => ({
+            name: item.name || "Product",
+            price: item.price || 0,
+            quantity: item.quantity || 1,
+            size: item.size || "",
+            color: item.color || "",
+            image: item.image || item.image_url || ""
+          }))
+          
+          fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: updatedOrder.customerEmail || updatedOrder.shippingInfo?.email || "",
+              customerName: updatedOrder.customer || updatedOrder.shippingInfo?.fullName || "Customer",
+              orderId: updatedOrder.orderId || updatedOrder._id,
+              status: formData.deliveryStatus,
+              items: orderItems,
+              totalAmount: updatedOrder.total || 0,
+              paymentMethod: updatedOrder.paymentMethod || "card",
+              trackingNumber: formData.deliveryStatus === "Shipped" ? `TRK${Date.now()}` : undefined,
+              carrier: formData.deliveryStatus === "Shipped" ? "DHL" : undefined,
+              estimatedDelivery: formData.deliveryStatus === "Shipped" ? "2026-09-18" : undefined,
+              cancelReason: formData.deliveryStatus === "Cancelled" ? "Order cancelled by admin" : undefined,
+              refundAmount: formData.deliveryStatus === "Cancelled" ? (updatedOrder.total || 0) : undefined,
+              refundMethod: formData.deliveryStatus === "Cancelled" ? "Original payment method" : undefined,
+            }),
+          }).catch(err => console.error("Error sending status email:", err))
+        }
       } else {
         const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/orders`, orderData, config)
         setOrders(prev => [res.data, ...prev])
