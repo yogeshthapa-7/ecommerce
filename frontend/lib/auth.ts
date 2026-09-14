@@ -1,6 +1,6 @@
-const AUTH_KEY = 'token';
-const USER_KEY = 'user';
-const AUTH_VERSION = 'auth_version';
+const AUTH_KEY = "token";
+const USER_KEY = "user";
+const AUTH_VERSION = "auth_version";
 const CURRENT_VERSION = 1;
 
 function isAuthStorage(storage: Storage | null): boolean {
@@ -9,25 +9,34 @@ function isAuthStorage(storage: Storage | null): boolean {
   return version === String(CURRENT_VERSION);
 }
 
-function getFromCookies(): { token: string | null; user: string | null } {
-  if (typeof document === 'undefined') return { token: null, user: null };
+function getFromCookies(): {token: string | null; user: string | null} {
+  if (typeof document === "undefined") return {token: null, user: null};
   const getCookie = (name: string): string | null => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) {
-      const cookieValue = parts.pop()?.split(';').shift();
-      if (cookieValue && cookieValue.startsWith('"') && cookieValue.endsWith('"')) {
+      const cookieValue = parts.pop()?.split(";").shift();
+      if (
+        cookieValue &&
+        cookieValue.startsWith('"') &&
+        cookieValue.endsWith('"')
+      ) {
         return cookieValue.slice(1, -1);
       }
-      return cookieValue || null;
+      if (!cookieValue) return null;
+      try {
+        return decodeURIComponent(cookieValue);
+      } catch {
+        return null;
+      }
     }
     return null;
   };
-  return { token: getCookie(AUTH_KEY), user: getCookie(USER_KEY) };
+  return {token: getCookie(AUTH_KEY), user: getCookie(USER_KEY)};
 }
 
 export function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   const cookies = getFromCookies();
   if (cookies.token) return cookies.token;
   if (isAuthStorage(sessionStorage)) {
@@ -40,7 +49,7 @@ export function getToken(): string | null {
 }
 
 export function getUser(): string | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   const cookies = getFromCookies();
   if (cookies.user) return cookies.user;
   if (isAuthStorage(sessionStorage)) {
@@ -52,8 +61,12 @@ export function getUser(): string | null {
   return null;
 }
 
-export function setAuth(token: string, user: unknown, rememberMe: boolean): void {
-  if (typeof window === 'undefined') return;
+export function setAuth(
+  token: string,
+  user: unknown,
+  rememberMe: boolean,
+): void {
+  if (typeof window === "undefined") return;
   const storage = rememberMe ? localStorage : sessionStorage;
   storage.setItem(AUTH_KEY, token);
   storage.setItem(USER_KEY, JSON.stringify(user));
@@ -65,9 +78,9 @@ export function setAuth(token: string, user: unknown, rememberMe: boolean): void
 }
 
 export function clearAuth(): void {
-  if (typeof window === 'undefined') return;
-  ['localStorage', 'sessionStorage'].forEach((storageName) => {
-    const storage = window[storageName as 'localStorage' | 'sessionStorage'];
+  if (typeof window === "undefined") return;
+  ["localStorage", "sessionStorage"].forEach((storageName) => {
+    const storage = window[storageName as "localStorage" | "sessionStorage"];
     storage.removeItem(AUTH_KEY);
     storage.removeItem(USER_KEY);
     storage.removeItem(AUTH_VERSION);
