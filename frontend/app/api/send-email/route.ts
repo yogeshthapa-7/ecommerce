@@ -43,25 +43,28 @@ const resolveEmailImage = async (image: string | undefined, baseUrl: string) => 
 
     if (!normalizedImage) return '';
 
-    if (/^(https?:|cid:)/i.test(normalizedImage)) return normalizedImage;
-
-    if (/^data:/i.test(normalizedImage)) {
-        const base64Data = normalizedImage.split(',')[1];
-        if (base64Data && base64Data.length > 10000) {
-            return '';
+    if (normalizedImage.startsWith('/')) {
+        if (baseUrl) {
+            try {
+                return new URL(normalizedImage, baseUrl).toString();
+            } catch {
+                return normalizedImage;
+            }
         }
         return normalizedImage;
     }
 
-    if (baseUrl) {
-        try {
-            return new URL(normalizedImage, baseUrl).toString();
-        } catch {
-            return normalizedImage;
+    if (/^(data:|cid:)/i.test(normalizedImage)) {
+        if (/^data:/i.test(normalizedImage)) {
+            const base64Data = normalizedImage.split(',')[1];
+            if (base64Data && base64Data.length > 10000) {
+                return '';
+            }
         }
+        return normalizedImage;
     }
 
-    return normalizedImage;
+    return '';
 };
 
 export async function POST(request: Request) {

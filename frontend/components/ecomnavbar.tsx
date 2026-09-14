@@ -146,7 +146,7 @@ const EcomNavbar = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="hidden md:flex hover:bg-red-500 hover:text-white relative"
+                className="hidden md:flex hover:bg-red-500 text-white font-bold relative"
                 onClick={() => setIsCartOpen(true)}
               >
                 <ShoppingBag className="w-5 h-5" />
