@@ -6,7 +6,6 @@ import {
   ArrowRight,
   ChevronDown,
   Filter,
-  Heart,
   Search,
   ShoppingBag,
   Star,
@@ -72,18 +71,6 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
       href={`/nike/products/${productId}`}
       className="group relative flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-zinc-950 shadow-xl shadow-black/30 transition-transform duration-300 hover:-translate-y-1 hover:border-red-400/60"
     >
-        <button
-          type="button"
-          aria-label={`Add ${product.name || "product"} to wishlist`}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log("Added to wishlist:", productId);
-          }}
-          className="absolute right-4 top-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-black/65 text-white transition-colors hover:border-red-400 hover:bg-red-500"
-        >
-          <Heart className="h-5 w-5 transition-colors group-hover:fill-white" />
-        </button>
 
         <div className="relative aspect-[1.02] overflow-hidden bg-zinc-900">
           <img

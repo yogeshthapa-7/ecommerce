@@ -120,6 +120,8 @@ const ProfilePage = () => {
   const [cancelReason, setCancelReason] = useState("");
   const [cancelDescription, setCancelDescription] = useState("");
   const [submittingCancel, setSubmittingCancel] = useState(false);
+  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const router = useRouter();
   const { addOrderItemsToCart, clearLocalCart } = useCart();
@@ -242,6 +244,39 @@ const ProfilePage = () => {
     }
   };
 
+  const fetchWishlist = async () => {
+    if (!user) return;
+
+    const token = getToken();
+    if (!token) {
+      setWishlist([]);
+      return;
+    }
+
+    setLoadingWishlist(true);
+    try {
+      let apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      if (apiBaseUrl.endsWith("/api")) {
+        apiBaseUrl = apiBaseUrl.slice(0, -4);
+      }
+
+      const res = await fetch(`${apiBaseUrl}/api/wishlist`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWishlist(data.items || []);
+      } else {
+        setWishlist([]);
+      }
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+      setWishlist([]);
+    } finally {
+      setLoadingWishlist(false);
+    }
+  };
+
   useEffect(() => {
     if (user) fetchReturns();
   }, [user]);
@@ -261,6 +296,12 @@ const ProfilePage = () => {
   useEffect(() => {
     if (activeTab === "cancellations" && user) {
       fetchCancellations();
+    }
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    if (activeTab === "wishlist" && user) {
+      fetchWishlist();
     }
   }, [activeTab, user]);
 
@@ -1551,23 +1592,84 @@ const ProfilePage = () => {
     </div>
   );
 
-  const renderWishlist = () => (
-    <div className="space-y-6">
-      <h3 className="text-xl font-black uppercase text-white">My Wishlist</h3>
-      <EmptyState
-        icon={Heart}
-        title="Your wishlist is empty"
-        description="Save items you love to your wishlist."
-        action={
-          <Link href="/nike/products">
-            <button className="mt-7 rounded-full bg-white px-8 py-3 text-sm font-black uppercase text-black transition-colors hover:bg-red-500 hover:text-white">
-              Browse Products
-            </button>
-          </Link>
-        }
-      />
-    </div>
-  );
+  const renderWishlist = () => {
+    if (loadingWishlist) {
+      return (
+        <div className="space-y-6">
+          <h3 className="text-xl font-black uppercase text-white">My Wishlist</h3>
+          <div className="flex items-center justify-center py-20">
+            <div className="h-10 w-10 rounded-full border-4 border-red-500 border-t-transparent animate-spin" />
+          </div>
+        </div>
+      );
+    }
+
+    if (!wishlist.length) {
+      return (
+        <div className="space-y-6">
+          <h3 className="text-xl font-black uppercase text-white">My Wishlist</h3>
+          <EmptyState
+            icon={Heart}
+            title="Your wishlist is empty"
+            description="Save items you love to your wishlist."
+            action={
+              <Link href="/nike/products">
+                <button className="mt-7 rounded-full bg-white px-8 py-3 text-sm font-black uppercase text-black transition-colors hover:bg-red-500 hover:text-white">
+                  Browse Products
+                </button>
+              </Link>
+            }
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <h3 className="text-xl font-black uppercase text-white">My Wishlist</h3>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {wishlist.map((item: any) => (
+            <div
+              key={item.productId}
+              className="group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-zinc-950 shadow-xl shadow-black/30"
+            >
+              <Link href={`/nike/products/${item.productId}`}>
+                <div className="relative aspect-[1.02] overflow-hidden bg-zinc-900">
+                  <img
+                    src={item.image_url || '/assets/nike-hero/nike6-transparent.png'}
+                    alt={item.name || 'Product'}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/5 to-transparent" />
+                  {!item.in_stock && (
+                    <div className="absolute left-4 top-4 z-10 rounded-full border border-red-300/30 bg-red-500 px-3 py-1 text-xs font-black uppercase text-white">
+                      Sold Out
+                    </div>
+                  )}
+                </div>
+                <div className="p-5">
+                  <h3 className="line-clamp-2 text-xl font-black leading-tight text-white">
+                    {item.name || 'Untitled Product'}
+                  </h3>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="block text-2xl font-black text-white">
+                      {item.currency || '$'}{Number(item.price || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="mt-2">
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${item.in_stock ? 'border-emerald-300/30 bg-emerald-400 text-black' : 'border-red-300/30 bg-red-500 text-white'}`}>
+                      {item.in_stock ? 'In Stock' : 'Out of Stock'}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const renderSettings = () => (
     <div className="space-y-6">
