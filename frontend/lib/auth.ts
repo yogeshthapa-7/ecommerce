@@ -42,7 +42,7 @@ export function getToken(): string | null {
 export function getUser(): string | null {
   if (typeof window === 'undefined') return null;
   const cookies = getFromCookies();
-  if (cookies.user) return cookies.user;
+  if (cookies.user) return decodeURIComponent(cookies.user);
   if (isAuthStorage(sessionStorage)) {
     return sessionStorage.getItem(USER_KEY);
   }

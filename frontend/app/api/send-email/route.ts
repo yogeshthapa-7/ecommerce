@@ -28,6 +28,14 @@ const getPublicBaseUrl = (request: Request) => {
     return configuredUrl || requestOrigin || (host ? `${protocol}://${host}` : '');
 };
 
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+    },
+});
+
 const resolveEmailImage = async (image: string | undefined, baseUrl: string) => {
     if (!image) return '';
 
@@ -158,14 +166,6 @@ export async function POST(request: Request) {
         const emailHtml = await render(emailComponent);
 
         console.log(`Rendered ${normalizedStatus} email HTML length:`, emailHtml.length, 'chars for', emailItems.length, 'items');
-
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.GMAIL_USER,
-                pass: process.env.GMAIL_APP_PASSWORD,
-            },
-        });
 
         const mailOptions = {
             from: `"Nike Store" <${process.env.GMAIL_USER}>`,

@@ -53,7 +53,7 @@ export const statusClass = (status?: string) => {
     return "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
   }
 
-  if (["pending", "processing", "shipped", "inactive"].includes(normalized)) {
+  if (["pending", "processing", "shipped", "inactive", "cod"].includes(normalized)) {
     return "border-amber-300/30 bg-amber-300/10 text-amber-200"
   }
 

@@ -57,7 +57,7 @@ exports.getReport = async (req, res) => {
                     revenue: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'Paid'] }, '$total', 0] } },
                     orders: { $sum: 1 },
                     paidOrders: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'Paid'] }, 1, 0] } },
-                    pendingOrders: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'Pending'] }, 1, 0] } },
+                    pendingOrders: { $sum: { $cond: [{ $in: ['$paymentStatus', ['Pending', 'COD']] }, 1, 0] } },
                     cancelledOrders: { $sum: { $cond: [{ $eq: ['$deliveryStatus', 'Cancelled'] }, 1, 0] } },
                     avgOrderValue: { $avg: '$total' },
                 }},

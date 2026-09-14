@@ -161,49 +161,47 @@ exports.updateCancellation = async (req, res) => {
             await Order.findByIdAndUpdate(cancellation.orderId, { deliveryStatus: 'Cancelled' });
         }
 
-        // Send email notification
+        // Send email notification (non-blocking)
         if (status === 'Approved' || status === 'Rejected') {
-            try {
-                const user = await User.findById(cancellation.userId).select('firstName lastName email');
-                const recipientEmail = user?.email || cancellation.customerEmail;
-                const recipientName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : cancellation.customerName;
+            const user = await User.findById(cancellation.userId).select('firstName lastName email');
+            const recipientEmail = user?.email || cancellation.customerEmail;
+            const recipientName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : cancellation.customerName;
 
-                if (recipientEmail) {
-                    const statusColor = status === 'Approved' ? '#22c55e' : '#ef4444';
-                    const statusTitle = status === 'Approved' ? 'Cancellation Approved' : 'Cancellation Rejected';
+            if (recipientEmail) {
+                const statusColor = status === 'Approved' ? '#22c55e' : '#ef4444';
+                const statusTitle = status === 'Approved' ? 'Cancellation Approved' : 'Cancellation Rejected';
 
-                    const html = `
-                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; color: #111;">
-                            <div style="background: #111; padding: 32px; text-align: center;">
-                                <h1 style="font-family: Arial, sans-serif; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin: 0; color: #ffffff;">NIKE STORE</h1>
+                const html = `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; color: #111;">
+                        <div style="background: #111; padding: 32px; text-align: center;">
+                            <h1 style="font-family: Arial, sans-serif; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin: 0; color: #ffffff;">NIKE STORE</h1>
+                        </div>
+                        <div style="padding: 40px 32px;">
+                            <div style="background: #f9fafb; border-left: 4px solid ${statusColor}; padding: 20px; margin-bottom: 32px; border-radius: 4px;">
+                                <h2 style="font-family: Arial, sans-serif; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0; color: ${statusColor};">${statusTitle}</h2>
+                                <p style="margin: 0; font-size: 14px; color: #374151;">Hi ${recipientName || 'Customer'},</p>
+                                <p style="margin: 8px 0 0 0; font-size: 14px; color: #374151;">Your cancellation request <strong style="color: #111;">${cancellation.cancellationId}</strong> for order <strong style="color: #111;">${cancellation.orderId?.orderId || cancellation.orderId}</strong> has been <strong style="color: ${statusColor};">${status.toLowerCase()}</strong>.</p>
                             </div>
-                            <div style="padding: 40px 32px;">
-                                <div style="background: #f9fafb; border-left: 4px solid ${statusColor}; padding: 20px; margin-bottom: 32px; border-radius: 4px;">
-                                    <h2 style="font-family: Arial, sans-serif; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0; color: ${statusColor};">${statusTitle}</h2>
-                                    <p style="margin: 0; font-size: 14px; color: #374151;">Hi ${recipientName || 'Customer'},</p>
-                                    <p style="margin: 8px 0 0 0; font-size: 14px; color: #374151;">Your cancellation request <strong style="color: #111;">${cancellation.cancellationId}</strong> for order <strong style="color: #111;">${cancellation.orderId?.orderId || cancellation.orderId}</strong> has been <strong style="color: ${statusColor};">${status.toLowerCase()}</strong>.</p>
-                                </div>
 
-                                <div style="margin-bottom: 24px;">
-                                    <h3 style="font-family: Arial, sans-serif; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; margin: 0 0 16px 0;">Cancellation Details</h3>
-                                    <div style="background: #f9fafb; border-radius: 8px; padding: 16px; font-size: 14px; color: #374151;">
-                                        <p style="margin: 0 0 8px 0;"><strong style="color: #111;">Order:</strong> ${cancellation.orderId?.orderId || cancellation.orderId}</p>
-                                        <p style="margin: 0 0 8px 0;"><strong style="color: #111;">Reason:</strong> ${cancellation.reason}</p>
-                                        ${cancellation.resolution ? `<p style="margin: 0;"><strong style="color: #111;">Resolution:</strong> ${cancellation.resolution}</p>` : ''}
-                                    </div>
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="font-family: Arial, sans-serif; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; margin: 0 0 16px 0;">Cancellation Details</h3>
+                                <div style="background: #f9fafb; border-radius: 8px; padding: 16px; font-size: 14px; color: #374151;">
+                                    <p style="margin: 0 0 8px 0;"><strong style="color: #111;">Order:</strong> ${cancellation.orderId?.orderId || cancellation.orderId}</p>
+                                    <p style="margin: 0 0 8px 0;"><strong style="color: #111;">Reason:</strong> ${cancellation.reason}</p>
+                                    ${cancellation.resolution ? `<p style="margin: 0;"><strong style="color: #111;">Resolution:</strong> ${cancellation.resolution}</p>` : ''}
                                 </div>
+                            </div>
 
-                                <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; text-align: center;">
-                                    <p style="margin: 0; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Nike Store Team</p>
-                                </div>
+                            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+                                <p style="margin: 0; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Nike Store Team</p>
                             </div>
                         </div>
-                    `;
+                    </div>
+                `;
 
-                    await sendCancellationEmail(recipientEmail, `${statusTitle} - ${cancellation.cancellationId}`, html);
-                }
-            } catch (emailError) {
-                console.error('Failed to send cancellation email:', emailError);
+                sendCancellationEmail(recipientEmail, `${statusTitle} - ${cancellation.cancellationId}`, html).catch(emailError => {
+                    console.error('Failed to send cancellation email:', emailError);
+                });
             }
         }
 
