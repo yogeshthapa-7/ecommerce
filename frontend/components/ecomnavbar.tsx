@@ -30,7 +30,7 @@ const EcomNavbar = () => {
   const router = useRouter();
 
   // Cart functionality
-  const { setIsCartOpen, getCartCount } = useCart();
+  const { setIsCartOpen, getCartCount, clearCart } = useCart();
   const cartCount = getCartCount();
 
   useEffect(() => {
@@ -63,6 +63,7 @@ const EcomNavbar = () => {
     setUser(null);
     setShowUserMenu(false);
     setShowLogoutConfirm(false);
+    clearCart();
     router.push("/login");
   };
 

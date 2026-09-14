@@ -122,7 +122,7 @@ const ProfilePage = () => {
   const [submittingCancel, setSubmittingCancel] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const router = useRouter();
-  const { addOrderItemsToCart } = useCart();
+  const { addOrderItemsToCart, clearCart } = useCart();
 
   useEffect(() => {
     const userStr = getUser();
@@ -277,6 +277,7 @@ const ProfilePage = () => {
 
   const handleLogout = () => {
     clearAuth();
+    clearCart();
     router.push("/login");
   };
 

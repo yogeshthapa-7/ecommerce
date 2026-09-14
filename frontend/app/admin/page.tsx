@@ -18,6 +18,7 @@ import {
 
 import axios from "axios"
 import { motion } from "motion/react"
+import { useCart } from "@/app/context/CartContext";
 import Image from "next/image"
 import BarGraph from "@/components/bargraph"
 import { useEffect, useState } from "react"
@@ -40,6 +41,7 @@ import { getUser, clearAuth } from "@/lib/auth";
 const AdminDashboardPage = () => {
   // --- STATE ---
   const router = useRouter()
+  const { clearCart } = useCart()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<DashboardOrder | null>(null)
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
@@ -340,6 +342,7 @@ const AdminDashboardPage = () => {
         cancelLabel="Cancel"
         onConfirm={() => {
           clearAuth()
+          clearCart()
           setIsLogoutDialogOpen(false)
           router.push("/login")
         }}
