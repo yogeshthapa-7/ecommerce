@@ -51,20 +51,20 @@ const toArray = (value: unknown): unknown[] => {
 const normalizeText = (value: unknown): string =>
   String(value ?? "").trim();
 
-function buildCatalogSummary(products: unknown[]): unknown[] {
-  return products.map((p: any) => ({
-    id: p._id || p.id,
-    name: p.name,
-    price: `${p.price}`,
-    currency: p.currency || "$",
-    category: p.category,
-    gender: p.gender,
-    stock: p.in_stock === false ? "Out of Stock" : "In Stock",
-    colors: Array.isArray(p.colors)
-      ? p.colors.map((c: any) => c?.name).filter(Boolean).join(", ")
-      : "",
-    sizes: Array.isArray(p.sizes) ? p.sizes : [],
-  }));
+function buildCatalogSummary(products: unknown[]): string {
+  const inStock = products.filter((p: any) => p.in_stock !== false);
+  return inStock
+    .map((p: any) => {
+      const name = p.name || "Unknown";
+      const price = `${p.currency || "$"}${p.price}`;
+      const stock = p.in_stock === false ? "Out of Stock" : "In Stock";
+      const colors = Array.isArray(p.colors)
+        ? p.colors.map((c: any) => c?.name).filter(Boolean).join(", ")
+        : "not listed";
+      const sizes = Array.isArray(p.sizes) ? p.sizes.join(", ") : "not listed";
+      return `- ${name} | ${price} | ${stock} | colors: ${colors} | sizes: ${sizes}`;
+    })
+    .join("\n");
 }
 
 export async function POST(req: NextRequest) {
@@ -144,8 +144,6 @@ export async function POST(req: NextRequest) {
       console.error("Failed to fetch store context:", err);
     }
 
-    const catalogSummary = buildCatalogSummary(products);
-
     const categorySummary = (categories as any[])
       .map((c: any) => c?.name)
       .filter(Boolean);
@@ -162,37 +160,54 @@ Be concise but friendly. Do not invent products or prices.
 
 CURRENT STORE INVENTORY:
 Categories available: ${categorySummary.join(", ") || "None loaded"}
-Products available:
-${JSON.stringify(catalogSummary, null, 2)}
+Products available (IN STOCK ONLY):
+${buildCatalogSummary(products) || "No products loaded"}
 
 CORE DIRECTIVES:
 1. Only answer shopping questions using the provided store inventory.
 2. If a customer asks about a product we do not have, politely say we do not carry it and suggest related catalog items.
 3. If asked about prices, give exact prices from the inventory.
-4. If asked about stock, colors, sizes, genders, or categories, use the inventory fields.
+4. If asked about stock, colors, sizes, genders, or categories, use the inventory fields. Count ONLY items marked "In Stock" when answering stock/count questions.
 5. Use the conversation history. If the latest message is a follow-up like "black and size 9", connect it to the earlier product/cart request.
 6. If a customer wants to add something to cart but product, color, or size is missing, ask only for the missing details.
 7. If product, color, and size are all clear, confirm the exact item and tell them you can add it to the cart from this chat.
 8. Do not answer unrelated non-shopping questions; steer back to shopping.`;
 
     try {
-      const response = await openai.chat.completions.create({
-        model: "openai/gpt-oss-20b",
-        messages: [
-          { role: "system", content: systemInstruction },
-          ...safeHistory.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          })),
-          { role: "user", content: safeQuery },
-        ],
+      const callGroq = async () => {
+        const response = await openai.chat.completions.create({
+          model: "openai/gpt-oss-20b",
+          messages: [
+            { role: "system", content: systemInstruction },
+            ...safeHistory.map((msg) => ({
+              role: msg.role,
+              content: msg.content,
+            })),
+            { role: "user", content: safeQuery },
+          ],
         temperature: 0.7,
-        max_tokens: 1024,
-      });
+        max_tokens: 512,
+        });
 
-      const responseText =
-        response.choices[0]?.message?.content ||
-        "Unable to get a response. Please try again.";
+        console.log("Groq raw response:", JSON.stringify({
+          finishReason: response.choices[0]?.finish_reason,
+          content: response.choices[0]?.message?.content,
+          usage: response.usage,
+        }, null, 2));
+        return response;
+      };
+
+      let response = await callGroq();
+      let responseText = response.choices[0]?.message?.content;
+
+      if (!responseText || !responseText.trim()) {
+        console.warn("Groq returned empty content, retrying once...");
+        response = await callGroq();
+        responseText = response.choices[0]?.message?.content;
+      }
+
+      responseText =
+        responseText || "Unable to get a response. Please try again.";
 
       return NextResponse.json({
         answer: responseText,
