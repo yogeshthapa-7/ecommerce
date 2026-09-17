@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useCart } from "@/app/context/CartContext";
+import { getToken } from "@/lib/auth";
 
 interface Message {
   role: "user" | "assistant";
@@ -22,7 +23,13 @@ export default function AssistantChat() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+    setMessages([
+      {
+        role: "assistant",
+        text: "Hey there! 👋 Welcome to Nike. I'm your personal shopping assistant. How can I help you today?",
+      },
+    ]);
+  }, []);
 
   async function sendMessage() {
     if (!input.trim()) return;
@@ -37,7 +44,10 @@ export default function AssistantChat() {
     try {
       const res = await fetch("/api/assistant", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
         body: JSON.stringify({
           query,
           history: nextMessages.slice(-10),

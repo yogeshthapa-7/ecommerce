@@ -53,20 +53,19 @@ const getTotalStock = (product: Product) => {
   return colorStock + (product.stockQuantity || 0);
 };
 
-const parseWishlist = (): Product[] => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem("wishlist") || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
 const formatPrice = (product: Product) => {
   const price = Number(product.price ?? 0);
   const safePrice = Number.isFinite(price) ? price : 0;
 
   return `${product.currency || "$"}${safePrice.toFixed(2)}`;
+};
+
+const getApiUrl = () => {
+  let apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  if (apiBaseUrl.endsWith("/api")) {
+    apiBaseUrl = apiBaseUrl.slice(0, -4);
+  }
+  return apiBaseUrl;
 };
 
 const ProductDetailPage = () => {
@@ -103,12 +102,23 @@ const ProductDetailPage = () => {
           defaultColor?.image_url || foundProduct.image_url || fallbackProductImage,
         );
 
-        const wishlist = parseWishlist();
-        setIsWishlisted(
-          wishlist.some(
-            (item) => getProductId(item) === getProductId(foundProduct),
-          ),
-        );
+        const token = getToken();
+        if (token) {
+          try {
+            const wishlistRes = await fetch(`${getApiUrl()}/api/wishlist`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (wishlistRes.ok) {
+              const wishlistData = await wishlistRes.json();
+              const isInWishlist = (wishlistData.items || []).some(
+                (item: any) => item.productId === getProductId(foundProduct)
+              );
+              setIsWishlisted(isInWishlist);
+            }
+          } catch {
+            setIsWishlisted(false);
+          }
+        }
       } catch (error) {
         console.error("Error fetching product:", error);
         setProduct(null);
@@ -155,29 +165,53 @@ const ProductDetailPage = () => {
     setCurrentImage(color.image_url || product?.image_url || fallbackProductImage);
   };
 
-  const toggleWishlist = () => {
+  const toggleWishlist = async () => {
     if (!product) return;
 
-    const wishlist = parseWishlist();
-    const productId = getProductId(product);
+    const token = getToken();
 
-    if (isWishlisted) {
-      const updatedWishlist = wishlist.filter((item) => getProductId(item) !== productId);
-      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-      setIsWishlisted(false);
+    if (!token) {
+      router.push("/login?redirect=/nike/products/" + id);
       return;
     }
 
-    wishlist.push({
-      _id: product._id,
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image_url: product.image_url,
-      currency: product.currency,
-    });
-    localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    setIsWishlisted(true);
+    const productId = getProductId(product);
+    const isInWishlist = isWishlisted;
+
+    try {
+      if (isInWishlist) {
+        await fetch(`${getApiUrl()}/api/wishlist/remove`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ productId }),
+        });
+        setIsWishlisted(false);
+      } else {
+        await fetch(`${getApiUrl()}/api/wishlist/add`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            productId,
+            name: product.name,
+            price: product.price,
+            currency: product.currency,
+            image_url: product.image_url,
+            category: product.category,
+            gender: product.gender,
+            in_stock: product.in_stock !== false && getTotalStock(product) > 0,
+          }),
+        });
+        setIsWishlisted(true);
+      }
+    } catch (error) {
+      console.error("Wishlist error:", error);
+    }
   };
 
   if (loading) {
@@ -225,25 +259,26 @@ const ProductDetailPage = () => {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.08),transparent_50%)]" />
               <div className="absolute left-1/2 top-1/2 h-[70%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.03] blur-3xl" />
 
-              <button
-                type="button"
-                onClick={toggleWishlist}
-                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                className="absolute right-5 top-5 z-20 grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/5 text-white shadow-lg shadow-black/40 transition hover:border-white/20 hover:bg-white hover:text-black"
-              >
-                <Heart
-                  className={`h-5 w-5 ${isWishlisted ? "fill-white text-white" : ""}`}
-                />
-              </button>
-
-              {(!product.in_stock || getTotalStock(product) <= 0) && (
-                <div className="absolute left-5 top-5 z-20 rounded-full bg-red-500 px-4 py-2 text-xs font-black uppercase text-white">
-                  Sold Out
-                </div>
+               {(!product.in_stock || getTotalStock(product) <= 0) && (
+                <button
+                  type="button"
+                  onClick={toggleWishlist}
+                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                  className="absolute right-5 top-5 z-20 grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/5 text-white shadow-lg shadow-black/40 transition hover:border-white/20 hover:bg-white hover:text-black"
+                >
+                  <Heart
+                    className={`h-5 w-5 ${isWishlisted ? "fill-white text-white" : ""}`}
+                  />
+                </button>
               )}
 
-              <div className="relative z-10 flex h-full min-h-[340px] items-center justify-center sm:min-h-[480px]">
-                <div className="absolute left-1/2 top-1/2 h-[60%] w-[60%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.06] blur-3xl" />
+               {(!product.in_stock || getTotalStock(product) <= 0) && (
+                 <div className="absolute left-5 top-5 z-20 rounded-full bg-red-500 px-4 py-2 text-xs font-black uppercase text-white">
+                   Sold Out
+                 </div>
+               )}
+
+               <div className="relative z-10 flex h-full min-h-[340px] items-center justify-center sm:min-h-[480px]">
                 <img
                   src={productImage}
                   alt={product.name || "Product"}
@@ -254,7 +289,7 @@ const ProductDetailPage = () => {
               </div>
 
               {availableColors.length > 0 && (
-                <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+                <div className="absolute top-16 left-4 z-20 flex flex-col gap-2">
                   {availableColors.map((color, index) => {
                     const isSelected = selectedColor === color;
                     const colorImage = color.image_url || product.image_url || fallbackProductImage;

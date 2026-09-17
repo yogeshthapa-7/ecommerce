@@ -54,6 +54,8 @@ app.use('/api/password-reset', require('./routes/passwordResetRoutes'));
 app.use('/api/audit', require('./routes/auditRoutes'));
 app.use('/api/sales', require('./routes/salesRoutes'));
 app.use('/api/stock', require('./routes/stockRoutes'));
+app.use('/api/cart', require('./routes/cartRoutes'));
+app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 
 // Health check
 app.get('/', (req, res) => {

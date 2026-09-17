@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import {
   ShoppingBag,
   Star,
-  Heart,
   Search,
   ArrowLeft,
 } from 'lucide-react';
@@ -84,17 +83,6 @@ const {
       href={`/nike/products/${product._id || product.id}`}
       className="group relative bg-gradient-to-b from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800 hover:border-red-500/50 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-red-500/20 cursor-pointer"
     >
-      {/* Wishlist Button */}
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('Added to wishlist:', product._id || product.id);
-        }}
-        className="absolute top-4 right-4 z-10 p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-red-500 transition-colors group/heart"
-      >
-        <Heart className="w-5 h-5 group-hover/heart:fill-white" />
-      </button>
 
       {/* Product Image */}
       <div className="aspect-square overflow-hidden bg-gray-800">
