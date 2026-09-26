@@ -156,27 +156,28 @@ export const NikeOrderEmail = ({
                             {items.length} item{items.length === 1 ? '' : 's'} in this order
                         </Text>
 
-                        {items.length > 0 ? (
-                            items.map((item, index) => {
-                                const lineTotal = Number(item.price || 0) * Number(item.quantity || 0);
+                         {items.length > 0 ? (
+                             items.map((item, index) => {
+                                 const lineTotal = Number(item.price || 0) * Number(item.quantity || 0);
+                                 const productImage = item.image;
 
-                                return (
-                                    <Section key={`${item.name}-${index}`} style={productRow}>
-                                        <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} border={0} style={{ borderCollapse: 'collapse' }}>
-                                            <tr>
-                                                <td width="84" valign="top" style={{ paddingRight: '16px', textAlign: 'left' }}>
-                                                    {item.image ? (
-                                                        <Img
-                                                            src={item.image}
-                                                            alt={item.name}
-                                                            width="84"
-                                                            height="84"
-                                                            style={{ display: 'block', width: '84px', height: '84px', objectFit: 'contain', borderRadius: '16px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}
-                                                        />
-                                                    ) : (
-                                                        <div style={{ display: 'inline-block', width: '84px', height: '84px', lineHeight: '84px', textAlign: 'center', borderRadius: '16px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff', color: '#a1a1aa', fontSize: '20px', fontWeight: '900', letterSpacing: '0.08em' }}>NIKE</div>
-                                                    )}
-                                                </td>
+                                 return (
+                                     <Section key={`${item.name}-${index}`} style={productRow}>
+                                         <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} border={0} style={{ borderCollapse: 'collapse' }}>
+                                             <tr>
+                                                 <td width="84" valign="top" style={{ paddingRight: '16px', textAlign: 'left' }}>
+                                                     {productImage ? (
+                                                         <Img
+                                                             src={productImage}
+                                                             alt={item.name}
+                                                             width="84"
+                                                             height="84"
+                                                             style={{ display: 'block', width: '84px', height: '84px', objectFit: 'contain', borderRadius: '16px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff' }}
+                                                         />
+                                                     ) : (
+                                                         <div style={{ display: 'inline-block', width: '84px', height: '84px', lineHeight: '84px', textAlign: 'center', borderRadius: '16px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff', color: '#a1a1aa', fontSize: '20px', fontWeight: '900', letterSpacing: '0.08em' }}>NIKE</div>
+                                                     )}
+                                                 </td>
                                                 <td valign="top" style={{ textAlign: 'left', paddingRight: '16px' }}>
                                                     <Text style={productName}>{item.name}</Text>
                                                     <Text style={productMeta}>

@@ -17,12 +17,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
 import { useCart } from "@/app/context/CartContext";
+import { getToken } from "@/lib/auth";
 
 type ProductColor = {
   name?: string;
   image_url?: string;
+  stockQuantity?: number;
 };
 
 type Product = {
@@ -47,13 +48,9 @@ const fallbackProductImage = "/assets/nike-hero/nike6-transparent.png";
 
 const getProductId = (product: Product) => product._id || product.id || "";
 
-const parseWishlist = (): Product[] => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem("wishlist") || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+const getTotalStock = (product: Product) => {
+  const colorStock = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
+  return colorStock + (product.stockQuantity || 0);
 };
 
 const formatPrice = (product: Product) => {
@@ -61,6 +58,14 @@ const formatPrice = (product: Product) => {
   const safePrice = Number.isFinite(price) ? price : 0;
 
   return `${product.currency || "$"}${safePrice.toFixed(2)}`;
+};
+
+const getApiUrl = () => {
+  let apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  if (apiBaseUrl.endsWith("/api")) {
+    apiBaseUrl = apiBaseUrl.slice(0, -4);
+  }
+  return apiBaseUrl;
 };
 
 const ProductDetailPage = () => {
@@ -97,12 +102,23 @@ const ProductDetailPage = () => {
           defaultColor?.image_url || foundProduct.image_url || fallbackProductImage,
         );
 
-        const wishlist = parseWishlist();
-        setIsWishlisted(
-          wishlist.some(
-            (item) => getProductId(item) === getProductId(foundProduct),
-          ),
-        );
+        const token = getToken();
+        if (token) {
+          try {
+            const wishlistRes = await fetch(`${getApiUrl()}/api/wishlist`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (wishlistRes.ok) {
+              const wishlistData = await wishlistRes.json();
+              const isInWishlist = (wishlistData.items || []).some(
+                (item: any) => item.productId === getProductId(foundProduct)
+              );
+              setIsWishlisted(isInWishlist);
+            }
+          } catch {
+            setIsWishlisted(false);
+          }
+        }
       } catch (error) {
         console.error("Error fetching product:", error);
         setProduct(null);
@@ -125,7 +141,7 @@ const ProductDetailPage = () => {
   }, [product]);
 
   const handleAddToCart = () => {
-    const token = localStorage.getItem("token");
+    const token = getToken();
 
     if (!token) {
       router.push("/login?redirect=/nike/products/" + id);
@@ -149,29 +165,53 @@ const ProductDetailPage = () => {
     setCurrentImage(color.image_url || product?.image_url || fallbackProductImage);
   };
 
-  const toggleWishlist = () => {
+  const toggleWishlist = async () => {
     if (!product) return;
 
-    const wishlist = parseWishlist();
-    const productId = getProductId(product);
+    const token = getToken();
 
-    if (isWishlisted) {
-      const updatedWishlist = wishlist.filter((item) => getProductId(item) !== productId);
-      localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-      setIsWishlisted(false);
+    if (!token) {
+      router.push("/login?redirect=/nike/products/" + id);
       return;
     }
 
-    wishlist.push({
-      _id: product._id,
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image_url: product.image_url,
-      currency: product.currency,
-    });
-    localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    setIsWishlisted(true);
+    const productId = getProductId(product);
+    const isInWishlist = isWishlisted;
+
+    try {
+      if (isInWishlist) {
+        await fetch(`${getApiUrl()}/api/wishlist/remove`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ productId }),
+        });
+        setIsWishlisted(false);
+      } else {
+        await fetch(`${getApiUrl()}/api/wishlist/add`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            productId,
+            name: product.name,
+            price: product.price,
+            currency: product.currency,
+            image_url: product.image_url,
+            category: product.category,
+            gender: product.gender,
+            in_stock: product.in_stock !== false && getTotalStock(product) > 0,
+          }),
+        });
+        setIsWishlisted(true);
+      }
+    } catch (error) {
+      console.error("Wishlist error:", error);
+    }
   };
 
   if (loading) {
@@ -200,7 +240,6 @@ const ProductDetailPage = () => {
 
   return (
     <div className="min-h-screen overflow-hidden bg-black text-white">
-      <EcomNavbar />
 
       <main className="relative pt-24">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_18%,rgba(255,255,255,0.06),transparent_28%),linear-gradient(180deg,#0a0a0a_0%,#000000_68%,#000000_100%)]" />
@@ -220,25 +259,26 @@ const ProductDetailPage = () => {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.08),transparent_50%)]" />
               <div className="absolute left-1/2 top-1/2 h-[70%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.03] blur-3xl" />
 
-              <button
-                type="button"
-                onClick={toggleWishlist}
-                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                className="absolute right-5 top-5 z-20 grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/5 text-white shadow-lg shadow-black/40 transition hover:border-white/20 hover:bg-white hover:text-black"
-              >
-                <Heart
-                  className={`h-5 w-5 ${isWishlisted ? "fill-white text-white" : ""}`}
-                />
-              </button>
-
-              {!product.in_stock && (
-                <div className="absolute left-5 top-5 z-20 rounded-full bg-red-500 px-4 py-2 text-xs font-black uppercase text-white">
-                  Sold Out
-                </div>
+               {(!product.in_stock || getTotalStock(product) <= 0) && (
+                <button
+                  type="button"
+                  onClick={toggleWishlist}
+                  aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                  className="absolute right-5 top-5 z-20 grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/5 text-white shadow-lg shadow-black/40 transition hover:border-white/20 hover:bg-white hover:text-black"
+                >
+                  <Heart
+                    className={`h-5 w-5 ${isWishlisted ? "fill-white text-white" : ""}`}
+                  />
+                </button>
               )}
 
-              <div className="relative z-10 flex h-full min-h-[340px] items-center justify-center sm:min-h-[480px]">
-                <div className="absolute left-1/2 top-1/2 h-[60%] w-[60%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.06] blur-3xl" />
+               {(!product.in_stock || getTotalStock(product) <= 0) && (
+                 <div className="absolute left-5 top-5 z-20 rounded-full bg-red-500 px-4 py-2 text-xs font-black uppercase text-white">
+                   Sold Out
+                 </div>
+               )}
+
+               <div className="relative z-10 flex h-full min-h-[340px] items-center justify-center sm:min-h-[480px]">
                 <img
                   src={productImage}
                   alt={product.name || "Product"}
@@ -247,14 +287,9 @@ const ProductDetailPage = () => {
                   className="relative z-10 max-h-[440px] w-full max-w-[760px] object-contain [filter:contrast(1.05)_saturate(1.05)_drop-shadow(0_30px_50px_rgba(0,0,0,0.6))] sm:max-h-[560px]"
                 />
               </div>
-            </div>
 
-            {availableColors.length > 0 && (
-              <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/[0.02] p-4 shadow-xl shadow-black/20">
-                <p className="mb-4 text-[10px] font-black uppercase tracking-[0.24em] text-white/50">
-                  Choose Color
-                </p>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {availableColors.length > 0 && (
+                <div className="absolute top-16 left-4 z-20 flex flex-col gap-2">
                   {availableColors.map((color, index) => {
                     const isSelected = selectedColor === color;
                     const colorImage = color.image_url || product.image_url || fallbackProductImage;
@@ -264,43 +299,26 @@ const ProductDetailPage = () => {
                         key={`${color.name || "color"}-${index}`}
                         type="button"
                         onClick={() => handleColorChange(color)}
-                        className={`group flex items-center gap-4 rounded-[1.25rem] border p-3 text-left transition ${
+                        className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 transition ${
                           isSelected
-                            ? "border-white bg-white text-black shadow-[0_16px_35px_rgba(255,255,255,0.15)]"
-                            : "border-white/10 bg-white/[0.04] text-white/70 hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+                            ? "border-white shadow-[0_0_12px_rgba(255,255,255,0.4)]"
+                            : "border-white/20 hover:border-white/60"
                         }`}
+                        title={color.name || `Color ${index + 1}`}
                       >
-                        <span
-                          className={`grid h-16 w-20 shrink-0 place-items-center overflow-hidden rounded-2xl ${
-                            isSelected ? "bg-black/10" : "bg-white/5"
-                          }`}
-                        >
-                          <img
-                            src={colorImage}
-                            alt=""
-                            loading="lazy"
-                            decoding="async"
-                            className="h-full w-full object-contain p-1.5"
-                          />
-                        </span>
-                        <span className="min-w-0 text-sm font-black uppercase leading-tight">
-                          {(color.name || `Color ${index + 1}`)
-                            .split("/")
-                            .map((part, partIndex) => (
-                              <span key={`${part}-${partIndex}`} className="block">
-                                {part}
-                              </span>
-                            ))}
-                        </span>
-                        {isSelected && (
-                          <Check className="ml-auto h-5 w-5 shrink-0 text-black" />
-                        )}
+                        <img
+                          src={colorImage}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-cover"
+                        />
                       </button>
                     );
                   })}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           <aside className="relative">
@@ -317,6 +335,12 @@ const ProductDetailPage = () => {
               <h1 className="max-w-2xl text-5xl font-black uppercase leading-[0.88] tracking-tight sm:text-6xl lg:text-7xl">
                 {product.name || "Nike Product"}
               </h1>
+
+              {selectedColor && (
+                <p className="mt-3 text-sm font-black uppercase tracking-[0.18em] text-white/70">
+                  {selectedColor.name}
+                </p>
+              )}
 
               <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
                 <div>
@@ -340,20 +364,16 @@ const ProductDetailPage = () => {
 
               <div className="mt-6 flex items-center gap-3">
                 <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    product.in_stock ? "bg-emerald-400" : "bg-red-500"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full ${(product.in_stock !== false && getTotalStock(product) > 0) ? "bg-emerald-400" : "bg-red-500"}`}
                 />
                 <span
-                  className={`text-sm font-black uppercase ${
-                    product.in_stock ? "text-emerald-300" : "text-red-400"
-                  }`}
+                  className={`text-sm font-black uppercase ${(product.in_stock !== false && getTotalStock(product) > 0) ? "text-emerald-300" : "text-red-400"}`}
                 >
-                  {product.in_stock ? "In Stock" : "Out of Stock"}
+                  {(product.in_stock !== false && getTotalStock(product) > 0) ? "In Stock" : "Out of Stock"}
                 </span>
               </div>
 
-              {!product.in_stock && isWishlisted && (
+              {(!product.in_stock || getTotalStock(product) <= 0) && isWishlisted && (
                 <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-white/40">
                   <Check className="h-4 w-4 text-red-400" />
                   Added to wishlist. We will notify you when it is back in stock.
@@ -417,20 +437,20 @@ const ProductDetailPage = () => {
                   </button>
                 </div>
 
-                {product.in_stock ? (
-                  <Button
-                    onClick={handleAddToCart}
-                    disabled={availableSizes.length > 0 && !selectedSize}
-                    className={`h-14 flex-1 rounded-full px-8 text-sm font-black uppercase tracking-[0.18em] text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${
-                      addedToCart
-                        ? "bg-emerald-600 hover:bg-emerald-700"
-                        : "bg-white text-black hover:bg-white/90"
-                    }`}
-                  >
-                    {addedToCart ? (
-                      <span className="flex items-center gap-2">
-                        <Check className="h-5 w-5" />
-                        Added
+                 {(product.in_stock !== false && getTotalStock(product) > 0) ? (
+                   <Button
+                     onClick={handleAddToCart}
+                     disabled={availableSizes.length > 0 && !selectedSize}
+                     className={`h-14 flex-1 rounded-full px-8 text-sm font-black uppercase tracking-[0.18em] text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 ${
+                       addedToCart
+                         ? "bg-emerald-600 hover:bg-emerald-700"
+                         : "bg-white text-black hover:bg-white/90"
+                     }`}
+                   >
+                     {addedToCart ? (
+                       <span className="flex items-center gap-2">
+                         <Check className="h-5 w-5" />
+                         Added
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">

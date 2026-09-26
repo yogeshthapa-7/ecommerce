@@ -11,6 +11,7 @@ const {
 } = require('../controllers/orderController');
 const auth = require('../middleware/authMiddleware');
 const adminAuth = require('../middleware/adminMiddleware');
+const audit = require('../middleware/auditMiddleware');
 
 // Public/Admin routes
 router.get('/stats', getStats);
@@ -23,8 +24,8 @@ router.get('/', getOrders);
 router.get('/:id', getOrder);
 
 // Protected routes
-router.post('/', auth, createOrder);
-router.put('/:id', auth, adminAuth, updateOrder);
-router.delete('/:id', auth, deleteOrder);
+router.post('/', auth, audit('Order'), createOrder);
+router.put('/:id', auth, adminAuth, audit('Order'), updateOrder);
+router.delete('/:id', auth, audit('Order'), deleteOrder);
 
 module.exports = router;

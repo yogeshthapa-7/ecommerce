@@ -12,16 +12,19 @@ import {
   CreditCard,
   Calendar,
   Truck,
-  ReceiptText
+  ReceiptText,
+  LogOut
 } from "lucide-react"
 
 import axios from "axios"
 import { motion } from "motion/react"
+import { useCart } from "@/app/context/CartContext";
 import Image from "next/image"
 import BarGraph from "@/components/bargraph"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { PageBody, PageHeader, MetricCard, adminPanel, adminTable, adminHeaderCell, adminCell, secondaryButton, StatusBadge } from "@/components/admin/AdminSurface"
+import { AdminConfirmDialog } from "@/components/admin/AdminSurface"
 import {
   DashboardOrder,
   formatCurrency,
@@ -33,12 +36,15 @@ import {
   getOrderDisplayId,
   getOrderItems,
 } from "@/lib/order-helpers"
+import { getUser, clearAuth } from "@/lib/auth";
 
 const AdminDashboardPage = () => {
   // --- STATE ---
   const router = useRouter()
+  const { clearCart, clearLocalCart } = useCart()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<DashboardOrder | null>(null)
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false)
 
   const [stats, setStats] = useState([
     { title: "Total Revenue", value: 0, prefix: "$", icon: DollarSign, change: "...", bg: "from-orange-500 to-red-600" },
@@ -52,7 +58,7 @@ const AdminDashboardPage = () => {
   // --- FETCH DATA ---
   useEffect(() => {
     // Admin access check
-    const userStr = localStorage.getItem("user")
+    const userStr = getUser();
     if (!userStr) {
       router.push("/login")
       return
@@ -141,10 +147,19 @@ const AdminDashboardPage = () => {
         label="Admin Portal"
         description="Performance overview for revenue, orders, customers, products, and live commerce movement."
         action={
-          <button onClick={handleRefresh} className={secondaryButton}>
-            <RefreshCcw size={18} className={isRefreshing ? "animate-spin" : ""} />
-            {isRefreshing ? "Updating" : "Refresh Data"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={handleRefresh} className={secondaryButton}>
+              <RefreshCcw size={18} className={isRefreshing ? "animate-spin" : ""} />
+              {isRefreshing ? "Updating" : "Refresh Data"}
+            </button>
+            <button
+              onClick={() => setIsLogoutDialogOpen(true)}
+              className={secondaryButton}
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          </div>
         }
       />
 
@@ -318,6 +333,22 @@ const AdminDashboardPage = () => {
           <BarGraph />
         </div>
       </PageBody>
+
+      <AdminConfirmDialog
+        open={isLogoutDialogOpen}
+        title="Confirm Logout"
+        message="Are you sure you want to sign out of the admin panel?"
+        confirmLabel="Logout"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          clearAuth()
+          clearLocalCart()
+          setIsLogoutDialogOpen(false)
+          router.push("/login")
+        }}
+        onClose={() => setIsLogoutDialogOpen(false)}
+        tone="danger"
+      />
 
       {/* ORDER DETAILS MODAL */}
       {selectedOrder && (

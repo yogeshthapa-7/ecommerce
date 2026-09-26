@@ -12,7 +12,6 @@ import {
   Star,
 } from "lucide-react";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
 
 const heroImage =
   "https://img3.wallspic.com/crops/5/5/2/6/4/146255/146255-shoe-black-darkness-nike-graphic_design-3840x2160.jpg";
@@ -104,7 +103,6 @@ const serviceNotes = [
 const NikeHomePage = () => {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black font-sans text-white">
-      <EcomNavbar />
 
       <section className="relative flex min-h-[92vh] items-center overflow-hidden">
         <Image

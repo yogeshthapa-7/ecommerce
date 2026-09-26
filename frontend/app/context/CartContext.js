@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from 'react';
+import { getToken, getUser } from '@/lib/auth';
 
 const CartContext = createContext();
 
@@ -14,42 +15,96 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = localStorage.getItem('nikeCart');
-    if (savedCart) {
+  const isLoggedIn = !!getToken();
+
+  // Load cart from backend when user is logged in, otherwise from localStorage
+  const refreshCart = async () => {
+    const token = getToken();
+    const userStr = getUser();
+    
+    if (token && userStr) {
       try {
-        setCartItems(JSON.parse(savedCart));
+        const user = JSON.parse(userStr);
+        setUserId(user._id || user.id);
+        
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          setCartItems(data.items || []);
+          localStorage.setItem('nikeCart', JSON.stringify(data.items || []));
+        } else {
+          const savedCart = localStorage.getItem('nikeCart');
+          if (savedCart) {
+            setCartItems(JSON.parse(savedCart));
+          }
+        }
       } catch (error) {
-        console.error('Error loading cart:', error);
+        console.error('Error refreshing cart:', error);
+        const savedCart = localStorage.getItem('nikeCart');
+        if (savedCart) {
+          setCartItems(JSON.parse(savedCart));
+        }
+      }
+    } else {
+      setUserId(null);
+      const savedCart = localStorage.getItem('nikeCart');
+      if (savedCart) {
+        try {
+          setCartItems(JSON.parse(savedCart));
+        } catch (error) {
+          console.error('Error loading cart:', error);
+        }
       }
     }
+  };
+
+  useEffect(() => {
+    refreshCart().finally(() => setLoading(false));
   }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('nikeCart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (!loading) {
+      localStorage.setItem('nikeCart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, loading]);
+
+  // Sync cart item to backend
+  const syncToBackend = async (items) => {
+    const token = getToken();
+    if (!token || !userId) return;
+    
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ items })
+      });
+    } catch (error) {
+      console.error('Error syncing cart to backend:', error);
+    }
+  };
 
   // Add item to cart
   const addToCart = (product, selectedColor, selectedSize, quantity = 1) => {
     setCartItems((prevItems) => {
-      // Create a unique identifier for this specific variant
       const cartItemId = `${product._id || product.id}-${selectedColor?.name || 'default'}-${selectedSize}`;
+      const existingItemIndex = prevItems.findIndex((item) => item.cartItemId === cartItemId);
 
-      // Check if this exact variant already exists in cart
-      const existingItemIndex = prevItems.findIndex(
-        (item) => item.cartItemId === cartItemId
-      );
-
+      let updatedItems;
       if (existingItemIndex > -1) {
-        // Update quantity if item exists
-        const updatedItems = [...prevItems];
+        updatedItems = [...prevItems];
         updatedItems[existingItemIndex].quantity += quantity;
-        return updatedItems;
       } else {
-        // Add new item
         const newItem = {
           cartItemId,
           productId: product._id || product.id,
@@ -62,19 +117,23 @@ export const CartProvider = ({ children }) => {
           quantity: quantity,
           category: product.category
         };
-        return [...prevItems, newItem];
+        updatedItems = [...prevItems, newItem];
       }
+
+      syncToBackend(updatedItems);
+      return updatedItems;
     });
 
-    // Open cart sidebar when item is added
     setIsCartOpen(true);
   };
 
   // Remove item from cart
   const removeFromCart = (cartItemId) => {
-    setCartItems((prevItems) =>
-      prevItems.filter((item) => item.cartItemId !== cartItemId)
-    );
+    setCartItems((prevItems) => {
+      const updatedItems = prevItems.filter((item) => item.cartItemId !== cartItemId);
+      syncToBackend(updatedItems);
+      return updatedItems;
+    });
   };
 
   // Update item quantity
@@ -84,18 +143,37 @@ export const CartProvider = ({ children }) => {
       return;
     }
 
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.cartItemId === cartItemId
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
+    setCartItems((prevItems) => {
+      const updatedItems = prevItems.map((item) =>
+        item.cartItemId === cartItemId ? { ...item, quantity: newQuantity } : item
+      );
+      syncToBackend(updatedItems);
+      return updatedItems;
+    });
   };
 
-  // Clear entire cart
-  const clearCart = () => {
+  // Clear entire cart (both localStorage and backend)
+  const clearCart = async () => {
     setCartItems([]);
+    localStorage.removeItem('nikeCart');
+    
+    const token = getToken();
+    if (token && userId) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/clear`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (error) {
+        console.error('Error clearing cart on backend:', error);
+      }
+    }
+  };
+
+  // Clear local cart only (keep backend cart for next login)
+  const clearLocalCart = () => {
+    setCartItems([]);
+    localStorage.removeItem('nikeCart');
   };
 
   // Calculate totals
@@ -132,6 +210,8 @@ export const CartProvider = ({ children }) => {
           nextItems.push(normalizedItem);
         }
       });
+      
+      syncToBackend(nextItems);
       return nextItems;
     });
   };
@@ -145,8 +225,11 @@ export const CartProvider = ({ children }) => {
     removeFromCart,
     updateQuantity,
     clearCart,
+    clearLocalCart,
+    refreshCart,
     getCartTotal,
-    getCartCount
+    getCartCount,
+    loading
   };
 
   return (

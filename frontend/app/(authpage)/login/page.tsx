@@ -16,6 +16,8 @@ import {
 import { AlertCircle, Eye, EyeOff } from "lucide-react"
 import { useEffect, useRef } from "react"
 import toastr from "toastr"
+import { clearAuth, getToken, setAuth } from "@/lib/auth";
+import { useCart } from "@/app/context/CartContext";
 import "toastr/build/toastr.min.css"
 
 // Configure toastr options
@@ -49,6 +51,7 @@ export default function LoginPage() {
   const redirectTo = searchParams.get("redirect") || null
   const toastrInitialized = useRef(false)
   const [showPassword, setShowPassword] = useState(false)
+  const { clearCart, refreshCart } = useCart()
 
   const showToast = (type: 'success' | 'error', message: string, title?: string) => {
     if (toastr) {
@@ -76,6 +79,8 @@ export default function LoginPage() {
       localStorage.removeItem("registeredUser");
       showToast('success', 'Account created! Please sign in.', 'Welcome!')
     }
+
+    clearAuth()
   }, [])
 
 
@@ -105,16 +110,16 @@ export default function LoginPage() {
           return;
         }
 
-        // Login success - save token and user
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // Login success - save token and user based on keepSignedIn preference
+        setAuth(data.token, data.user, values.keepSignedIn);
+        refreshCart();
 
         showToast('success', 'Login successful! Redirecting...', 'Welcome');
 
         // Redirect based on user role or redirect param
         setTimeout(() => {
           if (data.user.role === "admin") {
-            router.push("/admin");
+            window.location.href = "/admin";
           } else if (redirectTo) {
             router.push(redirectTo);
           } else {

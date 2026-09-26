@@ -1,5 +1,8 @@
 import nodemailer from 'nodemailer';
 import { NikeOrderEmail } from '@/emails/NikeOrderEmail';
+import { NikeShippedEmail } from '@/emails/NikeShippedEmail';
+import { NikeDeliveredEmail } from '@/emails/NikeDeliveredEmail';
+import { NikeCancelledEmail } from '@/emails/NikeCancelledEmail';
 import { NextResponse } from 'next/server';
 import { render } from '@react-email/render';
 import { getProductCutoutImage } from '@/app/nike/products/[id]/productImageCutouts';
@@ -25,20 +28,13 @@ const getPublicBaseUrl = (request: Request) => {
     return configuredUrl || requestOrigin || (host ? `${protocol}://${host}` : '');
 };
 
-async function fetchImageAsDataUri(url: string): Promise<string> {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch image');
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const contentType = response.headers.get('content-type') || 'image/png';
-        const base64 = buffer.toString('base64');
-        return `data:${contentType};base64,${base64}`;
-    } catch (error) {
-        console.error('Failed to convert image to data URI:', error);
-        return '';
-    }
-}
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+    },
+});
 
 const resolveEmailImage = async (image: string | undefined, baseUrl: string) => {
     if (!image) return '';
@@ -47,40 +43,28 @@ const resolveEmailImage = async (image: string | undefined, baseUrl: string) => 
 
     if (!normalizedImage) return '';
 
-    if (/^(https?:|cid:|data:)/i.test(normalizedImage)) return normalizedImage;
-
     if (normalizedImage.startsWith('/')) {
-        try {
-            const cleanPath = normalizedImage.split('?')[0];
-            const fullPath = path.join(process.cwd(), 'public', cleanPath);
-            const buffer = await fs.promises.readFile(fullPath);
-            
-            let contentType = 'image/png';
-            if (cleanPath.endsWith('.jpg') || cleanPath.endsWith('.jpeg')) contentType = 'image/jpeg';
-            else if (cleanPath.endsWith('.webp')) contentType = 'image/webp';
-            else if (cleanPath.endsWith('.svg')) contentType = 'image/svg+xml';
-            else if (cleanPath.endsWith('.gif')) contentType = 'image/gif';
-
-            const base64 = buffer.toString('base64');
-            return `data:${contentType};base64,${base64}`;
-        } catch (error) {
-            console.error('Failed to read local image for email:', error);
-        }
-    }
-
-    if (baseUrl) {
-        try {
-            const resolved = new URL(normalizedImage, baseUrl).toString();
-            if (resolved.includes('localhost') || resolved.includes('127.0.0.1')) {
-                return await fetchImageAsDataUri(resolved);
+        if (baseUrl) {
+            try {
+                return new URL(normalizedImage, baseUrl).toString();
+            } catch {
+                return normalizedImage;
             }
-            return resolved;
-        } catch {
-            return normalizedImage;
         }
+        return normalizedImage;
     }
 
-    return normalizedImage;
+    if (/^(data:|cid:)/i.test(normalizedImage)) {
+        if (/^data:/i.test(normalizedImage)) {
+            const base64Data = normalizedImage.split(',')[1];
+            if (base64Data && base64Data.length > 10000) {
+                return '';
+            }
+        }
+        return normalizedImage;
+    }
+
+    return '';
 };
 
 export async function POST(request: Request) {
@@ -103,8 +87,15 @@ export async function POST(request: Request) {
             totalAmount,
             items,
             cartItems,
+            status = 'Processing',
+            trackingNumber,
+            carrier,
+            estimatedDelivery,
+            cancelReason,
+            refundAmount,
+            refundMethod,
         } = await request.json();
-        console.log('Attempting to send email via Gmail to:', email);
+        console.log(`Attempting to send email via Gmail to: ${email} for status: ${status}`);
 
         const resolvedItems: OrderEmailItem[] = Array.isArray(items)
             ? items
@@ -120,7 +111,7 @@ export async function POST(request: Request) {
         console.log(`Sending email for ${resolvedItems.length} order items`);
         const publicBaseUrl = getPublicBaseUrl(request);
         const emailItems = await Promise.all(
-            resolvedItems.map(async (item, index) => {
+            resolvedItems.map(async (item) => {
                 const resolvedImage = await resolveEmailImage(item.image, publicBaseUrl);
                 return {
                     ...item,
@@ -131,44 +122,65 @@ export async function POST(request: Request) {
 
         console.log('Email items prepared:', emailItems.map(i => ({ name: i.name, hasImage: !!i.image })));
 
-        const emailHtml = await render(
-            NikeOrderEmail({
-                customerName,
-                orderId: orderId || `NX-${Math.floor(100000 + Math.random() * 900000)}`,
-                orderDate,
-                paymentMethod,
-                subtotal,
-                tax,
-                shipping,
-                discount,
-                totalAmount,
-                items: emailItems,
-            })
-        );
+        const baseEmailProps = {
+            customerName,
+            orderId: orderId || `NX-${Math.floor(100000 + Math.random() * 900000)}`,
+            orderDate,
+            paymentMethod,
+            subtotal,
+            tax,
+            shipping,
+            discount,
+            totalAmount,
+            items: emailItems,
+        };
 
-        console.log('Rendered email HTML length:', emailHtml.length, 'chars for', emailItems.length, 'items');
-        const productRowCount = (emailHtml.match(/borderTop/g) || []).length;
-        console.log('Product rows in HTML:', productRowCount);
+        const normalizedStatus = String(status || 'Processing').toLowerCase();
+        let emailComponent;
+        let subject: string;
 
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.GMAIL_USER,
-                pass: process.env.GMAIL_APP_PASSWORD,
-            },
-        });
+        if (normalizedStatus === 'shipped') {
+            emailComponent = NikeShippedEmail({
+                ...baseEmailProps,
+                trackingNumber,
+                carrier,
+                estimatedDelivery,
+            });
+            subject = `Your order has shipped - ${baseEmailProps.orderId}`;
+        } else if (normalizedStatus === 'delivered') {
+            emailComponent = NikeDeliveredEmail({
+                ...baseEmailProps,
+                deliveryDate: orderDate || estimatedDelivery,
+            });
+            subject = `Your order has been delivered - ${baseEmailProps.orderId}`;
+        } else if (normalizedStatus === 'cancelled' || normalizedStatus === 'canceled') {
+            emailComponent = NikeCancelledEmail({
+                ...baseEmailProps,
+                cancelReason,
+                refundAmount,
+                refundMethod,
+            });
+            subject = `Your order has been cancelled - ${baseEmailProps.orderId}`;
+        } else {
+            emailComponent = NikeOrderEmail(baseEmailProps);
+            subject = `Order Confirmation - ${baseEmailProps.orderId}`;
+        }
+
+        const emailHtml = await render(emailComponent);
+
+        console.log(`Rendered ${normalizedStatus} email HTML length:`, emailHtml.length, 'chars for', emailItems.length, 'items');
 
         const mailOptions = {
             from: `"Nike Store" <${process.env.GMAIL_USER}>`,
             to: email,
-            subject: 'Order Confirmation - Nike Store',
+            subject,
             html: emailHtml,
         };
 
         const info = await transporter.sendMail(mailOptions);
         console.log('Email sent successfully:', info.messageId);
 
-        return NextResponse.json({ success: true, messageId: info.messageId });
+        return NextResponse.json({ success: true, messageId: info.messageId, status: normalizedStatus });
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown email error';
         console.error('Nodemailer Error:', message);

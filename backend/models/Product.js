@@ -11,12 +11,16 @@ const productSchema = new mongoose.Schema({
     reviews_count: { type: Number, default: 0 },
     colors: [{
         name: String,
-        image_url: String
+        image_url: String,
+        stockQuantity: { type: Number, default: 0 }
     }],
     description: { type: String, default: '' },
     image_url: { type: String, default: '' },
     in_stock: { type: Boolean, default: true },
-    sizes: [mongoose.Schema.Types.Mixed]
+    sizes: [mongoose.Schema.Types.Mixed],
+    stockQuantity: { type: Number, default: 0 },
+    lowStockThreshold: { type: Number, default: 5 },
+    lastStockUpdate: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

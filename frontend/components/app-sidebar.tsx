@@ -1,11 +1,16 @@
 import {
-  Calendar,
+  ArrowLeftRight,
+  BarChart3,
   ClipboardCheck,
+  ClipboardList,
   Home,
   Inbox,
   PackageSearch,
+  RotateCcw,
   Settings,
   UsersRound,
+  Warehouse,
+  XCircle,
 } from "lucide-react"
 
 import {
@@ -13,7 +18,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -21,9 +25,15 @@ import {
 
 const items = [
   { title: "Dashboard", url: "/admin", icon: Home },
+  { title: "Sales", url: "/admin/sales", icon: BarChart3 },
+  { title: "Audit Log", url: "/admin/audit", icon: ClipboardList },
+  { title: "Stock", url: "/admin/stock", icon: Warehouse },
   { title: "Category", url: "/admin/categories", icon: Inbox },
   { title: "Customers", url: "/admin/customers", icon: UsersRound },
   { title: "Orders", url: "/admin/orders", icon: ClipboardCheck },
+  { title: "Returns", url: "/admin/returns", icon: RotateCcw },
+  { title: "Exchanges", url: "/admin/exchanges", icon: ArrowLeftRight },
+  { title: "Cancellations", url: "/admin/cancellations", icon: XCircle },
   { title: "Products", url: "/admin/products", icon: PackageSearch },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ]
@@ -48,7 +58,7 @@ export function AppSidebar() {
           <SidebarGroupContent className="px-3 py-4 group-data-[collapsible=icon]:px-2">
 
             <SidebarMenu className="space-y-1">
-              {items.map((item, idx) => (
+              {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <a

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { User, Lock, Shield, AlertTriangle, Camera, CheckCircle, XCircle } from "lucide-react"
 import { AdminConfirmDialog, PageBody, PageHeader, adminPanel, fieldClass, labelClass } from "@/components/admin/AdminSurface"
+import { getToken } from "@/lib/auth";
 const AdminSettingsPage = () => {
   const router = useRouter()
   // --- STATE MANAGEMENT ---
@@ -34,7 +35,7 @@ const AdminSettingsPage = () => {
   // --- FETCH USER DATA ---
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("token")
+      const token = getToken()
       if (!token) {
         router.push("/login")
         return
@@ -94,7 +95,7 @@ const AdminSettingsPage = () => {
       return
     }
 
-    const token = localStorage.getItem("token")
+    const token = getToken()
     if (!token) {
       router.push("/login")
       return
@@ -152,7 +153,7 @@ const AdminSettingsPage = () => {
     }
 
     setIsLoading(true)
-    const token = localStorage.getItem("token")
+    const token = getToken()
 
     // Split name into firstName and lastName
     const nameParts = profile.name.trim().split(" ")
@@ -209,7 +210,7 @@ const AdminSettingsPage = () => {
     }
 
     setIsLoading(true)
-    const token = localStorage.getItem("token")
+    const token = getToken()
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/password`, {

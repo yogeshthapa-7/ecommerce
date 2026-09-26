@@ -43,11 +43,19 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/cancellations', require('./routes/cancellationRoutes'));
+app.use('/api/returns', require('./routes/returnRoutes'));
+app.use('/api/exchanges', require('./routes/exchangeRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/password-reset', require('./routes/passwordResetRoutes'));
+app.use('/api/audit', require('./routes/auditRoutes'));
+app.use('/api/sales', require('./routes/salesRoutes'));
+app.use('/api/stock', require('./routes/stockRoutes'));
+app.use('/api/cart', require('./routes/cartRoutes'));
+app.use('/api/wishlist', require('./routes/wishlistRoutes'));
 
 // Health check
 app.get('/', (req, res) => {

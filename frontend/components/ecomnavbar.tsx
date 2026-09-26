@@ -13,26 +13,29 @@ import {
   Users,
   User,
   LogOut,
+  FileText,
 } from 'lucide-react';
 import { useCart } from '@/app/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { getUser, clearAuth } from '@/lib/auth';
+import { ConfirmDialog } from '@/components/ui/sharedcomponents';
 
 const EcomNavbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState<{ firstName?: string; lastName?: string; role?: string } | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const router = useRouter();
 
   // Cart functionality
-  const { setIsCartOpen, getCartCount } = useCart();
+  const { setIsCartOpen, getCartCount, clearLocalCart } = useCart();
   const cartCount = getCartCount();
 
   useEffect(() => {
     // Check for logged in user
-    const userStr = localStorage.getItem("user");
+    const userStr = getUser();
     if (userStr) {
       try {
         const userData = JSON.parse(userStr);
@@ -40,6 +43,8 @@ const EcomNavbar = () => {
       } catch (e) {
         console.error("Error parsing user data", e);
       }
+    } else {
+      setUser(null);
     }
 
     const handleScroll = () => {
@@ -50,10 +55,15 @@ const EcomNavbar = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    clearAuth();
     setUser(null);
     setShowUserMenu(false);
+    setShowLogoutConfirm(false);
+    clearLocalCart();
     router.push("/login");
   };
 
@@ -72,7 +82,7 @@ const EcomNavbar = () => {
     <div>
       {/* NAVBAR */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-black/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${scrolled ? 'bg-black/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
           }`}
       >
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -84,7 +94,7 @@ const EcomNavbar = () => {
                   <span className="text-white cursor-pointer">NIKE</span>
                 </h1>
               </Link>
-              <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium">
+              <nav className="hidden lg:flex items-center space-x-8 text-sm font-medium text-white">
                 <Link
                   href="/nike/products"
                   className="hover:text-gray-300 transition-colors relative group"
@@ -137,7 +147,7 @@ const EcomNavbar = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="hidden md:flex hover:bg-red-500 hover:text-white relative"
+                className="hidden md:flex hover:bg-red-500 text-white font-bold relative"
                 onClick={() => setIsCartOpen(true)}
               >
                 <ShoppingBag className="w-5 h-5" />
@@ -172,18 +182,26 @@ const EcomNavbar = () => {
                         </p>
                         <p className="text-xs text-gray-400">Member</p>
                       </div>
-                      <Link
-                        href="/nike/profile"
-                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <User className="w-4 h-4" />
-                        My Profile
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                      >
+                       <Link
+                         href="/nike/profile"
+                         className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                         onClick={() => setShowUserMenu(false)}
+                       >
+                         <User className="w-4 h-4" />
+                         My Profile
+                       </Link>
+                       <Link
+                         href="/nike/return-policy"
+                         className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                         onClick={() => setShowUserMenu(false)}
+                       >
+                         <FileText className="w-4 h-4" />
+                         Return Policy
+                       </Link>
+                        <button
+                         onClick={() => setShowLogoutConfirm(true)}
+                         className="w-full flex items-center gap-2 px-4 py-3 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                       >
                         <LogOut className="w-4 h-4" />
                         Sign Out
                       </button>
@@ -233,15 +251,21 @@ const EcomNavbar = () => {
               <Link href="/nike/products/category/Kids" className="hover:text-gray-300 transition-colors">
                 Kids
               </Link>
-              <Link
-                href="/nike/products"
-                className="text-red-500 hover:text-red-400 transition-colors font-semibold"
-              >
-                Sale
-              </Link>
+               <Link
+                 href="/nike/products"
+                 className="text-red-500 hover:text-red-400 transition-colors font-semibold"
+               >
+                 Sale
+               </Link>
+               <Link
+                 href="/nike/return-policy"
+                 className="hover:text-gray-300 transition-colors"
+               >
+                 Return Policy
+               </Link>
 
-              {/* Mobile Cart Button */}
-              <button
+               {/* Mobile Cart Button */}
+               <button
                 onClick={() => {
                   setIsCartOpen(true);
                   setMobileMenuOpen(false);
@@ -262,6 +286,15 @@ const EcomNavbar = () => {
           </div>
         )}
       </header>
+
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to sign out of your account?"
+        type="danger"
+      />
     </div>
   );
 };

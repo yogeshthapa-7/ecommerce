@@ -15,7 +15,6 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import EcomNavbar from "@/components/ecomnavbar";
 import EcomFooter from "@/components/ecomfooter";
 
 const tabs = ["Featured", "Innovation", "Athletes", "Sustainability", "Culture"];
@@ -145,7 +144,6 @@ const ExplorePage = () => {
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#050505] text-white">
-      <EcomNavbar />
 
       <main>
         <section className="relative min-h-[92vh] overflow-hidden pt-28">

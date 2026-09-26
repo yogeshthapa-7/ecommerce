@@ -6,17 +6,20 @@ import { Button } from '@/components/ui/button';
 import {
   ShoppingBag,
   Star,
-  Heart,
   Search,
   ArrowLeft,
 } from 'lucide-react';
-import EcomNavbar from '@/components/ecomnavbar';
 import EcomFooter from '@/components/ecomfooter';
 import useSWR from 'swr';
 
 const CategoryPage = () => {
   const params = useParams();
   const categoryParam = params?.category;
+
+  const getTotalStock = (product) => {
+    const colorStock = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
+    return colorStock + (product.stockQuantity || 0);
+  };
 
   const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -80,17 +83,6 @@ const {
       href={`/nike/products/${product._id || product.id}`}
       className="group relative bg-gradient-to-b from-gray-900 to-black rounded-2xl overflow-hidden border border-gray-800 hover:border-red-500/50 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-red-500/20 cursor-pointer"
     >
-      {/* Wishlist Button */}
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('Added to wishlist:', product._id || product.id);
-        }}
-        className="absolute top-4 right-4 z-10 p-2 bg-black/50 backdrop-blur-sm rounded-full hover:bg-red-500 transition-colors group/heart"
-      >
-        <Heart className="w-5 h-5 group-hover/heart:fill-white" />
-      </button>
 
       {/* Product Image */}
       <div className="aspect-square overflow-hidden bg-gray-800">
@@ -132,9 +124,9 @@ const {
 
         {/* Stock Status */}
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${product?.in_stock ? 'bg-green-500' : 'bg-red-500'}`} />
+          <div className={`w-2 h-2 rounded-full ${(product?.in_stock !== false && getTotalStock(product) > 0) ? 'bg-green-500' : 'bg-red-500'}`} />
           <span className="text-xs text-gray-400">
-            {product?.in_stock ? 'In Stock' : 'Out of Stock'}
+            {(product?.in_stock !== false && getTotalStock(product) > 0) ? 'In Stock' : 'Out of Stock'}
           </span>
         </div>
 
@@ -149,12 +141,12 @@ const {
       </div>
 
       {/* Status Badge */}
-      {product?.status === 'active' && product?.in_stock && (
+      {product?.status === 'active' && product?.in_stock && getTotalStock(product) > 0 && (
         <div className="absolute top-4 left-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
           NEW
         </div>
       )}
-      {!product?.in_stock && (
+      {(product?.in_stock === false || getTotalStock(product) <= 0) && (
         <div className="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
           SOLD OUT
         </div>
@@ -164,7 +156,6 @@ const {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <EcomNavbar />
 
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-gradient-to-b from-gray-900 to-black">

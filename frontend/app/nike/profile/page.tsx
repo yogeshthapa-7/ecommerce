@@ -21,6 +21,8 @@ import {
   MapPin,
   Package,
   Phone,
+  RotateCcw,
+  Search,
   Settings,
   Shield,
   ShoppingBag,
@@ -30,7 +32,7 @@ import {
   XCircle,
 } from "lucide-react";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
+import { getToken, getUser, clearAuth } from "@/lib/auth";
 import { useCart } from "@/app/context/CartContext";
 
 interface UserData {
@@ -79,7 +81,12 @@ interface Order {
   date: string;
 }
 
-type TabType = "orders" | "account" | "address" | "payment" | "wishlist" | "settings";
+type TabType = "orders" | "returns" | "exchanges" | "cancellations" | "account" | "address" | "payment" | "wishlist" | "settings";
+
+const getTotalStock = (product: any) => {
+  const colorStock = (product.colors || []).reduce((sum: number, c: any) => sum + (c.stockQuantity || 0), 0);
+  return colorStock + (product.stockQuantity || 0);
+};
 
 const panelClass = "rounded-3xl border border-white/10 bg-zinc-950 p-5 shadow-xl shadow-black/30 md:p-6";
 const labelClass = "text-xs font-black uppercase tracking-[0.18em] text-zinc-500";
@@ -91,11 +98,36 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [orderFilter, setOrderFilter] = useState("all");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [returns, setReturns] = useState<any[]>([]);
+  const [returnModalOrder, setReturnModalOrder] = useState<Order | null>(null);
+  const [returnReason, setReturnReason] = useState("");
+  const [returnDescription, setReturnDescription] = useState("");
+  const [selectedReturnItems, setSelectedReturnItems] = useState<string[]>([]);
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+  const [exchanges, setExchanges] = useState<any[]>([]);
+  const [exchangeModalOrder, setExchangeModalOrder] = useState<Order | null>(null);
+  const [exchangeReason, setExchangeReason] = useState("");
+  const [exchangeDescription, setExchangeDescription] = useState("");
+  const [selectedExchangeItems, setSelectedExchangeItems] = useState<string[]>([]);
+  const [submittingExchange, setSubmittingExchange] = useState(false);
+  const [replacementProducts, setReplacementProducts] = useState<any[]>([]);
+  const [selectedReplacements, setSelectedReplacements] = useState<Record<string, any>>({});
+  const [pickerItemIndex, setPickerItemIndex] = useState<number | null>(null);
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [cancellations, setCancellations] = useState<any[]>([]);
+  const [cancelModalOrder, setCancelModalOrder] = useState<Order | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelDescription, setCancelDescription] = useState("");
+  const [submittingCancel, setSubmittingCancel] = useState(false);
+  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
+  const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const router = useRouter();
-  const { addOrderItemsToCart } = useCart();
+  const { addOrderItemsToCart, clearLocalCart } = useCart();
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
+    const userStr = getUser();
 
     if (!userStr) {
       router.push("/login");
@@ -122,7 +154,7 @@ const ProfilePage = () => {
       apiBaseUrl = apiBaseUrl.slice(0, -4);
     }
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/orders/user/${userId}`, {
@@ -134,7 +166,7 @@ const ProfilePage = () => {
 
         if (allOrdersResponse.ok) {
           const allOrders = await allOrdersResponse.json();
-          const userStr = localStorage.getItem("user");
+          const userStr = getUser();
 
           if (userStr) {
             const userData = JSON.parse(userStr);
@@ -155,9 +187,138 @@ const ProfilePage = () => {
     }
   };
 
+  const fetchReturns = async () => {
+    if (!user) return;
+    const userId = user._id || user.id;
+    if (!userId) return;
+
+    const token = getToken();
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/returns/user/${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReturns(data);
+      }
+    } catch (error) {
+      console.error("Error fetching returns:", error);
+    }
+  };
+
+  const fetchExchanges = async () => {
+    if (!user) return;
+    const userId = user._id || user.id;
+    if (!userId) return;
+
+    const token = getToken();
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exchanges/user/${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setExchanges(data);
+      }
+    } catch (error) {
+      console.error("Error fetching exchanges:", error);
+    }
+  };
+
+  const fetchCancellations = async () => {
+    if (!user) return;
+    const userId = user._id || user.id;
+    if (!userId) return;
+
+    const token = getToken();
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cancellations/user/${userId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCancellations(data);
+      }
+    } catch (error) {
+      console.error("Error fetching cancellations:", error);
+    }
+  };
+
+  const fetchWishlist = async () => {
+    if (!user) return;
+
+    const token = getToken();
+    if (!token) {
+      setWishlist([]);
+      return;
+    }
+
+    setLoadingWishlist(true);
+    try {
+      let apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      if (apiBaseUrl.endsWith("/api")) {
+        apiBaseUrl = apiBaseUrl.slice(0, -4);
+      }
+
+      const res = await fetch(`${apiBaseUrl}/api/wishlist`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWishlist(data.items || []);
+      } else {
+        setWishlist([]);
+      }
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+      setWishlist([]);
+    } finally {
+      setLoadingWishlist(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) fetchReturns();
+  }, [user]);
+
+  useEffect(() => {
+    if (activeTab === "returns" && user) {
+      fetchReturns();
+    }
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    if (activeTab === "exchanges" && user) {
+      fetchExchanges();
+    }
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    if (activeTab === "cancellations" && user) {
+      fetchCancellations();
+    }
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    if (activeTab === "wishlist" && user) {
+      fetchWishlist();
+    }
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && user) {
+        fetchReturns();
+        fetchExchanges();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [user]);
+
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearAuth();
+    clearLocalCart();
     router.push("/login");
   };
 
@@ -179,7 +340,7 @@ const ProfilePage = () => {
       apiBaseUrl = apiBaseUrl.slice(0, -4);
     }
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/orders/${deleteTargetId}`, {
@@ -199,6 +360,249 @@ const ProfilePage = () => {
       console.error("Error deleting order:", error);
     } finally {
       setDeleteTargetId(null);
+    }
+  };
+
+  const openReturnModal = (order: Order) => {
+    setReturnModalOrder(order);
+    setSelectedReturnItems(order.items.map((_, idx) => String(idx)));
+    setReturnReason("");
+    setReturnDescription("");
+  };
+
+  const toggleReturnItem = (idx: number) => {
+    const key = String(idx);
+    setSelectedReturnItems((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
+
+  const submitReturn = async () => {
+    if (!returnModalOrder || !returnReason || selectedReturnItems.length === 0) return;
+    setSubmittingReturn(true);
+
+    try {
+      const token = getToken();
+      const selectedItems = selectedReturnItems
+        .map((idx) => returnModalOrder.items[Number(idx)])
+        .filter(Boolean);
+
+      const totalAmount = selectedItems.reduce(
+        (sum, item) => sum + Number(item.price) * Number(item.quantity),
+        0,
+      );
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/returns`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          orderId: returnModalOrder._id || returnModalOrder.orderId,
+          items: selectedItems.map((item) => ({
+            productId: item.productId,
+            name: item.name,
+            price: Number(item.price),
+            quantity: Number(item.quantity),
+            color: item.color || "",
+            size: item.size || "",
+            image: item.image || "",
+            reason: returnReason,
+          })),
+          totalAmount,
+          reason: returnReason,
+          description: returnDescription,
+          customerName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
+          customerEmail: user?.email || "",
+          userId: user?._id || user?.id,
+        }),
+      });
+
+      if (res.ok) {
+        setReturnModalOrder(null);
+        setSelectedReturnItems([]);
+        setReturnReason("");
+        setReturnDescription("");
+        fetchReturns();
+        setNotification({ message: "Return request submitted successfully", type: "success" });
+      } else {
+        const err = await res.json();
+        setNotification({ message: err.message || "Failed to submit return", type: "error" });
+      }
+    } catch (error) {
+      console.error("Error submitting return:", error);
+      setNotification({ message: "Something went wrong", type: "error" });
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
+
+  const openExchangeModal = (order: Order) => {
+    setExchangeModalOrder(order);
+    setSelectedExchangeItems(order.items.map((_, idx) => String(idx)));
+    setExchangeReason("");
+    setExchangeDescription("");
+  };
+
+  const toggleExchangeItem = (idx: number) => {
+    const key = String(idx);
+    setSelectedExchangeItems((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
+
+  const fetchReplacementProducts = async (query: string) => {
+    setLoadingProducts(true);
+    try {
+      let apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      if (apiBaseUrl.endsWith("/api")) {
+        apiBaseUrl = apiBaseUrl.slice(0, -4);
+      }
+      const url = query
+        ? `${apiBaseUrl}/api/products/search?q=${encodeURIComponent(query)}&inStock=true`
+        : `${apiBaseUrl}/api/products?showAll=true&limit=20`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setReplacementProducts(data.products || data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching replacement products:", error);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const openProductPicker = (idx: number) => {
+    setPickerItemIndex(idx);
+    setProductSearchQuery("");
+    setReplacementProducts([]);
+  };
+
+  const selectReplacementProduct = (idx: number, product: any) => {
+    setSelectedReplacements((prev) => ({
+      ...prev,
+      [String(idx)]: product,
+    }));
+    setPickerItemIndex(null);
+  };
+
+  const removeReplacement = (idx: number) => {
+    setSelectedReplacements((prev) => {
+      const next = { ...prev };
+      delete next[String(idx)];
+      return next;
+    });
+  };
+
+  const submitExchange = async () => {
+    if (!exchangeModalOrder || !exchangeReason || selectedExchangeItems.length === 0) return;
+    setSubmittingExchange(true);
+
+    try {
+      const token = getToken();
+      const selectedItems = selectedExchangeItems
+        .map((idx) => exchangeModalOrder.items[Number(idx)])
+        .filter(Boolean);
+
+      const originalItems = selectedItems.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        price: Number(item.price),
+        quantity: Number(item.quantity),
+        color: item.color || "",
+        size: item.size || "",
+        image: item.image || "",
+      }));
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/exchanges`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          orderId: exchangeModalOrder._id || exchangeModalOrder.orderId,
+          originalItems,
+          requestedItems: [],
+          reason: exchangeReason,
+          description: exchangeDescription,
+          customerName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
+          customerEmail: user?.email || "",
+          userId: user?._id || user?.id,
+        }),
+      });
+
+      if (res.ok) {
+        setExchangeModalOrder(null);
+        setSelectedExchangeItems([]);
+        setExchangeReason("");
+        setExchangeDescription("");
+        setSelectedReplacements({});
+        fetchExchanges();
+        setNotification({ message: "Exchange request submitted successfully", type: "success" });
+      } else {
+        const err = await res.json();
+        setNotification({ message: err.message || "Failed to submit exchange", type: "error" });
+      }
+    } catch (error) {
+      console.error("Error submitting exchange:", error);
+      setNotification({ message: "Something went wrong", type: "error" });
+    } finally {
+      setSubmittingExchange(false);
+    }
+  };
+
+  const openCancelModal = (order: Order) => {
+    setCancelModalOrder(order);
+    setCancelReason("");
+    setCancelDescription("");
+  };
+
+  const submitCancellation = async () => {
+    if (!cancelModalOrder || !cancelReason) return;
+    setSubmittingCancel(true);
+
+    try {
+      const token = getToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cancellations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          orderId: cancelModalOrder._id || cancelModalOrder.orderId,
+          reason: cancelReason,
+          description: cancelDescription,
+          customerName: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
+          customerEmail: user?.email || "",
+          userId: user?._id || user?.id,
+        }),
+      });
+
+      if (res.ok) {
+        setCancelModalOrder(null);
+        setCancelReason("");
+        setCancelDescription("");
+        fetchCancellations();
+        setNotification({ message: "Cancellation request submitted successfully", type: "success" });
+      } else {
+        const err = await res.json();
+        setCancelModalOrder(null);
+        setCancelReason("");
+        setCancelDescription("");
+        setNotification({ message: err.message || "Failed to submit cancellation", type: "error" });
+      }
+    } catch (error) {
+      console.error("Error submitting cancellation:", error);
+      setCancelModalOrder(null);
+      setCancelReason("");
+      setCancelDescription("");
+      setNotification({ message: "Something went wrong", type: "error" });
+    } finally {
+      setSubmittingCancel(false);
     }
   };
 
@@ -245,6 +649,66 @@ const ProfilePage = () => {
         return <XCircle className="h-4 w-4" />;
       default:
         return <Package className="h-4 w-4" />;
+    }
+  };
+
+  const getReturnForOrder = (order: Order) => {
+    const orderReturns = returns
+      .filter((ret) => {
+        const retOrderId = typeof ret.orderId === "object" ? ret.orderId?._id || ret.orderId?.orderId : ret.orderId;
+        return retOrderId === order._id || retOrderId === order.orderId;
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return orderReturns[0] || null;
+  };
+
+  const getExchangeForOrder = (order: Order) => {
+    const orderExchanges = exchanges
+      .filter((exc) => {
+        const excOrderId = typeof exc.orderId === "object" ? exc.orderId?._id || exc.orderId?.orderId : exc.orderId;
+        return excOrderId === order._id || excOrderId === order.orderId;
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return orderExchanges[0] || null;
+  };
+
+  const getCancellationForOrder = (order: Order) => {
+    const orderCancellations = cancellations
+      .filter((can) => {
+        const canOrderId = typeof can.orderId === "object" ? can.orderId?._id || can.orderId?.orderId : can.orderId;
+        return canOrderId === order._id || canOrderId === order.orderId;
+      })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return orderCancellations[0] || null;
+  };
+
+  const getReturnStatusColor = (status: string) => {
+    switch (status) {
+      case "Approved":
+        return "border-emerald-400/30 bg-emerald-400/10 text-emerald-300";
+      case "Rejected":
+        return "border-red-400/30 bg-red-400/10 text-red-300";
+      case "Refunded":
+        return "border-blue-400/30 bg-blue-400/10 text-blue-300";
+      case "Cancelled":
+        return "border-red-500/30 bg-red-500/10 text-red-300";
+      default:
+        return "border-amber-300/30 bg-amber-300/10 text-amber-200";
+    }
+  };
+
+  const getExchangeStatusColor = (status: string) => {
+    switch (status) {
+      case "Approved":
+        return "border-emerald-400/30 bg-emerald-400/10 text-emerald-300";
+      case "Rejected":
+        return "border-red-400/30 bg-red-400/10 text-red-300";
+      case "Completed":
+        return "border-blue-400/30 bg-blue-400/10 text-blue-300";
+      case "Cancelled":
+        return "border-red-500/30 bg-red-500/10 text-red-300";
+      default:
+        return "border-amber-300/30 bg-amber-300/10 text-amber-200";
     }
   };
 
@@ -393,9 +857,177 @@ const ProfilePage = () => {
                           />
                         )}
                       </div>
-                    );
-                  })}
+                  );
+                })}
+              </div>
+
+              {selectedExchangeItems.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-black uppercase tracking-wider text-zinc-400">
+                    Choose Replacement Items
+                  </p>
+                  <div className="space-y-2">
+                    {selectedExchangeItems.map((idx) => {
+                      const item = exchangeModalOrder.items[Number(idx)];
+                      const replacement = selectedReplacements[idx];
+                      return (
+                        <div key={idx} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black px-4 py-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-black uppercase">{item.name}</p>
+                            <p className="text-xs text-zinc-500">
+                              {item.color ? `${item.color}` : ""} {item.size ? `· ${item.size}` : ""}
+                            </p>
+                          </div>
+                          {replacement ? (
+                            <div className="flex items-center gap-2">
+                              <div className="text-right">
+                                <p className="text-xs font-black text-white">{replacement.name}</p>
+                                <p className="text-xs text-emerald-300">${Number(replacement.price || 0).toFixed(2)}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeReplacement(Number(idx))}
+                                className="text-xs font-black uppercase text-red-400 transition-colors hover:text-red-300"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => openProductPicker(Number(idx))}
+                              className="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-blue-300 transition-colors hover:bg-blue-400/20"
+                            >
+                              Choose Replacement
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
+              )}
+
+              {pickerItemIndex !== null && (
+                <div className="rounded-2xl border border-white/10 bg-zinc-900 p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-xs font-black uppercase tracking-wider text-zinc-400">
+                      Select Replacement Product
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setPickerItemIndex(null)}
+                      className="text-xs font-black uppercase text-zinc-500 transition-colors hover:text-white"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <div className="mb-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+                      <input
+                        type="text"
+                        value={productSearchQuery}
+                        onChange={(e) => setProductSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            fetchReplacementProducts(productSearchQuery);
+                          }
+                        }}
+                        placeholder="Search products..."
+                        className="w-full rounded-xl border border-white/10 bg-black pl-9 pr-4 py-2 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/25 focus:border-white/40"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fetchReplacementProducts(productSearchQuery)}
+                      className="mt-2 rounded-full bg-white px-4 py-2 text-xs font-black uppercase text-black transition-colors hover:bg-lime-300"
+                    >
+                      {loadingProducts ? "Searching..." : "Search"}
+                    </button>
+                  </div>
+                  <div className="max-h-48 space-y-2 overflow-y-auto">
+                    {replacementProducts.length === 0 && !loadingProducts ? (
+                      <p className="py-4 text-center text-xs text-zinc-500">
+                        Search for a product to select as replacement.
+                      </p>
+                    ) : (
+                      replacementProducts.map((product: any) => (
+                        <button
+                          key={product._id || product.id}
+                          type="button"
+                          onClick={() => selectReplacementProduct(pickerItemIndex, product)}
+                          className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black px-3 py-2 text-left transition-colors hover:border-white/20"
+                        >
+                          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-zinc-900">
+                            {product.image_url ? (
+                              <img
+                                src={product.image_url}
+                                alt={product.name}
+                                className="h-full w-full object-contain"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="grid h-full w-full place-items-center">
+                                <Package className="h-5 w-5 text-zinc-700" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-black uppercase text-white">{product.name}</p>
+                              <p className="text-xs text-zinc-500">
+                                {(product.in_stock === false || getTotalStock(product) <= 0) && (
+                                  <span className="text-red-400">Out of stock</span>
+                                )}
+                                {(product.in_stock !== false && getTotalStock(product) > 0) && (
+                                  <span className="text-emerald-300">In stock</span>
+                                )}
+                              </p>
+                          </div>
+                          <p className="text-sm font-black text-white">
+                            ${Number(product.price || 0).toFixed(2)}
+                          </p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedExchangeItems.length > 0 && Object.keys(selectedReplacements).length > 0 && (
+                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-4">
+                  <p className="text-xs font-black uppercase tracking-wider text-emerald-300 mb-2">
+                    Price Difference Preview
+                  </p>
+                  {(() => {
+                    const selectedItems = selectedExchangeItems
+                      .map((idx) => exchangeModalOrder.items[Number(idx)])
+                      .filter(Boolean);
+                    const originalTotal = selectedItems.reduce(
+                      (sum, item) => sum + Number(item.price) * Number(item.quantity),
+                      0,
+                    );
+                    const replacementTotal = selectedItems.reduce((sum, _, i) => {
+                      const replacement = selectedReplacements[String(i)];
+                      if (replacement) {
+                        return sum + Number(replacement.price || 0) * Number(selectedItems[i]?.quantity || 1);
+                      }
+                      return sum + Number(selectedItems[i]?.price || 0) * Number(selectedItems[i]?.quantity || 1);
+                    }, 0);
+                    const diff = replacementTotal - originalTotal;
+                    return (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-zinc-300">
+                          {diff > 0 ? "You pay" : diff < 0 ? "You receive" : "No difference"}
+                        </span>
+                        <span className={`text-lg font-black ${diff > 0 ? "text-red-300" : diff < 0 ? "text-emerald-300" : "text-white"}`}>
+                          {diff > 0 ? "+" : ""}${diff.toFixed(2)}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
                 {order.deliveryStatus === "Cancelled" && (
                   <div className="mt-5 flex items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 py-3 text-red-300">
                     <XCircle className="h-5 w-5" />
@@ -451,14 +1083,72 @@ const ProfilePage = () => {
                       {order.paymentStatus}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleDeleteOrder(order._id || order.orderId)}
-                      className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-500 transition-colors hover:text-red-300"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </button>
+                   <div className="flex items-center gap-3">
+                     {order.deliveryStatus === "Delivered" && (() => {
+                       const existingReturn = getReturnForOrder(order);
+                       const existingExchange = getExchangeForOrder(order);
+                       if (existingReturn) {
+                         return (
+                           <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase ${getReturnStatusColor(existingReturn.status)}`}>
+                             <RotateCcw className="h-4 w-4" />
+                             Return {existingReturn.status}
+                           </span>
+                         );
+                       }
+                       if (existingExchange) {
+                         return (
+                           <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase ${getExchangeStatusColor(existingExchange.status)}`}>
+                             <RotateCcw className="h-4 w-4" />
+                             Exchange {existingExchange.status}
+                           </span>
+                         );
+                       }
+                       return (
+                         <>
+                           <button
+                             onClick={() => openExchangeModal(order)}
+                             className="inline-flex items-center gap-2 text-sm font-black uppercase text-blue-400 transition-colors hover:text-blue-300"
+                           >
+                             <RotateCcw className="h-4 w-4" />
+                             Exchange
+                           </button>
+                           <button
+                             onClick={() => openReturnModal(order)}
+                             className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-400 transition-colors hover:text-red-300"
+                           >
+                             <RotateCcw className="h-4 w-4" />
+                             Return
+                           </button>
+                         </>
+                       );
+                     })()}
+                     {(order.deliveryStatus === "Processing" || order.deliveryStatus === "Shipped") && (() => {
+                       const existingCancellation = getCancellationForOrder(order);
+                       if (existingCancellation) {
+                         return (
+                           <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-black uppercase ${getReturnStatusColor(existingCancellation.status)}`}>
+                             <XCircle className="h-4 w-4" />
+                             Cancel {existingCancellation.status}
+                           </span>
+                         );
+                       }
+                       return (
+                         <button
+                           onClick={() => openCancelModal(order)}
+                           className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-400 transition-colors hover:text-red-300"
+                         >
+                           <XCircle className="h-4 w-4" />
+                           Cancel
+                         </button>
+                       );
+                     })()}
+                     <button
+                       onClick={() => handleDeleteOrder(order._id || order.orderId)}
+                       className="inline-flex items-center gap-2 text-sm font-black uppercase text-red-500 transition-colors hover:text-red-300"
+                     >
+                       <Trash2 className="h-4 w-4" />
+                       Delete
+                     </button>
                     <button
                       onClick={() => handleBuyAgain(order)}
                       className="inline-flex items-center gap-2 text-sm font-black uppercase text-zinc-500 transition-colors hover:text-white"
@@ -474,6 +1164,287 @@ const ProfilePage = () => {
       )}
     </div>
   );
+
+  const renderReturns = () => {
+    const deliveredOrders = orders.filter((o) => o.deliveryStatus === "Delivered");
+    const returnableItems = deliveredOrders.flatMap((order) =>
+      order.items.map((item, idx) => ({
+        order,
+        item,
+        idx,
+        key: `${order._id || order.orderId}-${idx}`,
+      })),
+    );
+
+    return (
+      <div className="space-y-6">
+        <div className="rounded-3xl border border-white/10 bg-zinc-950 p-6">
+          <h3 className="text-xl font-black uppercase text-white mb-2">My Returns</h3>
+          <p className="text-sm text-zinc-500 mb-6">
+            Returns are only available for orders that have been successfully delivered.
+          </p>
+
+          {returns.length === 0 && returnableItems.length === 0 ? (
+            <div className="py-10 text-center">
+              <RotateCcw className="mx-auto mb-4 h-10 w-10 text-zinc-600" />
+              <p className="text-lg font-black uppercase text-white">No returns yet</p>
+              <p className="mt-2 text-sm text-zinc-500">
+                Once you receive a delivered order, you can request a return from the Orders tab.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {returns.map((ret) => (
+                <div
+                  key={ret._id}
+                  className="rounded-2xl border border-white/10 bg-black px-5 py-4"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-black uppercase text-white">
+                        {ret.status === "Approved"
+                          ? "Return Approved"
+                          : ret.status === "Rejected"
+                            ? "Return Rejected"
+                            : ret.status === "Requested"
+                              ? "Return Requested"
+                              : ret.status === "Refunded"
+                                ? "Return Refunded"
+                                : ret.status === "Cancelled"
+                                  ? "Return Cancelled"
+                                  : ret.returnId || ret._id}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        Order: {ret.orderId?.orderId || ret.orderId || "—"}
+                      </p>
+                    </div>
+                    <StatusBadge status={ret.status} />
+                  </div>
+                  <div className="mt-3 space-y-1">
+                    {ret.items?.map((item: any, idx: number) => (
+                      <p key={idx} className="text-xs text-zinc-400">
+                        {item.quantity}x {item.name || "Product"}
+                        {item.color ? ` (${item.color}` : ""}
+                        {item.size ? ` / ${item.size}` : ""}
+                        {item.color ? ")" : ""}
+                      </p>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Reason: {ret.reason || "—"}
+                  </p>
+                  {ret.resolution && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      Resolution: {ret.resolution}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderExchanges = () => {
+    const deliveredOrders = orders.filter((o) => o.deliveryStatus === "Delivered");
+
+    const areRequestedItemsPlaceholders = (exc: any) => {
+      if (!exc.originalItems || !exc.requestedItems || exc.requestedItems.length === 0) return true;
+      if (exc.originalItems.length !== exc.requestedItems.length) return false;
+      return exc.originalItems.every(
+        (orig: any, idx: number) => orig.productId === exc.requestedItems[idx]?.productId
+      );
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="rounded-3xl border border-white/10 bg-zinc-950 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-black uppercase text-white mb-2">My Exchanges</h3>
+              <p className="text-sm text-zinc-500">
+                Exchanges are only available for orders that have been successfully delivered.
+              </p>
+            </div>
+            <RotateCcw className="hidden h-8 w-8 text-zinc-700 sm:block" />
+          </div>
+
+          {exchanges.length === 0 && deliveredOrders.length === 0 ? (
+            <div className="py-10 text-center">
+              <RotateCcw className="mx-auto mb-4 h-10 w-10 text-zinc-600" />
+              <p className="text-lg font-black uppercase text-white">No exchanges yet</p>
+              <p className="mt-2 text-sm text-zinc-500">
+                Once you receive a delivered order, you can request an exchange from the Orders tab.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 space-y-4">
+              {exchanges.map((exc) => (
+                <div
+                  key={exc._id}
+                  className="rounded-2xl border border-white/10 bg-black px-5 py-4"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-black uppercase text-white">
+                        {exc.status === "Approved"
+                          ? "Exchange Approved"
+                          : exc.status === "Rejected"
+                            ? "Exchange Rejected"
+                            : exc.status === "Requested"
+                              ? "Exchange Requested"
+                              : exc.status === "Completed"
+                                ? "Exchange Completed"
+                                : exc.status === "Cancelled"
+                                  ? "Exchange Cancelled"
+                                  : exc.exchangeId || exc._id}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        Order: {exc.orderId?.orderId || exc.orderId || "—"}
+                      </p>
+                    </div>
+                    <StatusBadge status={exc.status} />
+                  </div>
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-2">
+                        Original Items
+                      </p>
+                      <div className="space-y-1">
+                        {exc.originalItems?.map((item: any, idx: number) => (
+                          <p key={idx} className="text-xs text-zinc-400">
+                            {item.quantity}x {item.name || "Product"}
+                            {item.color ? ` (${item.color}` : ""}
+                            {item.size ? ` / ${item.size}` : ""}
+                            {item.color ? ")" : ""}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wider text-zinc-400 mb-2">
+                        Requested Items
+                      </p>
+                      {exc.status === "Approved" && areRequestedItemsPlaceholders(exc) ? (
+                        <div className="rounded-xl border border-blue-400/20 bg-blue-400/5 px-3 py-2">
+                          <p className="text-xs text-blue-300">
+                            Awaiting your selection. Choose a replacement product.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          {exc.requestedItems?.map((item: any, idx: number) => (
+                            <p key={idx} className="text-xs text-zinc-400">
+                              {item.quantity}x {item.name || "Product"}
+                              {item.color ? ` (${item.color}` : ""}
+                              {item.size ? ` / ${item.size}` : ""}
+                              {item.color ? ")" : ""}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Price Difference: <span className="font-bold text-white">${Number(exc.priceDifference || 0).toFixed(2)}</span>
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Reason: {exc.reason || "—"}
+                  </p>
+                  {exc.description && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      {exc.description}
+                    </p>
+                  )}
+                  {exc.resolution && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      Resolution: {exc.resolution}
+                    </p>
+                  )}
+
+                  {exc.status === "Approved" && areRequestedItemsPlaceholders(exc) && (
+                    <div className="mt-4">
+                      <Link
+                        href="/nike/exchanges"
+                        className="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-400/10 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-blue-300 transition-colors hover:bg-blue-400/20"
+                      >
+                        Choose Replacement Product
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCancellations = () => {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-3xl border border-white/10 bg-zinc-950 p-6">
+          <h3 className="text-xl font-black uppercase text-white mb-2">My Cancellations</h3>
+          <p className="text-sm text-zinc-500 mb-6">
+            Request to cancel orders that are still processing or shipped.
+          </p>
+
+          {cancellations.length === 0 ? (
+            <div className="py-10 text-center">
+              <XCircle className="mx-auto mb-4 h-10 w-10 text-zinc-600" />
+              <p className="text-lg font-black uppercase text-white">No cancellations yet</p>
+              <p className="mt-2 text-sm text-zinc-500">
+                You can request a cancellation from the Orders tab for orders that are processing or shipped.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {cancellations.map((can) => (
+                <div
+                  key={can._id}
+                  className="rounded-2xl border border-white/10 bg-black px-5 py-4"
+                >
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-black uppercase text-white">
+                        {can.status === "Approved"
+                          ? "Cancellation Approved"
+                          : can.status === "Rejected"
+                            ? "Cancellation Rejected"
+                            : can.status === "Requested"
+                              ? "Cancellation Requested"
+                              : can.cancellationId || can._id}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        Order: {can.orderId?.orderId || can.orderId || "—"}
+                      </p>
+                    </div>
+                    <StatusBadge status={can.status} />
+                  </div>
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Reason: {can.reason || "—"}
+                  </p>
+                  {can.description && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      {can.description}
+                    </p>
+                  )}
+                  {can.resolution && (
+                    <p className="mt-1 text-xs text-zinc-400">
+                      Resolution: {can.resolution}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const renderAccount = () => (
     <div className="space-y-6">
@@ -621,23 +1592,84 @@ const ProfilePage = () => {
     </div>
   );
 
-  const renderWishlist = () => (
-    <div className="space-y-6">
-      <h3 className="text-xl font-black uppercase text-white">My Wishlist</h3>
-      <EmptyState
-        icon={Heart}
-        title="Your wishlist is empty"
-        description="Save items you love to your wishlist."
-        action={
-          <Link href="/nike/products">
-            <button className="mt-7 rounded-full bg-white px-8 py-3 text-sm font-black uppercase text-black transition-colors hover:bg-red-500 hover:text-white">
-              Browse Products
-            </button>
-          </Link>
-        }
-      />
-    </div>
-  );
+  const renderWishlist = () => {
+    if (loadingWishlist) {
+      return (
+        <div className="space-y-6">
+          <h3 className="text-xl font-black uppercase text-white">My Wishlist</h3>
+          <div className="flex items-center justify-center py-20">
+            <div className="h-10 w-10 rounded-full border-4 border-red-500 border-t-transparent animate-spin" />
+          </div>
+        </div>
+      );
+    }
+
+    if (!wishlist.length) {
+      return (
+        <div className="space-y-6">
+          <h3 className="text-xl font-black uppercase text-white">My Wishlist</h3>
+          <EmptyState
+            icon={Heart}
+            title="Your wishlist is empty"
+            description="Save items you love to your wishlist."
+            action={
+              <Link href="/nike/products">
+                <button className="mt-7 rounded-full bg-white px-8 py-3 text-sm font-black uppercase text-black transition-colors hover:bg-red-500 hover:text-white">
+                  Browse Products
+                </button>
+              </Link>
+            }
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <h3 className="text-xl font-black uppercase text-white">My Wishlist</h3>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {wishlist.map((item: any) => (
+            <div
+              key={item.productId}
+              className="group relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-zinc-950 shadow-xl shadow-black/30"
+            >
+              <Link href={`/nike/products/${item.productId}`}>
+                <div className="relative aspect-[1.02] overflow-hidden bg-zinc-900">
+                  <img
+                    src={item.image_url || '/assets/nike-hero/nike6-transparent.png'}
+                    alt={item.name || 'Product'}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/5 to-transparent" />
+                  {!item.in_stock && (
+                    <div className="absolute left-4 top-4 z-10 rounded-full border border-red-300/30 bg-red-500 px-3 py-1 text-xs font-black uppercase text-white">
+                      Sold Out
+                    </div>
+                  )}
+                </div>
+                <div className="p-5">
+                  <h3 className="line-clamp-2 text-xl font-black leading-tight text-white">
+                    {item.name || 'Untitled Product'}
+                  </h3>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="block text-2xl font-black text-white">
+                      {item.currency || '$'}{Number(item.price || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="mt-2">
+                    <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-bold ${item.in_stock ? 'border-emerald-300/30 bg-emerald-400 text-black' : 'border-red-300/30 bg-red-500 text-white'}`}>
+                      {item.in_stock ? 'In Stock' : 'Out of Stock'}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const renderSettings = () => (
     <div className="space-y-6">
@@ -674,6 +1706,9 @@ const ProfilePage = () => {
 
   const tabs = [
     { id: "orders", label: "Orders", icon: Package },
+    { id: "returns", label: "Returns", icon: RotateCcw },
+    { id: "exchanges", label: "Exchanges", icon: RotateCcw },
+    { id: "cancellations", label: "Cancellations", icon: XCircle },
     { id: "account", label: "Account", icon: User },
     { id: "address", label: "Addresses", icon: MapPin },
     { id: "payment", label: "Payment", icon: CreditCard },
@@ -683,9 +1718,47 @@ const ProfilePage = () => {
 
   const activeLabel = tabs.find((tab) => tab.id === activeTab)?.label;
 
+  const NotificationModal = () => {
+    if (!notification) return null;
+    const isSuccess = notification.type === "success";
+
+    return (
+      <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 p-4">
+        <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60">
+          <div className={`border-b border-white/10 px-6 py-5 ${isSuccess ? "bg-emerald-500/10" : "bg-red-500/10"}`}>
+            <div className="flex items-center gap-3">
+              <div
+                className={`grid h-10 w-10 place-items-center rounded-full border ${
+                  isSuccess ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-red-400/30 bg-red-400/10 text-red-300"
+                }`}
+              >
+                {isSuccess ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+              </div>
+              <div>
+                <h3 className="text-lg font-black uppercase text-white">{isSuccess ? "Success" : "Error"}</h3>
+                <p className="text-xs font-semibold text-zinc-500">{notification.message}</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-3 border-t border-white/10 px-6 py-4">
+            <button
+              onClick={() => setNotification(null)}
+              className={`h-11 rounded-full px-5 text-sm font-black uppercase transition-colors ${
+                isSuccess
+                  ? "border border-white/10 bg-white text-black hover:bg-emerald-400"
+                  : "border border-white/10 bg-white text-black hover:bg-red-500 hover:text-white"
+              }`}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
-      <EcomNavbar />
 
       {deleteTargetId && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4">
@@ -726,6 +1799,292 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
+
+      {returnModalOrder && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60">
+            <div className="border-b border-white/10 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-red-500/30 bg-red-500/10">
+                  <RotateCcw className="h-4 w-4 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">Request Return</h3>
+                  <p className="text-xs font-semibold text-zinc-500">
+                    Order {returnModalOrder.orderId}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-xs font-black uppercase tracking-wider text-zinc-400">
+                Select Items to Return
+              </p>
+              <div className="space-y-2">
+                {returnModalOrder.items.map((item: any, idx: number) => {
+                  const checked = selectedReturnItems.includes(String(idx));
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => toggleReturnItem(idx)}
+                      className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-colors ${
+                        checked
+                          ? "border-white bg-white text-black"
+                          : "border-white/10 bg-black text-zinc-300 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black uppercase">{item.name}</p>
+                        <p className={`text-xs ${checked ? "text-black/70" : "text-zinc-500"}`}>
+                          Qty: {item.quantity} {item.color ? `· ${item.color}` : ""} {item.size ? `· ${item.size}` : ""}
+                        </p>
+                      </div>
+                      <p className="text-sm font-black">${(Number(item.price) * Number(item.quantity)).toFixed(2)}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Reason <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors focus:border-white/40"
+                >
+                  <option value="">Select a reason</option>
+                  <option value="Damaged">Damaged</option>
+                  <option value="Wrong item">Wrong item</option>
+                  <option value="No longer needed">No longer needed</option>
+                  <option value="Poor quality">Poor quality</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Description
+                </label>
+                <textarea
+                  value={returnDescription}
+                  onChange={(e) => setReturnDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/25 focus:border-white/40"
+                  placeholder="Add more details about your return..."
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-white/10 px-6 py-4">
+              <button
+                onClick={() => {
+                  setReturnModalOrder(null);
+                  setSelectedReturnItems([]);
+                  setReturnReason("");
+                  setReturnDescription("");
+                }}
+                className="h-11 rounded-full border border-white/10 px-5 text-sm font-black uppercase text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReturn}
+                disabled={!returnReason || selectedReturnItems.length === 0 || submittingReturn}
+                className="h-11 rounded-full bg-red-500 px-5 text-sm font-black uppercase text-white transition-colors hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingReturn ? "Submitting..." : "Submit Return"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {exchangeModalOrder && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60">
+            <div className="border-b border-white/10 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-blue-500/30 bg-blue-500/10">
+                  <RotateCcw className="h-4 w-4 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">Request Exchange</h3>
+                  <p className="text-xs font-semibold text-zinc-500">
+                    Order {exchangeModalOrder.orderId}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-xs font-black uppercase tracking-wider text-zinc-400">
+                Select Items to Exchange
+              </p>
+              <div className="space-y-2">
+                {exchangeModalOrder.items.map((item: any, idx: number) => {
+                  const checked = selectedExchangeItems.includes(String(idx));
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => toggleExchangeItem(idx)}
+                      className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-colors ${
+                        checked
+                          ? "border-white bg-white text-black"
+                          : "border-white/10 bg-black text-zinc-300 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black uppercase">{item.name}</p>
+                        <p className={`text-xs ${checked ? "text-black/70" : "text-zinc-500"}`}>
+                          Qty: {item.quantity} {item.color ? `· ${item.color}` : ""} {item.size ? `· ${item.size}` : ""}
+                        </p>
+                      </div>
+                      <p className="text-sm font-black">${(Number(item.price) * Number(item.quantity)).toFixed(2)}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Reason <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={exchangeReason}
+                  onChange={(e) => setExchangeReason(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors focus:border-white/40"
+                >
+                  <option value="">Select a reason</option>
+                  <option value="Size issue">Size issue</option>
+                  <option value="Color not as expected">Color not as expected</option>
+                  <option value="Style preference">Style preference</option>
+                  <option value="Wrong item">Wrong item</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Description
+                </label>
+                <textarea
+                  value={exchangeDescription}
+                  onChange={(e) => setExchangeDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/25 focus:border-white/40"
+                  placeholder="Describe what you'd like to exchange for..."
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-white/10 px-6 py-4">
+              <button
+                onClick={() => {
+                  setExchangeModalOrder(null);
+                  setSelectedExchangeItems([]);
+                  setExchangeReason("");
+                  setExchangeDescription("");
+                  setSelectedReplacements({});
+                  setPickerItemIndex(null);
+                  setReplacementProducts([]);
+                  setProductSearchQuery("");
+                }}
+                className="h-11 rounded-full border border-white/10 px-5 text-sm font-black uppercase text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitExchange}
+                disabled={!exchangeReason || selectedExchangeItems.length === 0 || submittingExchange}
+                className="h-11 rounded-full bg-blue-500 px-5 text-sm font-black uppercase text-white transition-colors hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingExchange ? "Submitting..." : "Submit Exchange"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cancelModalOrder && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/60">
+            <div className="border-b border-white/10 px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-red-500/30 bg-red-500/10">
+                  <XCircle className="h-4 w-4 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black uppercase text-white">Request Cancellation</h3>
+                  <p className="text-xs font-semibold text-zinc-500">
+                    Order {cancelModalOrder.orderId}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Reason <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors focus:border-white/40"
+                >
+                  <option value="">Select a reason</option>
+                  <option value="Changed my mind">Changed my mind</option>
+                  <option value="Ordered by mistake">Ordered by mistake</option>
+                  <option value="Found better price">Found better price</option>
+                  <option value="Need to change shipping address">Need to change shipping address</option>
+                  <option value="Item out of stock for too long">Item out of stock for too long</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">
+                  Description
+                </label>
+                <textarea
+                  value={cancelDescription}
+                  onChange={(e) => setCancelDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm font-medium text-white outline-none transition-colors placeholder:text-white/25 focus:border-white/40"
+                  placeholder="Add more details about your cancellation request..."
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-white/10 px-6 py-4">
+              <button
+                onClick={() => {
+                  setCancelModalOrder(null);
+                  setCancelReason("");
+                  setCancelDescription("");
+                }}
+                className="h-11 rounded-full border border-white/10 px-5 text-sm font-black uppercase text-zinc-300 transition-colors hover:border-white/20 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitCancellation}
+                disabled={!cancelReason || submittingCancel}
+                className="h-11 rounded-full bg-red-500 px-5 text-sm font-black uppercase text-white transition-colors hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {submittingCancel ? "Submitting..." : "Submit Cancellation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <NotificationModal />
 
       <section className="border-b border-white/10 bg-[linear-gradient(120deg,#09090b_0%,#000_52%,rgba(239,68,68,0.16)_100%)] pt-28">
         <div className="mx-auto max-w-7xl px-6 py-12">
@@ -807,12 +2166,15 @@ const ProfilePage = () => {
               <ShoppingBag className="hidden h-8 w-8 text-zinc-700 sm:block" />
             </div>
 
-            {activeTab === "orders" && renderOrders()}
-            {activeTab === "account" && renderAccount()}
-            {activeTab === "address" && renderAddress()}
-            {activeTab === "payment" && renderPayment()}
-            {activeTab === "wishlist" && renderWishlist()}
-            {activeTab === "settings" && renderSettings()}
+             {activeTab === "orders" && renderOrders()}
+             {activeTab === "returns" && renderReturns()}
+             {activeTab === "exchanges" && renderExchanges()}
+             {activeTab === "cancellations" && renderCancellations()}
+             {activeTab === "account" && renderAccount()}
+             {activeTab === "address" && renderAddress()}
+             {activeTab === "payment" && renderPayment()}
+             {activeTab === "wishlist" && renderWishlist()}
+             {activeTab === "settings" && renderSettings()}
           </section>
         </div>
       </main>
@@ -842,5 +2204,37 @@ const EmptyState = ({
     {action}
   </div>
 );
+
+const StatusBadge = ({ status }: { status?: string }) => {
+  const normalized = (status || "").toLowerCase();
+  const cls =
+    ["paid", "delivered", "refunded", "approved"].includes(normalized) ||
+    status === "Delivered" ||
+    status === "Paid" ||
+    status === "Refunded" ||
+    status === "Approved"
+      ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+      : ["pending", "processing", "shipped", "requested"].includes(normalized) ||
+        status === "Pending" ||
+        status === "Processing" ||
+        status === "Shipped" ||
+        status === "Requested"
+        ? "border-amber-300/30 bg-amber-300/10 text-amber-200"
+        : ["failed", "cancelled", "rejected", "banned"].includes(normalized) ||
+          status === "Failed" ||
+          status === "Cancelled" ||
+          status === "Rejected" ||
+          status === "Banned"
+          ? "border-red-400/30 bg-red-400/10 text-red-300"
+          : "border-white/10 bg-white/[0.06] text-white/60";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${cls}`}
+    >
+      {status || "Unknown"}
+    </span>
+  );
+};
 
 export default ProfilePage;

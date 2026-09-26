@@ -16,8 +16,8 @@ import {
   Smartphone,
 } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
+import { getToken, getUser } from "@/lib/auth";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
 import { Button } from "@/components/ui/button";
 
 type FormData = {
@@ -154,8 +154,8 @@ const PaymentDetailsPage = () => {
   const typedCartItems = cartItems as CartItem[];
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
+    const userStr = getUser();
+    const token = getToken();
 
     if (!userStr || !token) {
       router.push("/login?redirect=/nike/payment-details");
@@ -207,7 +207,7 @@ const PaymentDetailsPage = () => {
     }
 
     try {
-      const userStr = localStorage.getItem("user");
+      const userStr = getUser();
       let userId = null;
 
       if (userStr) {
@@ -219,25 +219,25 @@ const PaymentDetailsPage = () => {
         }
       }
 
-      const orderData = {
-        userId,
-        customer: {
-          name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-        },
-        items: typedCartItems.map((item) => ({
-          productId: item.productId,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          color: item.color || "",
-          size: item.size || "",
-          image: item.image || "",
-        })),
-        total,
-        paymentStatus: "Paid",
-        paymentMethod,
+        const orderData = {
+          userId,
+          customer: {
+            name: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+          },
+          items: typedCartItems.map((item) => ({
+            productId: item.productId,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            color: item.color || "",
+            size: item.size || "",
+            image: item.image || "",
+          })),
+          total,
+          paymentStatus: paymentMethod === "cod" ? "COD" : "Paid",
+          paymentMethod,
         shippingInfo: {
           fullName: formData.fullName,
           email: formData.email,
@@ -250,7 +250,7 @@ const PaymentDetailsPage = () => {
         },
       };
 
-      const token = localStorage.getItem("token");
+      const token = getToken();
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
         method: "POST",
         headers: {
@@ -320,7 +320,6 @@ const PaymentDetailsPage = () => {
   if (cartItems.length === 0 && !orderPlaced) {
     return (
       <div className="min-h-screen bg-black text-white">
-        <EcomNavbar />
         <main className="flex min-h-screen items-center justify-center px-6 pt-20">
           <div className="max-w-md text-center">
             <div className="mx-auto mb-8 grid h-24 w-24 place-items-center rounded-full border border-white/10 bg-zinc-950">
@@ -343,7 +342,6 @@ const PaymentDetailsPage = () => {
 
   return (
     <div className="min-h-screen overflow-hidden bg-black text-white">
-      <EcomNavbar />
 
       <main className="relative px-4 pb-16 pt-28">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.06),transparent_40%)]" />

@@ -6,14 +6,12 @@ import {
   ArrowRight,
   ChevronDown,
   Filter,
-  Heart,
   Search,
   ShoppingBag,
   Star,
 } from "lucide-react";
 import useSWR from "swr";
 import EcomFooter from "@/components/ecomfooter";
-import EcomNavbar from "@/components/ecomnavbar";
 
 type Product = {
   _id?: string;
@@ -58,6 +56,11 @@ const formatPrice = (product: Product) => {
   return `${product.currency || "$"}${safePrice.toFixed(2)}`;
 };
 
+const getTotalStock = (product: Product) => {
+  const colorStock = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
+  return colorStock + (product.stockQuantity || 0);
+};
+
 const getProductId = (product: Product) => product._id || product.id || "";
 
 const ProductCard = ({ product, index }: { product: Product; index: number }) => {
@@ -68,18 +71,6 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
       href={`/nike/products/${productId}`}
       className="group relative flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-zinc-950 shadow-xl shadow-black/30 transition-transform duration-300 hover:-translate-y-1 hover:border-red-400/60"
     >
-        <button
-          type="button"
-          aria-label={`Add ${product.name || "product"} to wishlist`}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log("Added to wishlist:", productId);
-          }}
-          className="absolute right-4 top-4 z-20 grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-black/65 text-white transition-colors hover:border-red-400 hover:bg-red-500"
-        >
-          <Heart className="h-5 w-5 transition-colors group-hover:fill-white" />
-        </button>
 
         <div className="relative aspect-[1.02] overflow-hidden bg-zinc-900">
           <img
@@ -91,12 +82,12 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/5 to-transparent" />
 
-          {product.status === "active" && product.in_stock && (
+          {(product.status === "active" && product.in_stock && getTotalStock(product) > 0) && (
             <div className="absolute left-4 top-4 z-10 rounded-full border border-emerald-300/30 bg-emerald-400 px-3 py-1 text-xs font-black uppercase text-black">
               New
             </div>
           )}
-          {product.in_stock === false && (
+          {(product.in_stock === false || getTotalStock(product) <= 0) && (
             <div className="absolute left-4 top-4 z-10 rounded-full border border-red-300/30 bg-red-500 px-3 py-1 text-xs font-black uppercase text-white">
               Sold Out
             </div>
@@ -131,12 +122,10 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
               )}
               <div className="flex items-center gap-2">
                 <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    product.in_stock ? "bg-emerald-400" : "bg-red-500"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full ${(product.in_stock !== false && getTotalStock(product) > 0) ? "bg-emerald-400" : "bg-red-500"}`}
                 />
                 <span className="text-xs font-bold uppercase text-gray-400">
-                  {product.in_stock ? "In Stock" : "Out of Stock"}
+                  {(product.in_stock !== false && getTotalStock(product) > 0) ? "In Stock" : "Out of Stock"}
                 </span>
               </div>
             </div>
@@ -235,7 +224,6 @@ const ProductsPage = () => {
 
   return (
     <div className="min-h-screen overflow-hidden bg-black text-white">
-      <EcomNavbar />
 
       <section className="relative min-h-[88vh] overflow-hidden bg-black pt-28">
         <div className="absolute inset-0">
@@ -270,10 +258,10 @@ const ProductsPage = () => {
               {[
                 { value: safeProducts.length, label: "Products" },
                 { value: allCategories.length, label: "Categories" },
-                {
-                  value: safeProducts.filter((product) => product.in_stock).length,
-                  label: "In Stock",
-                },
+                 {
+                   value: safeProducts.filter((product) => product.in_stock !== false && getTotalStock(product) > 0).length,
+                   label: "In Stock",
+                 },
               ].map((stat) => (
                 <div key={stat.label} className="border-r border-white/10 p-4 last:border-r-0">
                   <div className="text-2xl font-black">{stat.value}</div>
