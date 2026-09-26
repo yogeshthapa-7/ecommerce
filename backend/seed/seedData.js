@@ -25,12 +25,12 @@ const products = [
         rating: 4.8,
         reviews_count: 1240,
         colors: [
-            { name: "White", image_url: "/product-cutouts-transparent/nike-air-max-270-dda25f7e.png" },
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-air-max-270-8904d678.png" },
-            { name: "Multi-Color", image_url: "/product-cutouts-transparent/nike-air-max-270-43a1f087.png" }
+            { name: "White", image_url: "/product-cutouts/nike-air-max-270-dda25f7e.png" },
+            { name: "Black", image_url: "/product-cutouts/nike-air-max-270-8904d678.png" },
+            { name: "Multi-Color", image_url: "/product-cutouts/nike-air-max-270-43a1f087.png" }
         ],
         description: "Nike's first lifestyle Air Max brings you style, comfort and big attitude. The design draws inspiration from Air Max icons, showcasing Nike's greatest innovation with its large window and fresh array of colors.",
-        image_url: "/product-cutouts-transparent/nike-air-max-270-fe29fb79.png",
+        image_url: "/product-cutouts/nike-air-max-270-fe29fb79.png",
         in_stock: true,
         sizes: [7, 8, 9, 10, 11]
     },
@@ -44,11 +44,11 @@ const products = [
         rating: 4.9,
         reviews_count: 5600,
         colors: [
-            { name: "White", image_url: "/product-cutouts-transparent/nike-air-max-plus-5404a18a.png" },
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-air-max-plus-6c7ec7b0.png" },
-            { name: "Reflect Silver/Hyper Jade", image_url: "/product-cutouts-transparent/nike-air-max-plus-c3747d8d.png" }
+            { name: "White", image_url: "/product-cutouts/nike-air-max-plus-5404a18a.png" },
+            { name: "Black", image_url: "/product-cutouts/nike-air-max-plus-6c7ec7b0.png" },
+            { name: "Reflect Silver/Hyper Jade", image_url: "/product-cutouts/nike-air-max-plus-c3747d8d.png" }
         ],
-        image_url: "/product-cutouts-transparent/nike-air-max-plus-a6d42e0c.png",
+        image_url: "/product-cutouts/nike-air-max-plus-a6d42e0c.png",
         description: "The radiance lives on in the Nike Air Force 1 '07, the b-ball OG that puts a fresh spin on what you know best.",
         in_stock: true,
         sizes: [8, 9, 10, 11]
@@ -63,13 +63,13 @@ const products = [
         rating: 4.5,
         reviews_count: 890,
         colors: [
-            { name: "White", image_url: "/product-cutouts-transparent/nike-pegasus-41-9b3c9122.png" },
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-pegasus-41-34d971e2.png" },
-            { name: "Twist/Black", image_url: "/product-cutouts-transparent/nike-pegasus-41-c3b7be7a.png" },
-            { name: "Gray/Diffused Blue", image_url: "/product-cutouts-transparent/nike-pegasus-41-607d4719.png" }
+            { name: "White", image_url: "/product-cutouts/nike-pegasus-41-9b3c9122.png" },
+            { name: "Black", image_url: "/product-cutouts/nike-pegasus-41-34d971e2.png" },
+            { name: "Twist/Black", image_url: "/product-cutouts/nike-pegasus-41-c3b7be7a.png" },
+            { name: "Gray/Diffused Blue", image_url: "/product-cutouts/nike-pegasus-41-607d4719.png" }
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
-        image_url: "/product-cutouts-transparent/nike-pegasus-41-9b3c9122.png",
+        image_url: "/product-cutouts/nike-pegasus-41-9b3c9122.png",
         in_stock: true,
         sizes: [8, 9, 10]
     },
@@ -83,13 +83,13 @@ const products = [
         rating: 4.7,
         reviews_count: 890,
         colors: [
-            { name: "White/Sail/Black", image_url: "/product-cutouts-transparent/nike-blazer-47dae5a7.png" },
-            { name: "Black/Sail/Black/White", image_url: "/product-cutouts-transparent/nike-blazer-29860531.png" },
-            { name: "Black/Anthracite/White/University Red", image_url: "/product-cutouts-transparent/nike-blazer-5eec2e75.png" },
-            { name: "White/Sail/Black/Pine Green", image_url: "/product-cutouts-transparent/nike-blazer-7da899c4.png" }
+            { name: "White/Sail/Black", image_url: "/product-cutouts/nike-blazer-47dae5a7.png" },
+            { name: "Black/Sail/Black/White", image_url: "/product-cutouts/nike-blazer-29860531.png" },
+            { name: "Black/Anthracite/White/University Red", image_url: "/product-cutouts/nike-blazer-5eec2e75.png" },
+            { name: "White/Sail/Black/Pine Green", image_url: "/product-cutouts/nike-blazer-7da899c4.png" }
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
-        image_url: "/product-cutouts-transparent/nike-blazer-bb984165.png",
+        image_url: "/product-cutouts/nike-blazer-bb984165.png",
         in_stock: true,
         sizes: [8, 9, 10]
     },
@@ -103,13 +103,13 @@ const products = [
         rating: 4.2,
         reviews_count: 890,
         colors: [
-            { name: "White", image_url: "/product-cutouts-transparent/nike-huarache-1a6ea6c1.png" },
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-huarache-27014530.png" },
-            { name: "Red", image_url: "/product-cutouts-transparent/nike-huarache-e7aa05e7.png" },
-            { name: "Multi-Color", image_url: "/product-cutouts-transparent/nike-huarache-ad6e849f.png" }
+            { name: "White", image_url: "/product-cutouts/nike-huarache-1a6ea6c1.png" },
+            { name: "Black", image_url: "/product-cutouts/nike-huarache-27014530.png" },
+            { name: "Red", image_url: "/product-cutouts/nike-huarache-e7aa05e7.png" },
+            { name: "Multi-Color", image_url: "/product-cutouts/nike-huarache-ad6e849f.png" }
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
-        image_url: "/product-cutouts-transparent/nike-huarache-29c20f92.png",
+        image_url: "/product-cutouts/nike-huarache-29c20f92.png",
         in_stock: true,
         sizes: [8, 9, 10]
     },
@@ -123,12 +123,12 @@ const products = [
         rating: 4.2,
         reviews_count: 890,
         colors: [
-            { name: "White/Mint Foam", image_url: "/product-cutouts-transparent/nike-run-defy-fa9eed58.png" },
-            { name: "Black/White", image_url: "/product-cutouts-transparent/nike-run-defy-b86f8874.png" },
-            { name: "Orange/White/Bright Crimson", image_url: "/product-cutouts-transparent/nike-run-defy-c6010dda.png" }
+            { name: "White/Mint Foam", image_url: "/product-cutouts/nike-run-defy-fa9eed58.png" },
+            { name: "Black/White", image_url: "/product-cutouts/nike-run-defy-b86f8874.png" },
+            { name: "Orange/White/Bright Crimson", image_url: "/product-cutouts/nike-run-defy-c6010dda.png" }
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
-        image_url: "/product-cutouts-transparent/nike-run-defy-a12c964d.png",
+        image_url: "/product-cutouts/nike-run-defy-a12c964d.png",
         in_stock: true,
         sizes: [8, 10, 12]
     },
@@ -142,13 +142,13 @@ const products = [
         rating: 4.2,
         reviews_count: 890,
         colors: [
-            { name: "Black/Anthracite", image_url: "/product-cutouts-transparent/jordan-spizike-low-be435a03.png" },
-            { name: "Black/Wolf Grey", image_url: "/product-cutouts-transparent/jordan-spizike-low-28d246be.png" },
-            { name: "Black/Gamma Blue", image_url: "/product-cutouts-transparent/jordan-spizike-low-097dc3f3.png" },
-            { name: "Sail/Oil Grey", image_url: "/product-cutouts-transparent/jordan-spizike-low-a9b05d58.png" }
+            { name: "Black/Anthracite", image_url: "/product-cutouts/jordan-spizike-low-be435a03.png" },
+            { name: "Black/Wolf Grey", image_url: "/product-cutouts/jordan-spizike-low-28d246be.png" },
+            { name: "Black/Gamma Blue", image_url: "/product-cutouts/jordan-spizike-low-097dc3f3.png" },
+            { name: "Sail/Oil Grey", image_url: "/product-cutouts/jordan-spizike-low-a9b05d58.png" }
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
-        image_url: "/product-cutouts-transparent/jordan-spizike-low-d5901466.png",
+        image_url: "/product-cutouts/jordan-spizike-low-d5901466.png",
         in_stock: true,
         sizes: [9, 10, 11]
     },
@@ -162,13 +162,13 @@ const products = [
         rating: 4.2,
         reviews_count: 890,
         colors: [
-            { name: "Black/Anthracite/White", image_url: "/product-cutouts-transparent/nike-metcon-10-f9f3c5ae.png" },
-            { name: "Black/Safety Orange", image_url: "/product-cutouts-transparent/nike-metcon-10-0c1f31b6.png" },
-            { name: "Vast Grey/Blue Hero", image_url: "/product-cutouts-transparent/nike-metcon-10-5ea26efb.png" },
-            { name: "Green Strike/Light Liquid Lime", image_url: "/product-cutouts-transparent/nike-metcon-10-3e9d8f65.png" }
+            { name: "Black/Anthracite/White", image_url: "/product-cutouts/nike-metcon-10-f9f3c5ae.png" },
+            { name: "Black/Safety Orange", image_url: "/product-cutouts/nike-metcon-10-0c1f31b6.png" },
+            { name: "Vast Grey/Blue Hero", image_url: "/product-cutouts/nike-metcon-10-5ea26efb.png" },
+            { name: "Green Strike/Light Liquid Lime", image_url: "/product-cutouts/nike-metcon-10-3e9d8f65.png" }
         ],
         description: "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
-        image_url: "/product-cutouts-transparent/nike-metcon-10-fdc24e9f.png",
+        image_url: "/product-cutouts/nike-metcon-10-fdc24e9f.png",
         in_stock: true,
         sizes: [10, 11, 13]
     },
@@ -182,13 +182,13 @@ const products = [
         rating: 4.4,
         reviews_count: 890,
         colors: [
-            { name: "Desert Khaki/Black", image_url: "/product-cutouts-transparent/nike-gym-bag-8405faaf.png" },
-            { name: "Iron Grey/Black", image_url: "/product-cutouts-transparent/nike-gym-bag-a2ccaa6e.png" },
-            { name: "Laser Fuchsia/Black", image_url: "/product-cutouts-transparent/nike-gym-bag-1922bb89.png" },
-            { name: "Burnt Sunrise/Black", image_url: "/product-cutouts-transparent/nike-gym-bag-fc71f999.png" }
+            { name: "Desert Khaki/Black", image_url: "/product-cutouts/nike-gym-bag-8405faaf.png" },
+            { name: "Iron Grey/Black", image_url: "/product-cutouts/nike-gym-bag-a2ccaa6e.png" },
+            { name: "Laser Fuchsia/Black", image_url: "/product-cutouts/nike-gym-bag-1922bb89.png" },
+            { name: "Burnt Sunrise/Black", image_url: "/product-cutouts/nike-gym-bag-fc71f999.png" }
         ],
         description: "Simple and sleek design — the perfect compact companion for your fitness goals.",
-        image_url: "/product-cutouts-transparent/nike-gym-bag-eab4131d.png",
+        image_url: "/product-cutouts/nike-gym-bag-eab4131d.png",
         in_stock: true,
         sizes: ["One Size"]
     },
@@ -202,13 +202,13 @@ const products = [
         rating: 4.2,
         reviews_count: 890,
         colors: [
-            { name: "Limelight/Hyper Crimson", image_url: "/product-cutouts-transparent/nike-academy-cab9aaeb.png" },
-            { name: "Black/Sunset Pulse", image_url: "/product-cutouts-transparent/nike-academy-eb5fc363.png" },
-            { name: "Black/White", image_url: "/product-cutouts-transparent/nike-academy-b6fd89bd.png" },
-            { name: "Black/Ember Glow", image_url: "/product-cutouts-transparent/nike-academy-469aad44.png" }
+            { name: "Limelight/Hyper Crimson", image_url: "/product-cutouts/nike-academy-cab9aaeb.png" },
+            { name: "Black/Sunset Pulse", image_url: "/product-cutouts/nike-academy-eb5fc363.png" },
+            { name: "Black/White", image_url: "/product-cutouts/nike-academy-b6fd89bd.png" },
+            { name: "Black/Ember Glow", image_url: "/product-cutouts/nike-academy-469aad44.png" }
         ],
         description: "Reliable and spacious — the go-to choice for travel, gym, or weekend trips.",
-        image_url: "/product-cutouts-transparent/nike-academy-ba4df3c8.png",
+        image_url: "/product-cutouts/nike-academy-ba4df3c8.png",
         in_stock: true,
         sizes: ["One Size"]
     },
@@ -222,12 +222,12 @@ const products = [
         rating: 4.4,
         reviews_count: 890,
         colors: [
-            { name: "Light Bone", image_url: "/product-cutouts-transparent/nike-heritage-4315e0c3.png" },
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-heritage-e61be5f0.png" },
-            { name: "Desert Khaki", image_url: "/product-cutouts-transparent/nike-heritage-8fdc1b65.png" }
+            { name: "Light Bone", image_url: "/product-cutouts/nike-heritage-4315e0c3.png" },
+            { name: "Black", image_url: "/product-cutouts/nike-heritage-e61be5f0.png" },
+            { name: "Desert Khaki", image_url: "/product-cutouts/nike-heritage-8fdc1b65.png" }
         ],
         description: "Durable and stylish, this backpack is designed for athletes on the go.",
-        image_url: "/product-cutouts-transparent/nike-heritage-df8a7e9f.png",
+        image_url: "/product-cutouts/nike-heritage-df8a7e9f.png",
         in_stock: true,
         sizes: ["One Size"]
     },
@@ -241,12 +241,12 @@ const products = [
         rating: 4.2,
         reviews_count: 890,
         colors: [
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-varsity-elite-a20decdf.png" },
-            { name: "Midnight Navy/Black", image_url: "/product-cutouts-transparent/nike-varsity-elite-8f05d291.png" },
-            { name: "Iron Grey/Black", image_url: "/product-cutouts-transparent/nike-varsity-elite-c99f8e6d.png" }
+            { name: "Black", image_url: "/product-cutouts/nike-varsity-elite-a20decdf.png" },
+            { name: "Midnight Navy/Black", image_url: "/product-cutouts/nike-varsity-elite-8f05d291.png" },
+            { name: "Iron Grey/Black", image_url: "/product-cutouts/nike-varsity-elite-c99f8e6d.png" }
         ],
         description: "Spacious and functional, this basketball backpack is perfect for carrying all your gear.",
-        image_url: "/product-cutouts-transparent/nike-varsity-elite-c99f8e6d.png",
+        image_url: "/product-cutouts/nike-varsity-elite-c99f8e6d.png",
         in_stock: false,
         sizes: ["One Size"]
     },
@@ -260,10 +260,10 @@ const products = [
         rating: 4.0,
         reviews_count: 890,
         colors: [
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-tech-7c2bcbf8.png" },
-            { name: "Dark Grey Heather", image_url: "/product-cutouts-transparent/nike-tech-6e181241.png" },
-            { name: "Deep Night/Black", image_url: "/product-cutouts-transparent/nike-tech-a86e8c63.png" },
-            { name: "Black Heather", image_url: "/product-cutouts-transparent/nike-tech-b6c568c1.png" }
+            { name: "Black", image_url: "/product-cutouts/nike-tech-7c2bcbf8.png" },
+            { name: "Dark Grey Heather", image_url: "/product-cutouts/nike-tech-6e181241.png" },
+            { name: "Deep Night/Black", image_url: "/product-cutouts/nike-tech-a86e8c63.png" },
+            { name: "Black Heather", image_url: "/product-cutouts/nike-tech-b6c568c1.png" }
         ],
         description: "Comfort meets style in this classic pullover hoodie.",
         image_url: "https://static.nike.com/a/images/t_web_pdp_936_v2/f_auto/7deb0efc-4a47-4ac3-8abf-ae49b4f33b50/AS+M+NK+TCH+FLC+FZ+WR+HOODIE.png",
@@ -280,10 +280,10 @@ const products = [
         rating: 4.3,
         reviews_count: 890,
         colors: [
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-club-fleece-44077b48.png" },
-            { name: "Dark-Gray", image_url: "/product-cutouts-transparent/nike-club-fleece-647d294e.png" },
-            { name: "Birch Heather/White", image_url: "/product-cutouts-transparent/nike-club-fleece-719480cc.png" },
-            { name: "Sail/Sail/Black", image_url: "/product-cutouts-transparent/nike-club-fleece-029086f3.png" }
+            { name: "Black", image_url: "/product-cutouts/nike-club-fleece-44077b48.png" },
+            { name: "Dark-Gray", image_url: "/product-cutouts/nike-club-fleece-647d294e.png" },
+            { name: "Birch Heather/White", image_url: "/product-cutouts/nike-club-fleece-719480cc.png" },
+            { name: "Sail/Sail/Black", image_url: "/product-cutouts/nike-club-fleece-029086f3.png" }
         ],
         description: "A cozy, standard-fit fleece sweatshirt with a soft interior.",
         image_url: "https://sportamore.com/cdn/shop/products/09236-35_001.png?v=1678993650",
@@ -300,10 +300,10 @@ const products = [
         rating: 4.6,
         reviews_count: 890,
         colors: [
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-24-7-impossiblysoft-women-69c78e27.png" },
-            { name: "Light Orewood Brown", image_url: "/product-cutouts-transparent/nike-24-7-impossiblysoft-women-9465f997.png" },
-            { name: "Sail/Light Bone", image_url: "/product-cutouts-transparent/nike-24-7-impossiblysoft-women-4f6da231.png" },
-            { name: "Midnight Navy/Dark Obsidian", image_url: "/product-cutouts-transparent/nike-24-7-impossiblysoft-women-2fb1e5cd.png" }
+            { name: "Black", image_url: "/product-cutouts/nike-24-7-impossiblysoft-women-69c78e27.png" },
+            { name: "Light Orewood Brown", image_url: "/product-cutouts/nike-24-7-impossiblysoft-women-9465f997.png" },
+            { name: "Sail/Light Bone", image_url: "/product-cutouts/nike-24-7-impossiblysoft-women-4f6da231.png" },
+            { name: "Midnight Navy/Dark Obsidian", image_url: "/product-cutouts/nike-24-7-impossiblysoft-women-2fb1e5cd.png" }
         ],
         description: "Soft and warm, this fleece hoodie is perfect for cooler days.",
         image_url: "https://static.nike.com/a/images/t_web_pdp_936_v2/f_auto/3be8ed34-66b3-4a2d-9beb-7bcfb3e91702/AS+W+NK+24.7+DF+HZ+TOP+SOFT.png",
@@ -320,8 +320,8 @@ const products = [
         rating: 4.7,
         reviews_count: 890,
         colors: [
-            { name: "White", image_url: "/product-cutouts-transparent/fleece-full-zip-hoodie-e0770c3e.png" },
-            { name: "Black", image_url: "/product-cutouts-transparent/fleece-full-zip-hoodie-4e15cb52.png" }
+            { name: "White", image_url: "/product-cutouts/fleece-full-zip-hoodie-e0770c3e.png" },
+            { name: "Black", image_url: "/product-cutouts/fleece-full-zip-hoodie-4e15cb52.png" }
         ],
         description: "A versatile full-zip hoodie made from soft fleece fabric, perfect for layering.",
         image_url: "https://static.nike.com/a/images/t_web_pdp_936_v2/f_auto,u_9ddf04c7-2a9a-4d76-add1-d15af8f0263d,c_scale,fl_relative,w_1.0,h_1.0,fl_layer_apply/cf44ed1f-4c9a-45d2-a9e1-f5c3ab0c01d2/M+NK+CLUB+BB+FZ+HOODIE.png",
@@ -338,11 +338,11 @@ const products = [
         rating: 4.7,
         reviews_count: 890,
         colors: [
-            { name: "Light Bone/Sail", image_url: "/product-cutouts-transparent/nike-sportswear-essentials-506a271b.png" },
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-sportswear-essentials-dabf34bf.png" }
+            { name: "Light Bone/Sail", image_url: "/product-cutouts/nike-sportswear-essentials-506a271b.png" },
+            { name: "Black", image_url: "/product-cutouts/nike-sportswear-essentials-dabf34bf.png" }
         ],
         description: "A versatile crossbody bag perfect for everyday essentials.",
-        image_url: "/product-cutouts-transparent/nike-sportswear-essentials-587eacba.png",
+        image_url: "/product-cutouts/nike-sportswear-essentials-587eacba.png",
         in_stock: true,
         sizes: ["S", "M", "L", "XL"]
     },
@@ -375,13 +375,13 @@ const products = [
         rating: 4.7,
         reviews_count: 890,
         colors: [
-            { name: "Summit White/Black", image_url: "/product-cutouts-transparent/nike-offcourt-adjust-b3f357a0.png" },
-            { name: "Black", image_url: "/product-cutouts-transparent/nike-offcourt-adjust-ed113173.png" },
-            { name: "University Red/Black", image_url: "/product-cutouts-transparent/nike-offcourt-adjust-5b023e57.png" },
-            { name: "Lapis/Dark Smoke Grey", image_url: "/product-cutouts-transparent/nike-offcourt-adjust-5a54dfaf.png" }
+            { name: "Summit White/Black", image_url: "/product-cutouts/nike-offcourt-adjust-b3f357a0.png" },
+            { name: "Black", image_url: "/product-cutouts/nike-offcourt-adjust-ed113173.png" },
+            { name: "University Red/Black", image_url: "/product-cutouts/nike-offcourt-adjust-5b023e57.png" },
+            { name: "Lapis/Dark Smoke Grey", image_url: "/product-cutouts/nike-offcourt-adjust-5a54dfaf.png" }
         ],
         description: "Slide into all-day comfort with the Nike Offcourt Adjust.",
-        image_url: "/product-cutouts-transparent/nike-offcourt-adjust-080c3ce5.png",
+        image_url: "/product-cutouts/nike-offcourt-adjust-080c3ce5.png",
         in_stock: true,
         sizes: [8, 9, 10, 11]
     }

@@ -300,14 +300,14 @@ export default function LoginPage() {
                          />
                          <span className="transition-colors duration-200 group-hover:text-white">Keep me signed in</span>
                        </label>
-                       <button
-                         type="button"
-                         onClick={() => router.push("/forget-password")}
-                         className="hover:text-white transition-colors duration-200 hover:underline underline-offset-2"
-                         disabled={formik.isSubmitting}
-                       >
-                         Forgotten your password?
-                       </button>
+<button
+                          type="button"
+                          onClick={() => router.push(`/forget-password?email=${encodeURIComponent(formik.values.email)}`)}
+                          className="hover:text-white transition-colors duration-200 hover:underline underline-offset-2"
+                          disabled={formik.isSubmitting}
+                        >
+                          Forgotten your password?
+                        </button>
                      </div>
 
                      <p className="text-xs text-neutral-400 text-center leading-relaxed pt-2 animate-stagger" style={{ animationDelay: '0.2s' }}>

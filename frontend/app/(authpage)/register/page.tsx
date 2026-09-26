@@ -1,9 +1,9 @@
 "use client"
 
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useFormik } from "formik"
 import * as Yup from "yup"
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +16,7 @@ import {
 import { AlertCircle, Eye, EyeOff, Calendar, ChevronLeft, ChevronRight } from "lucide-react"
 import toastr from "toastr"
 import "toastr/build/toastr.min.css"
+import { createPortal } from "react-dom"
 
 // Configure toastr options
 toastr.options = {
@@ -175,9 +176,24 @@ function CustomDatePicker({
     return d > maxDate
   }
 
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const getDropdownStyle = (): React.CSSProperties => {
+    if (!buttonRef.current) return {};
+    const rect = buttonRef.current.getBoundingClientRect();
+    return {
+      position: 'fixed',
+      top: rect.bottom + 8,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 99999,
+    };
+  };
+
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         onBlur={onBlur}
@@ -194,13 +210,16 @@ function CustomDatePicker({
         <Calendar size={18} className="text-neutral-500" />
       </button>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <>
           <div
             className="fixed inset-0 z-[9998]"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute z-[9999] mt-2 w-full bg-neutral-900 border border-neutral-700 rounded-sm shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div
+            className="bg-neutral-900 border border-neutral-700 rounded-sm shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-200"
+            style={getDropdownStyle()}
+          >
             <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
@@ -296,7 +315,8 @@ function CustomDatePicker({
               </button>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   )

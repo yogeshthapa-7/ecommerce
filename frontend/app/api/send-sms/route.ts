@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 import twilio from 'twilio';
 
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+export const runtime = 'nodejs';
 
 type OrderSmsItem = {
   name: string;
@@ -14,33 +11,47 @@ type OrderSmsItem = {
 };
 
 export async function POST(request: Request) {
-  const {
-    phone,
-    customerName,
-    totalAmount,
-    orderId,
-    items,
-  } = await request.json();
-
-  if (!phone) {
-    return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
-  }
-
-  const resolvedItems: OrderSmsItem[] = Array.isArray(items) ? items : [];
-  const productName = resolvedItems[0]?.name || 'your order';
-
-  const currency = resolvedItems[0]?.currency || '$';
-  const formattedTotal = `${currency}${Number(totalAmount).toFixed(2)}`;
-
-  const messageBody =
-    `Hi ${customerName.split(' ')[0] || 'there'}! ` +
-    `Your payment of ${formattedTotal} for "${productName}" was successful. ` +
-    `Order #${orderId}. Thank you for shopping with us!`;
-
   try {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+
+    if (!accountSid || !authToken || !fromNumber) {
+      return NextResponse.json(
+        { error: 'Twilio credentials are missing. Check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER.' },
+        { status: 500 },
+      );
+    }
+
+    const twilioClient = twilio(accountSid, authToken);
+    const {
+      phone,
+      customerName,
+      totalAmount,
+      orderId,
+      items,
+    } = await request.json();
+
+    if (!phone) {
+      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+    }
+
+    const resolvedItems: OrderSmsItem[] = Array.isArray(items) ? items : [];
+    const productName = resolvedItems[0]?.name || 'your order';
+    const currency = resolvedItems[0]?.currency || '$';
+    const formattedTotal = `${currency}${Number(totalAmount || 0).toFixed(2)}`;
+    const firstName = typeof customerName === 'string' && customerName.trim()
+      ? customerName.trim().split(/\s+/)[0]
+      : 'there';
+
+    const messageBody =
+      `Hi ${firstName}! ` +
+      `Your payment of ${formattedTotal} for "${productName}" was successful. ` +
+      `Order #${orderId}. Thank you for shopping with us!`;
+
     const message = await twilioClient.messages.create({
       body: messageBody,
-      from: process.env.TWILIO_PHONE_NUMBER,
+      from: fromNumber,
       to: phone,
     });
 
