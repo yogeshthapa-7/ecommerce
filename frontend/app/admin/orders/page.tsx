@@ -5,6 +5,7 @@ import axios from "axios"
 import Pagination from "@/components/ui/pagination"
 import { AdminConfirmDialog, AdminModal, PageBody, PageHeader, MetricCard, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, iconButton, labelClass, primaryButton } from "@/components/admin/AdminSurface"
 import { getToken } from "@/lib/auth"
+import { useAutoRefresh } from "@/hooks/useAutoRefresh"
 
 
 /* ================= ORDERS PAGE ================= */
@@ -26,8 +27,11 @@ const OrdersPage = () => {
   })
 
   // Initialize Data
+  useAutoRefresh (() => fetchOrders(), [currentPage], 10000);
   useEffect(() => {
-    fetchOrders()
+   const handler = () => fetchOrders();
+   window.addEventListener('inventory-updated', handler);
+   return () => window.removeEventListener('inventory-updated', handler);
   }, [currentPage])
 
   const fetchOrders = async () => {

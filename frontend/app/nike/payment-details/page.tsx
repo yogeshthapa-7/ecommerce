@@ -268,6 +268,7 @@ const PaymentDetailsPage = () => {
 
       const createdOrder = await res.json();
       setOrderPlaced(true);
+      window.dispatchEvent(new Event('inventory-updated'));
 
       const cartSnapshot = typedCartItems.map((item) => ({
         productId: item.productId,

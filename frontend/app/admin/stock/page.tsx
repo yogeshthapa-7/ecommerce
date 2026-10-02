@@ -19,6 +19,7 @@ import autoTable from "jspdf-autotable"
 import { AdminModal, PageBody, PageHeader, MetricCard, StatusBadge, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, secondaryButton, primaryButton } from "@/components/admin/AdminSurface"
 import { NikeDatePicker } from "@/components/ui/nike-date-picker"
 import { getToken } from "@/lib/auth"
+import { useAutoRefresh } from "@/hooks/useAutoRefresh"
 
 type StockLog = {
   _id: string
@@ -161,12 +162,24 @@ const StockPage = () => {
     }
   }
 
+  useAutoRefresh(() => {
+    fetchLogs();
+    fetchSummary();
+    fetchLowStock();
+    fetchReport();
+    fetchProducts();
+  }, [page, filterType, filterProduct, startDate, endDate], 10000);
+
   useEffect(() => {
+    const handler = () => {
     fetchLogs()
     fetchSummary()
     fetchLowStock()
     fetchReport()
     fetchProducts()
+    };
+    window.addEventListener('inventory-updated', handler);
+    return() => window.remove
   }, [page, filterType, filterProduct, startDate, endDate])
 
   useEffect(() => {

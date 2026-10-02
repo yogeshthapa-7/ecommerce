@@ -10,6 +10,8 @@ import {
 import axios from "axios"
 import { AdminConfirmDialog, AdminModal, PageBody, PageHeader, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, iconButton, labelClass, primaryButton } from "@/components/admin/AdminSurface"
 import { getToken } from "@/lib/auth"
+import { useAutoRefresh } from "@/hooks/useAutoRefresh"
+
 const ProductsPage = () => {
   const [products, setProducts] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
@@ -40,9 +42,14 @@ const ProductsPage = () => {
   })
   const [sizesInput, setSizesInput] = useState("")
   const [newColor, setNewColor] = useState({ name: "", image_url: "" })
+
+  useAutoRefresh(() => fetchProducts(currentPage), [currentPage], 10000);
   useEffect(() => {
-    fetchProducts()
+    const handler = () => fetchProducts(currentPage);
+    window.addEventListener('inventory-updated', handler);
+    return () => window.removeEventListener('inventory-updated', handler);
   }, [currentPage])
+
   const fetchProducts = async (page = currentPage) => {
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/products?showAll=true&page=${page}&limit=50`)

@@ -111,16 +111,36 @@ exports.createOrder = async (req, res) => {
                 (c) => c.name && item.color && c.name.toLowerCase() === item.color.toLowerCase()
             );
 
-            const colorStock = matchedColor ? (matchedColor.stockQuantity || 0) : (product.stockQuantity || 0);
             const quantityChange = -(item.quantity || 1);
-            const newQuantity = colorStock + quantityChange;
-
-            if (newQuantity < 0) continue;
+            let previousQuantity = product.stockQuantity || 0;
+            let newQuantity = previousQuantity;
 
             if (matchedColor) {
-                matchedColor.stockQuantity = newQuantity;
+                const colorStock = matchedColor.stockQuantity || 0;
+                const newColorStock = colorStock + quantityChange;
+
+                if (newColorStock >= 0) {
+                    matchedColor.stockQuantity = newColorStock;
+                    previousQuantity = colorStock;
+                    newQuantity = newColorStock;
+                } else {
+                    const topStock = product.stockQuantity || 0;
+                    const newTopStock = topStock + quantityChange;
+                    if (newTopStock >= 0) {
+                        product.stockQuantity = newTopStock;
+                        previousQuantity = topStock;
+                        newQuantity = newTopStock;
+                    } else {
+                        continue;
+                    }
+                }
             } else {
-                product.stockQuantity = newQuantity;
+                const topStock = product.stockQuantity || 0;
+                const newTopStock = topStock + quantityChange;
+                if (newTopStock < 0) continue;
+                product.stockQuantity = newTopStock;
+                previousQuantity = topStock;
+                newQuantity = newTopStock;
             }
             product.lastStockUpdate = new Date();
             if (newQuantity === 0) {
@@ -133,7 +153,7 @@ exports.createOrder = async (req, res) => {
                 productName: product.name,
                 changeType: 'sale',
                 quantityChange,
-                previousQuantity: colorStock,
+                previousQuantity,
                 newQuantity,
                 referenceId: null,
                 referenceType: 'Order',

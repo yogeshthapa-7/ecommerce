@@ -34,6 +34,7 @@ import {
 import EcomFooter from "@/components/ecomfooter";
 import { getToken, getUser, clearAuth } from "@/lib/auth";
 import { useCart } from "@/app/context/CartContext";
+import { useAutoRefresh } from '@/hooks/useAutoRefresh';
 
 interface UserData {
   _id?: string;
@@ -142,6 +143,21 @@ const ProfilePage = () => {
       router.push("/login");
     }
   }, [router]);
+
+  useAutoRefresh((userId) => fetchOrders(userId), [user?._id || user?.id], 10000);
+  useEffect(() => {
+    const handler = () => {
+      const userStr = getUser();
+      if (userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+          fetchOrders(userData._id || userData.id);
+        } catch(e) {}
+      }
+    };
+    window.addEventListener('inventory-updated', handler);
+    return () => window.removeEventListener('inventory-updated', handler);
+  }, []);
 
   const fetchOrders = async (userId: string) => {
     if (!userId) {
