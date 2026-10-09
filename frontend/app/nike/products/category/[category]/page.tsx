@@ -46,19 +46,19 @@ const {
 });
 
 
+  // Check if we're filtering by gender (Men, Women, Kids) instead of category
+  const genderCategories = ['Men', 'Women', 'Kids'];
+  const normalizedCategoryParam = categoryParam?.charAt(0).toUpperCase() + categoryParam?.slice(1).toLowerCase();
+  const isGenderFilter = genderCategories.includes(normalizedCategoryParam);
+
   // Filter products by category and other filters
   const categoryProducts = products.filter((product) => {
     if (!product || !product.category) return false;
 
-    // Check if we're filtering by gender (Men, Women, Kids) instead of category
-    const genderCategories = ['Men', 'Women', 'Kids'];
-    const isGenderFilter = genderCategories.includes(categoryParam?.charAt(0).toUpperCase() + categoryParam?.slice(1).toLowerCase());
-
     let matchesCategory = true;
     if (isGenderFilter) {
       // Filter by gender
-      const gender = categoryParam?.charAt(0).toUpperCase() + categoryParam?.slice(1).toLowerCase();
-      matchesCategory = product.gender === gender;
+      matchesCategory = product.gender === normalizedCategoryParam;
     } else {
       // Match category (case-insensitive)
       matchesCategory = product.category.toLowerCase() === categoryParam?.toLowerCase();
@@ -76,7 +76,9 @@ const {
   });
 
   // Get unique genders from category products
-  const genders = ['All', ...new Set(categoryProducts.map((p) => p?.gender).filter(Boolean))];
+  // When filtering by gender (Men/Women/Kids), hide "All" since the URL already selects a specific gender
+  const availableGenders = [...new Set(categoryProducts.map((p) => p?.gender).filter(Boolean))];
+  const genders = isGenderFilter ? availableGenders : ['All', ...availableGenders];
 
   const ProductCard = ({ product }) => (
     <Link
