@@ -3,13 +3,15 @@
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Menu, Search, X } from 'lucide-react'
 import { useLanguage } from '@/app/context/LanguageContext'
+import { getToken } from '@/lib/auth'
 
 const navItems = [
-    { labelKey: 'nav.men', link: '/men' },
-    { labelKey: 'nav.women', link: '/women' },
-    { labelKey: 'nav.kids', link: '/kids' },
+    { labelKey: 'nav.men', link: '/nike/products/category/Men', gender: true },
+    { labelKey: 'nav.women', link: '/nike/products/category/Women', gender: true },
+    { labelKey: 'nav.kids', link: '/nike/products/category/Kids', gender: true },
     { labelKey: 'nav.running', link: '/running' },
     { labelKey: 'nav.lifestyle', link: '/lifestyle' },
     { labelKey: 'nav.jordan', link: '/jordan' },
@@ -20,7 +22,13 @@ export default function LandingNavbar() {
     const [isScrolled, setIsScrolled] = useState(false)
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [searchOpen, setSearchOpen] = useState(false)
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
     const { language, setLanguage, t } = useLanguage()
+    const router = useRouter()
+
+    useEffect(() => {
+        setIsLoggedIn(!!getToken())
+    }, [])
 
     useEffect(() => {
         const handleScroll = () => {
@@ -31,6 +39,14 @@ export default function LandingNavbar() {
         window.addEventListener('scroll', handleScroll, { passive: true })
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
+
+    const handleGenderClick = (e: React.MouseEvent, item: (typeof navItems)[number]) => {
+        if (!item.gender) return
+        if (!isLoggedIn) {
+            e.preventDefault()
+            router.push('/register')
+        }
+    }
 
     return (
         <header className="fixed left-0 top-0 z-50 w-full">
@@ -48,8 +64,12 @@ export default function LandingNavbar() {
                     </div>
 
                     <div className="flex items-center gap-5">
-                        <Link href="/register" className="hover:underline">{t('nav.join')}</Link>
-                        <Link href="/login" className="hover:underline">{t('nav.signIn')}</Link>
+                        {!isLoggedIn && (
+                            <>
+                                <Link href="/register" className="hover:underline">{t('nav.join')}</Link>
+                                <Link href="/login" className="hover:underline">{t('nav.signIn')}</Link>
+                            </>
+                        )}
                         <div className="flex items-center gap-1 font-black uppercase">
                             <button
                                 type="button"
@@ -90,6 +110,7 @@ export default function LandingNavbar() {
                             <Link
                                 key={item.labelKey}
                                 href={item.link}
+                                onClick={(e) => handleGenderClick(e, item)}
                                 className={`transition-colors ${
                                     item.sale
                                         ? 'text-red-600 hover:text-red-500'
@@ -146,10 +167,13 @@ export default function LandingNavbar() {
                             <Link
                                 key={item.labelKey}
                                 href={item.link}
+                                onClick={(e) => {
+                                    handleGenderClick(e, item)
+                                    setMobileMenuOpen(false)
+                                }}
                                 className={`border-b border-zinc-200 py-5 ${
                                     item.sale ? 'text-red-600' : 'text-zinc-950'
                                 }`}
-                                onClick={() => setMobileMenuOpen(false)}
                             >
                                 {t(item.labelKey)}
                             </Link>
