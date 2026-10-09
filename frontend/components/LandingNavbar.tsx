@@ -15,7 +15,7 @@ const navItems = [
     { labelKey: 'nav.running', link: '/running' },
     { labelKey: 'nav.lifestyle', link: '/lifestyle' },
     { labelKey: 'nav.jordan', link: '/jordan' },
-    { labelKey: 'nav.sale', link: '/sale', sale: true },
+    { labelKey: 'nav.sale', link: '/nike/sale', sale: true },
 ]
 
 export default function LandingNavbar() {

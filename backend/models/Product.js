@@ -18,6 +18,9 @@ const productSchema = new mongoose.Schema({
     image_url: { type: String, default: '' },
     in_stock: { type: Boolean, default: true },
     sizes: [mongoose.Schema.Types.Mixed],
+    tags: [{ type: String }],
+    discount: { type: Number, default: 0 },
+    saleFestival: { type: String, default: '' },
     stockQuantity: { type: Number, default: 0 },
     lowStockThreshold: { type: Number, default: 5 },
     lastStockUpdate: { type: Date }

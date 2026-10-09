@@ -38,7 +38,9 @@ const ProductsPage = () => {
     colors: [],
     sizes: [],
     reviews_count: 0,
-    in_stock: true
+    in_stock: true,
+    discount: 0,
+    saleFestival: ""
   })
   const [sizesInput, setSizesInput] = useState("")
   const [newColor, setNewColor] = useState({ name: "", image_url: "" })
@@ -97,7 +99,7 @@ const ProductsPage = () => {
     setFormData({
       name: "", category: "Shoes", gender: "Unisex", price: "", stock: 0, stockQuantity: 0,
       status: "active", image_url: "", description: "", colors: [],
-      sizes: [], reviews_count: 0, in_stock: true
+      sizes: [], reviews_count: 0, in_stock: true, discount: 0, saleFestival: ""
     })
     setIsModalOpen(true)
   }
@@ -119,7 +121,9 @@ const ProductsPage = () => {
       colors: product.colors || [],
       sizes: product.sizes || [],
       reviews_count: product.reviews_count || 0,
-      in_stock: product.in_stock !== undefined ? product.in_stock : true
+      in_stock: product.in_stock !== undefined ? product.in_stock : true,
+      discount: product.discount ?? 0,
+      saleFestival: product.saleFestival || ""
     })
     setIsModalOpen(true)
   }
@@ -168,7 +172,9 @@ const ProductsPage = () => {
         : (parseInt(formData.stockQuantity) || 0),
       sizes: formData.sizes,
       colors: formData.colors,
-      reviews_count: parseInt(formData.reviews_count) || 0
+      reviews_count: parseInt(formData.reviews_count) || 0,
+      discount: parseFloat(formData.discount) || 0,
+      saleFestival: formData.saleFestival || ""
     }
     const token = getToken()
     const config = { headers: { Authorization: `Bearer ${token}` } }
@@ -489,15 +495,37 @@ const ProductsPage = () => {
                     className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
                   />
                 </div>
-                {/* <div>
-                  <label className={labelClass}>Stock Quantity</label>
+                <div>
+                  <label className={labelClass}>Discount (%)</label>
                   <input
                     type="number"
-                    value={formData.stockQuantity}
-                    onChange={e => setFormData({ ...formData, stockQuantity: e.target.value })}
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={formData.discount}
+                    onChange={e => setFormData({ ...formData, discount: e.target.value })}
+                    placeholder="0"
                     className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
                   />
-                </div> */}
+                </div>
+              </div>
+
+              {/* Sale Festival */}
+              <div>
+                <label className={labelClass}>Sale Festival</label>
+                <select
+                  value={formData.saleFestival}
+                  onChange={e => setFormData({ ...formData, saleFestival: e.target.value })}
+                  className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors appearance-none"
+                >
+                  <option value="">None</option>
+                  <option value="dashain">Dashain</option>
+                  <option value="tihar">Tihar</option>
+                  <option value="holi">Holi</option>
+                  <option value="teej">Teej</option>
+                  <option value="chhath">Chhath</option>
+                  <option value="maghi">Maghi</option>
+                </select>
               </div>
 
               {/* In Stock Toggle and Status */}

@@ -124,7 +124,7 @@ const EcomNavbar = () => {
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-white transition-all group-hover:w-full"></span>
                 </Link>
                 <Link
-                  href="/nike/products"
+                  href="/nike/sale"
                   className="text-red-500 hover:text-red-400 transition-colors relative group font-semibold"
                 >
                   Sale
