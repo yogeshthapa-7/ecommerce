@@ -1,6 +1,12 @@
 const Product = require('../models/Product');
 const { addOrUpdateProductInSearch, removeProductFromSearch } = require('../utils/syncMeilisearch');
 
+const syncTopLevelStock = (product) => {
+    const totalColorStock = (product.colors || []).reduce (
+        (sum, c) => sum + (c.stockQuantity || 0), 0
+    );
+    product.stockQuantity = totalColorStock;
+}
 // GET product count
 exports.getProductCount = async (req, res) => {
     try {
@@ -80,6 +86,7 @@ exports.getProductsByCategory = async (req, res) => {
 exports.createProduct = async (req, res) => {
     try {
         const product = new Product(req.body);
+        syncTopLevelStock(product);
         const saved = await product.save();
         await addOrUpdateProductInSearch(saved);
         res.status(201).json(saved);
@@ -91,14 +98,13 @@ exports.createProduct = async (req, res) => {
 // PUT update product
 exports.updateProduct = async (req, res) => {
     try {
-        const updated = await Product.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { returnDocument: 'after', runValidators: true }
-        );
-        if (!updated) return res.status(404).json({ message: 'Product not found' });
-        await addOrUpdateProductInSearch(updated);
-        res.json(updated);
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+        Object.assign(product, req.body);
+        syncTopLevelStock(product);
+        const saved = await product.save();
+        await addOrUpdateProductInSearch(saved);
+        res.json(saved);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }

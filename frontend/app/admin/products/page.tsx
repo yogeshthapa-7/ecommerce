@@ -163,7 +163,9 @@ const ProductsPage = () => {
       image_url: displayImage,
       description: formData.description,
       in_stock: formData.in_stock,
-      stockQuantity: parseInt(formData.stockQuantity) || 0,
+            stockQuantity: formData.colors.length > 0
+        ? formData.colors.reduce((sum, c) => sum + (c.stockQuantity || 0), 0)
+        : (parseInt(formData.stockQuantity) || 0),
       sizes: formData.sizes,
       colors: formData.colors,
       reviews_count: parseInt(formData.reviews_count) || 0
@@ -273,16 +275,16 @@ const ProductsPage = () => {
                             <td className={adminCell}>
                               <span className="text-white font-black text-base">${product.price.toFixed(2)}</span>
                             </td>
-                            <td className={adminCell}>
-                              <span className={`text-sm font-black ${((product.colors || []).reduce((sum, c) => sum + (c.stockQuantity ?? 0), 0) + (product.stockQuantity ?? 0)) <= 0 ? 'text-red-300' : 'text-emerald-300'}`}>
-                                {(product.colors || []).reduce((sum, c) => sum + (c.stockQuantity ?? 0), 0) + (product.stockQuantity ?? 0)}
+                               <td className={adminCell}>
+                              <span className={`text-sm font-black ${(product.stockQuantity ?? 0) <= 0 ? 'text-red-300' : 'text-emerald-300'}`}>
+                                {product.stockQuantity ?? 0}
                               </span>
                             </td>
-                            <td className={adminCell}>
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.in_stock ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
-                                {product.in_stock ? "In Stock" : "Out of Stock"}
+                               <td className={adminCell}>
+                               <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.in_stock ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+                                 {product.in_stock ? "In Stock" : "Out of Stock"}
                               </span>
-                            </td>
+                             </td>
                             <td className={adminCell}>
                               <div className="flex items-center gap-3">
                                 <button onClick={(e) => handleOpenEdit(e, product)} className={iconButton}>
@@ -487,7 +489,7 @@ const ProductsPage = () => {
                     className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label className={labelClass}>Stock Quantity</label>
                   <input
                     type="number"
@@ -495,7 +497,7 @@ const ProductsPage = () => {
                     onChange={e => setFormData({ ...formData, stockQuantity: e.target.value })}
                     className="w-full bg-black border border-gray-800 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white transition-colors"
                   />
-                </div>
+                </div> */}
               </div>
 
               {/* In Stock Toggle and Status */}
@@ -578,34 +580,32 @@ const ProductsPage = () => {
                 {/* Existing Colors */}
                 {formData.colors.length > 0 && (
                   <div className="space-y-2 mb-3">
-                    {formData.colors.map((color, index) => (
-                      <div key={index} className="flex items-center gap-2 bg-black border border-gray-800 rounded-lg p-3">
-                        <div className="flex-1">
-                          <div className="text-white text-sm font-bold">{color.name}</div>
-                          <div className="text-gray-500 text-xs truncate">{color.image_url}</div>
-                        </div>
-                        <div className="w-24">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 block mb-1">Stock</label>
-                          <input
-                            type="number"
-                            value={color.stockQuantity ?? 0}
-                            onChange={(e) => {
-                              const updated = [...formData.colors];
-                              updated[index] = { ...updated[index], stockQuantity: parseInt(e.target.value) || 0 };
-                              setFormData({ ...formData, colors: updated });
-                            }}
-                            className="w-full bg-black border border-gray-800 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-white transition-colors"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeColor(index)}
-                          className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
+          {formData.colors.map((color, idx) => (
+  <div key={idx} className="flex items-center gap-3">
+    <span className="text-sm font-bold text-white">{color.name}</span>
+    <input
+      type="number"
+      min="0"
+      value={color.stockQuantity ?? 0}
+      onChange={(e) => {
+        const value = parseInt(e.target.value) || 0;
+        setFormData((prev) => ({
+          ...prev,
+          colors: prev.colors.map((c, i) =>
+            i === idx ? { ...c, stockQuantity: value } : c
+          ),
+        }));
+      }}
+      className="h-9 w-24 rounded-lg border border-white/10 bg-black px-3 text-sm font-bold text-white"
+    />
+    <button
+      onClick={() => removeColor(idx)}
+      className="text-red-400 hover:text-red-300"
+    >
+      <Trash2 size={14} />
+    </button>
+  </div>
+))}
                   </div>
                 )}
 

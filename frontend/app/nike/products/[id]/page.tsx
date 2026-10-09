@@ -81,6 +81,7 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [currentImage, setCurrentImage] = useState("");
   const [addedToCart, setAddedToCart] = useState(false);
+  const [selectedColorStock, setSelectedColorStock] = useState<number | null>(null);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   useEffect(() => {
@@ -163,6 +164,7 @@ const ProductDetailPage = () => {
   const handleColorChange = (color: ProductColor) => {
     setSelectedColor(color);
     setCurrentImage(color.image_url || product?.image_url || fallbackProductImage);
+    setSelectedColorStock(color.stockQuantity ?? null);
   };
 
   const toggleWishlist = async () => {
@@ -313,6 +315,11 @@ const ProductDetailPage = () => {
                           decoding="async"
                           className="h-full w-full object-cover"
                         />
+                                                     {(color.stockQuantity ?? 0) === 0 && (
+                             <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/70 text-[10px] font-black text-red-400 pointer-events-none">
+                               OUT
+                             </span>
+                           )}
                       </button>
                     );
                   })}
@@ -363,15 +370,25 @@ const ProductDetailPage = () => {
               </div>
 
               <div className="mt-6 flex items-center gap-3">
-                <span
-                  className={`h-2.5 w-2.5 rounded-full ${(product.in_stock !== false && getTotalStock(product) > 0) ? "bg-emerald-400" : "bg-red-500"}`}
-                />
-                <span
-                  className={`text-sm font-black uppercase ${(product.in_stock !== false && getTotalStock(product) > 0) ? "text-emerald-300" : "text-red-400"}`}
-                >
-                  {(product.in_stock !== false && getTotalStock(product) > 0) ? "In Stock" : "Out of Stock"}
-                </span>
-              </div>
+                 <span
+                   className={`h-2.5 w-2.5 rounded-full ${selectedColor && (selectedColor.stockQuantity ?? 0) === 0 ? "bg-red-500" : "bg-emerald-400"}`}
+                 />
+                 <span
+                   className={`text-sm font-black uppercase ${selectedColor && (selectedColor.stockQuantity ?? 0) === 0 ? "text-red-400" : "text-emerald-300"}`}
+                 >
+                   {selectedColor && (selectedColor.stockQuantity ?? 0) === 0 ? "Out of Stock" : "In Stock"}
+                 </span>
+               </div>
+
+                {selectedColor && (
+                <p className="text-xs font-bold text-zinc-500">
+                  {selectedColorStock !== null
+                    ? selectedColorStock > 0
+                      ? `${selectedColorStock} in stock`
+                      : 'Out of stock'
+                    : ''}
+                </p>
+              )}
 
               {(!product.in_stock || getTotalStock(product) <= 0) && isWishlisted && (
                 <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-white/40">
@@ -437,7 +454,7 @@ const ProductDetailPage = () => {
                   </button>
                 </div>
 
-                 {(product.in_stock !== false && getTotalStock(product) > 0) ? (
+                {(product.colors?.length ? (selectedColor?.stockQuantity ?? 0) > 0 : (product.in_stock !== false && getTotalStock(product) > 0)) ? (
                    <Button
                      onClick={handleAddToCart}
                      disabled={availableSizes.length > 0 && !selectedSize}

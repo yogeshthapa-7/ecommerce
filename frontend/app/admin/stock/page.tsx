@@ -16,7 +16,7 @@ import axios from "axios"
 import Link from "next/link"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
-import { AdminModal, PageBody, PageHeader, MetricCard, StatusBadge, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, secondaryButton, primaryButton } from "@/components/admin/AdminSurface"
+import { AdminModal, PageBody, PageHeader, MetricCard, StatusBadge, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, labelClass, secondaryButton, primaryButton } from "@/components/admin/AdminSurface"
 import { NikeDatePicker } from "@/components/ui/nike-date-picker"
 import { getToken } from "@/lib/auth"
 import { useAutoRefresh } from "@/hooks/useAutoRefresh"
@@ -45,6 +45,7 @@ type ProductSummary = {
   lowStockThreshold: number
   in_stock: boolean
   image_url: string
+  color?: Array<{ name: string; stockQuantity: number }>
 }
 
 type ReportData = {
@@ -89,7 +90,9 @@ const StockPage = () => {
   const [adjustQuantity, setAdjustQuantity] = useState("")
   const [adjustReason, setAdjustReason] = useState("")
   const [adjustType, setAdjustType] = useState("adjustment")
+  const [adjustColor, setAdjustColor] = useState("")
   const [products, setProducts] = useState<ProductSummary[]>([])
+  
 
   const token = getToken() || ""
 
@@ -162,24 +165,17 @@ const StockPage = () => {
     }
   }
 
-  useAutoRefresh(() => {
-    fetchLogs();
-    fetchSummary();
-    fetchLowStock();
-    fetchReport();
-    fetchProducts();
-  }, [page, filterType, filterProduct, startDate, endDate], 10000);
-
-  useEffect(() => {
+    useEffect(() => {
     const handler = () => {
-    fetchLogs()
-    fetchSummary()
-    fetchLowStock()
-    fetchReport()
-    fetchProducts()
+      fetchLogs();
+      fetchSummary();
+      fetchLowStock();
+      fetchReport();
+      fetchProducts();
     };
+    handler();
     window.addEventListener('inventory-updated', handler);
-    return() => window.remove
+    return () => window.removeEventListener('inventory-updated', handler);
   }, [page, filterType, filterProduct, startDate, endDate])
 
   useEffect(() => {
@@ -198,6 +194,7 @@ const StockPage = () => {
           reason: adjustReason,
           changeType: adjustType,
           notes: adjustReason,
+          colorName: adjustColor || undefined,
         },
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -206,10 +203,12 @@ const StockPage = () => {
       setAdjustQuantity("")
       setAdjustReason("")
       setAdjustType("adjustment")
+      setAdjustColor("")
       fetchLogs()
       fetchSummary()
       fetchLowStock()
       fetchReport()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
       console.error("Error adjusting stock:", err)
     }
@@ -531,8 +530,16 @@ const StockPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* LOW STOCK ALERTS */}
               <div className={`${adminPanel} overflow-hidden`}>
-                <div className="border-b border-white/10 px-5 py-4">
-                  <h3 className="text-xs font-black uppercase tracking-[0.18em] text-white/45">Low Stock Alerts</h3>
+                <div className="flex items-center justify-between border-b border-white/10 bg-[#0b0b0b] px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-300 text-black">
+                      <AlertTriangle size={16} />
+                    </div>
+                    <h3 className="text-xs font-black uppercase tracking-[0.18em] text-white">Low Stock Alerts</h3>
+                  </div>
+                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white/50">
+                    {lowStockProducts.length} Items
+                  </span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className={adminTable}>
@@ -547,11 +554,40 @@ const StockPage = () => {
                     </thead>
                     <tbody>
                       {lowStockProducts.length === 0 ? (
-                        <tr><td colSpan={5} className="px-4 py-8 text-center text-white/35">No low stock alerts.</td></tr>
+                        <tr><td colSpan={5} className="px-4 py-12 text-center text-white/35">No low stock alerts.</td></tr>
                       ) : (
                         lowStockProducts.map((p) => (
                           <tr key={p._id} className="transition-colors hover:bg-white/[0.04]">
-                            <td className={`${adminCell} text-sm font-medium text-white`}>{p.name}</td>
+                            <td className={`${adminCell} text-sm font-medium text-white`}>
+                              <div className="flex items-center gap-3">
+                                {p.image_url ? (
+                                  <img
+                                    src={p.image_url}
+                                    alt={p.name}
+                                    className="h-14 w-14 shrink-0 rounded-xl border border-white/10 bg-black object-contain"
+                                  />
+                                ) : (
+                                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white/30">
+                                    <Package size={20} />
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="truncate font-bold text-white">{p.name}</p>
+                                  {(p.colors || []).length > 0 && (
+                                    <div className="mt-1.5 flex flex-wrap gap-1">
+                                      {p.colors.map((c, idx) => (
+                                        <span
+                                          key={idx}
+                                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${(c.stockQuantity ?? 0) > 0 ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300' : 'border-red-500/20 bg-red-500/10 text-red-300'}`}
+                                        >
+                                          {c.name}: {c.stockQuantity ?? 0}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
                             <td className={`${adminCell} text-sm text-gray-300`}>{p.category}</td>
                             <td className={`${adminCell} text-sm font-black ${p.stockQuantity === 0 ? 'text-red-300' : 'text-amber-300'}`}>{p.stockQuantity}</td>
                             <td className={`${adminCell} text-sm text-gray-300`}>{p.lowStockThreshold}</td>
@@ -568,26 +604,55 @@ const StockPage = () => {
 
               {/* MANUAL ADJUST */}
               <div className={`${adminPanel} p-5 sm:p-6`}>
-                <h3 className="mb-4 text-xs font-black uppercase tracking-[0.18em] text-white/45">Manual Stock Adjustment</h3>
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime-300 text-black">
+                    <Warehouse size={16} />
+                  </div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.18em] text-white">Manual Stock Adjustment</h3>
+                </div>
                 <form onSubmit={handleAdjustStock} className="space-y-4">
                   <div>
-                    <label className={fieldClass}>Product</label>
-                     <select value={adjustProductId} onChange={(e) => setAdjustProductId(e.target.value)} className={fieldClass} required>
-                       <option value="">Select a product</option>
-                       {lowStockProducts.map((p) => (
-                         <option key={p._id} value={p._id}>{p.name} (Current: {p.stockQuantity})</option>
-                       ))}
-                     </select>
-                  </div>
-                  <div>
-                    <label className={fieldClass}>Change Type</label>
-                    <select value={adjustType} onChange={(e) => setAdjustType(e.target.value)} className={fieldClass}>
-                      <option value="adjustment">Adjustment</option>
-                      <option value="restock">Restock</option>
+                    <label className={`${labelClass} block`}>Product & Color</label>
+                    <select
+                      value={adjustProductId ? `${adjustProductId}::${adjustColor}` : ""}
+                      onChange={(e) => {
+                        const [pid, color] = e.target.value.split("::")
+                        setAdjustProductId(pid)
+                        setAdjustColor(color || "")
+                      }}
+                      className={fieldClass}
+                      required
+                    >
+                      <option value="">Select a product variant</option>
+                      {lowStockProducts.map((p) => {
+                        if ((p.colors || []).length > 0) {
+                          return p.colors.map((c) => (
+                            <option key={`${p._id}-${c.name}`} value={`${p._id}::${c.name}`}>
+                              {p.name}: {c.name} (Stock: {c.stockQuantity ?? 0})
+                            </option>
+                          ))
+                        }
+                        return (
+                          <option key={p._id} value={`${p._id}::`}>
+                            {p.name} (Current: {p.stockQuantity})
+                          </option>
+                        )
+                      })}
                     </select>
                   </div>
                   <div>
-                    <label className={fieldClass}>Quantity Change (+/-)</label>
+                    <label className={`${labelClass} block`}>Change Type</label>
+                    <select value={adjustType} onChange={(e) => setAdjustType(e.target.value)} className={fieldClass}>
+                      <option value="restock">Restock</option>
+                      <option value="adjustment">Adjustment</option>
+                      <option value="sale">Sale</option>
+                      <option value="return">Return</option>
+                      <option value="exchange_in">Exchange In</option>
+                      <option value="exchange_out">Exchange Out</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`${labelClass} block`}>Quantity Change (+/-)</label>
                     <input
                       type="number"
                       value={adjustQuantity}
@@ -598,7 +663,7 @@ const StockPage = () => {
                     />
                   </div>
                   <div>
-                    <label className={fieldClass}>Reason / Notes</label>
+                    <label className={`${labelClass} block`}>Reason / Notes</label>
                     <textarea
                       value={adjustReason}
                       onChange={(e) => setAdjustReason(e.target.value)}

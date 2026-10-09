@@ -247,6 +247,8 @@ const OrdersPage = () => {
                                 {order.items.slice(0, 2).map((item, i) => (
                                   <p key={i} className="truncate" title={`${item.quantity}x ${item.name || 'Product'}`}>
                                     {item.quantity}x {item.name || 'Product'}
+                                    {item.color && <span className = 'text-gray-500'> . {item.color}</span>}
+                                    {item.size && <span className = 'text-gray-500'> . {item.size}</span>}
                                   </p>
                                 ))}
                                 {order.items.length > 2 && (

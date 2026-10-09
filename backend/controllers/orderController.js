@@ -3,6 +3,12 @@ const Customer = require('../models/Customer');
 const Product = require('../models/Product');
 const mongoose = require('mongoose');
 
+const syncTopLevelStock = (product) => {
+    const totalColorStock = (product.colors || []).reduce(
+        (sum, c) => sum + (c.stockQuantity || 0), 0
+    );
+    product.stockQuantity = totalColorStock;
+};
 // GET orders by user ID
 exports.getOrdersByUser = async (req, res) => {
     try {
@@ -112,55 +118,74 @@ exports.createOrder = async (req, res) => {
             );
 
             const quantityChange = -(item.quantity || 1);
-            let previousQuantity = product.stockQuantity || 0;
-            let newQuantity = previousQuantity;
 
             if (matchedColor) {
                 const colorStock = matchedColor.stockQuantity || 0;
                 const newColorStock = colorStock + quantityChange;
 
-                if (newColorStock >= 0) {
-                    matchedColor.stockQuantity = newColorStock;
-                    previousQuantity = colorStock;
-                    newQuantity = newColorStock;
-                } else {
-                    const topStock = product.stockQuantity || 0;
-                    const newTopStock = topStock + quantityChange;
-                    if (newTopStock >= 0) {
-                        product.stockQuantity = newTopStock;
-                        previousQuantity = topStock;
-                        newQuantity = newTopStock;
-                    } else {
-                        continue;
-                    }
+                if (newColorStock < 0) continue;
+
+                               matchedColor.stockQuantity = newColorStock;
+                product.lastStockUpdate = new Date();
+
+                const totalColorStock = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
+                const totalStock = totalColorStock + (product.stockQuantity || 0);
+                if (totalStock === 0) {
+                    product.in_stock = false;
+                } else if (totalStock > 0 && product.in_stock === false) {
+                    product.in_stock = true;
                 }
+
+                syncTopLevelStock(product);
+                await product.save();
+
+                await StockLog.create({
+                    productId: product._id,
+                    productName: product.name,
+                    changeType: 'sale',
+                    quantityChange,
+                    previousQuantity: colorStock,
+                    newQuantity: newColorStock,
+                    referenceId: null,
+                    referenceType: 'Order',
+                    performedBy: actor.id || actor._id,
+                    performedByName: actorName,
+                    notes: `Order ${orderId} (Color: ${matchedColor.name})`
+                });
             } else {
                 const topStock = product.stockQuantity || 0;
                 const newTopStock = topStock + quantityChange;
-                if (newTopStock < 0) continue;
-                product.stockQuantity = newTopStock;
-                previousQuantity = topStock;
-                newQuantity = newTopStock;
-            }
-            product.lastStockUpdate = new Date();
-            if (newQuantity === 0) {
-                product.in_stock = false;
-            }
-            await product.save();
 
-            await StockLog.create({
-                productId: product._id,
-                productName: product.name,
-                changeType: 'sale',
-                quantityChange,
-                previousQuantity,
-                newQuantity,
-                referenceId: null,
-                referenceType: 'Order',
-                performedBy: actor.id || actor._id,
-                performedByName: actorName,
-                notes: `Order ${orderId}${matchedColor ? ` (Color: ${matchedColor.name})` : ''}`
-            });
+                if (newTopStock < 0) continue;
+
+                                product.stockQuantity = newTopStock;
+                product.lastStockUpdate = new Date();
+
+                const totalColorStock = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
+                const totalStock = totalColorStock + newTopStock;
+                if (totalStock === 0) {
+                    product.in_stock = false;
+                } else if (totalStock > 0 && product.in_stock === false) {
+                    product.in_stock = true;
+                }
+
+                syncTopLevelStock(product);
+                await product.save();
+
+                await StockLog.create({
+                    productId: product._id,
+                    productName: product.name,
+                    changeType: 'sale',
+                    quantityChange,
+                    previousQuantity: topStock,
+                    newQuantity: newTopStock,
+                    referenceId: null,
+                    referenceType: 'Order',
+                    performedBy: actor.id || actor._id,
+                    performedByName: actorName,
+                    notes: `Order ${orderId}`
+                });
+            }
         }
 
         // Create the order

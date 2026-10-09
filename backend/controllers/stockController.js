@@ -103,21 +103,35 @@ exports.getLowStock = async (req, res) => {
         const products = await Product.find({}).sort({ createdAt: -1 });
 
         const filtered = products.filter((product) => {
-            const colorTotal = (product.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
-            const totalStock = colorTotal + (product.stockQuantity || 0);
-            return totalStock <= (product.lowStockThreshold || 0);
+            const colors = product.colors || [];
+            const threshold = product.lowStockThreshold || 0;
+
+            // Products with color variants: flag if ANY color is at/below threshold
+            if (colors.length > 0) {
+                return colors.some((c) => (c.stockQuantity || 0) <= threshold);
+            }
+
+            // Products without color variants: use top-level stock
+            return (product.stockQuantity || 0) <= threshold;
         });
 
-        const result = filtered.map((p) => ({
-            _id: p._id,
-            name: p.name,
-            category: p.category,
-            price: p.price,
-            stockQuantity: (p.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0) + (p.stockQuantity || 0),
-            lowStockThreshold: p.lowStockThreshold,
-            in_stock: (p.colors || []).reduce((sum, c) => sum + (c.stockQuantity || 0), 0) + (p.stockQuantity || 0) > 0,
-            image_url: p.image_url
-        }));
+        const result = filtered.map((p) => {
+            const colors = p.colors || [];
+            const colorTotal = colors.reduce((sum, c) => sum + (c.stockQuantity || 0), 0);
+            const totalStock = colorTotal + (p.stockQuantity || 0);
+
+            return {
+                _id: p._id,
+                name: p.name,
+                category: p.category,
+                price: p.price,
+                stockQuantity: totalStock,
+                lowStockThreshold: p.lowStockThreshold,
+                in_stock: totalStock > 0,
+                image_url: p.image_url,
+                colors: colors
+            };
+        });
 
         res.json(result);
     } catch (error) {
