@@ -26,6 +26,8 @@ type Product = {
   status?: string;
   currency?: string;
   price?: number | string;
+  discount?: number;
+  saleFestival?: string;
 };
 
 type ProductsByCategory = Record<string, Product[]>;
@@ -54,6 +56,18 @@ const formatPrice = (product: Product) => {
   const safePrice = Number.isFinite(price) ? price : 0;
 
   return `${product.currency || "$"}${safePrice.toFixed(2)}`;
+};
+
+const getDiscountedPrice = (product: Product) => {
+  const price = Number(product.price ?? 0);
+  const discount = Number(product.discount ?? 0);
+  if (!Number.isFinite(price) || discount <= 0) return price;
+  return price - price * (discount / 100);
+};
+
+const formatDiscountedPrice = (product: Product) => {
+  const salePrice = getDiscountedPrice(product);
+  return `${product.currency || "$"}${salePrice.toFixed(2)}`;
 };
 
 const getTotalStock = (product: Product) => {
@@ -85,6 +99,11 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
           {(product.status === "active" && product.in_stock && getTotalStock(product) > 0) && (
             <div className="absolute left-4 top-4 z-10 rounded-full border border-emerald-300/30 bg-emerald-400 px-3 py-1 text-xs font-black uppercase text-black">
               New
+            </div>
+          )}
+          {Number(product.discount) > 0 && (product.in_stock !== false && getTotalStock(product) > 0) && (
+            <div className="absolute right-4 top-4 z-10 rounded-full border border-red-300/30 bg-red-500 px-3 py-1 text-xs font-black uppercase text-white shadow-lg shadow-red-500/30">
+              Sale
             </div>
           )}
           {(product.in_stock === false || getTotalStock(product) <= 0) && (
@@ -131,9 +150,23 @@ const ProductCard = ({ product, index }: { product: Product; index: number }) =>
             </div>
 
             <div className="text-right">
-              <span className="block text-2xl font-black text-white">
-                {formatPrice(product)}
-              </span>
+              {Number(product.discount) > 0 && (product.in_stock !== false && getTotalStock(product) > 0) ? (
+                <div className="space-y-1">
+                  <span className="block text-sm font-bold text-gray-500 line-through">
+                    {formatPrice(product)}
+                  </span>
+                  <span className="block text-2xl font-black text-red-400">
+                    {formatDiscountedPrice(product)}
+                  </span>
+                  <span className="inline-block rounded-full border border-red-400/30 bg-red-500/10 px-2 py-0.5 text-[10px] font-black uppercase text-red-300">
+                    -{product.discount}% Off
+                  </span>
+                </div>
+              ) : (
+                <span className="block text-2xl font-black text-white">
+                  {formatPrice(product)}
+                </span>
+              )}
               <span className="inline-flex items-center gap-1 text-xs font-bold uppercase text-red-400 opacity-0 transition-opacity group-hover:opacity-100">
                 View
                 <ArrowRight className="h-3.5 w-3.5" />

@@ -42,6 +42,8 @@ type Product = {
   description?: string;
   colors?: ProductColor[];
   sizes?: string[];
+  discount?: number;
+  saleFestival?: string;
 };
 
 const fallbackProductImage = "/assets/nike-hero/nike6-transparent.png";
@@ -58,6 +60,18 @@ const formatPrice = (product: Product) => {
   const safePrice = Number.isFinite(price) ? price : 0;
 
   return `${product.currency || "$"}${safePrice.toFixed(2)}`;
+};
+
+const getDiscountedPrice = (product: Product) => {
+  const price = Number(product.price ?? 0);
+  const discount = Number(product.discount ?? 0);
+  if (!Number.isFinite(price) || discount <= 0) return price;
+  return price - price * (discount / 100);
+};
+
+const formatDiscountedPrice = (product: Product) => {
+  const salePrice = getDiscountedPrice(product);
+  return `${product.currency || "$"}${salePrice.toFixed(2)}`;
 };
 
 const getApiUrl = () => {
@@ -156,7 +170,13 @@ const ProductDetailPage = () => {
 
     if (!product) return;
 
-    addToCart(product, selectedColor, selectedSize, quantity);
+    // Apply discount to the price stored in cart so checkout uses the sale price
+    const discount = Number(product.discount ?? 0);
+    const productForCart = discount > 0
+      ? { ...product, price: getDiscountedPrice(product) }
+      : product;
+
+    addToCart(productForCart, selectedColor, selectedSize, quantity);
     setAddedToCart(true);
     window.setTimeout(() => setAddedToCart(false), 1800);
   };
@@ -351,9 +371,23 @@ const ProductDetailPage = () => {
 
               <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
                 <div>
-                  <div className="text-4xl font-black text-white">
-                    {formatPrice(product)}
-                  </div>
+                  {Number(product.discount) > 0 ? (
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-4xl font-black text-red-400">
+                        {formatDiscountedPrice(product)}
+                      </span>
+                      <span className="text-xl font-bold text-white/40 line-through">
+                        {formatPrice(product)}
+                      </span>
+                      <span className="rounded-full border border-red-400/30 bg-red-500/10 px-2.5 py-1 text-xs font-black uppercase text-red-300">
+                        -{product.discount}%
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-4xl font-black text-white">
+                      {formatPrice(product)}
+                    </div>
+                  )}
                   {Number(product.reviews_count) > 0 && (
                     <p className="mt-2 text-sm text-white/40">
                       {product.reviews_count} verified reviews
