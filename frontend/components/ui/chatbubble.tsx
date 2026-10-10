@@ -42,7 +42,7 @@ export default function ChatBubble() {
           
           {/* Chat Component */}
           <div className="relative z-[2147483646]">
-            <AssistantChat />
+            <AssistantChat onClose={() => setOpen(false)} />
           </div>
         </>
       )}

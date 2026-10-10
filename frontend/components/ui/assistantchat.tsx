@@ -10,26 +10,25 @@ interface Message {
   text: string;
 }
 
-export default function AssistantChat() {
+export default function AssistantChat({ onClose }: { onClose?: () => void }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { addToCart } = useCart();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
     setMessages([
       {
         role: "assistant",
-        text: "Hey there! 👋 Welcome to Nike. I'm your personal shopping assistant. How can I help you today?",
+        text: "Hey there! Welcome to Nike. I'm your personal shopping assistant. How can I help you today?",
       },
     ]);
   }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
   async function sendMessage() {
     if (!input.trim()) return;
@@ -87,7 +86,7 @@ export default function AssistantChat() {
   };
 
   return (
-    <div className="fixed bottom-24 right-4 z-[2147483646] flex max-h-[min(720px,calc(100svh-7.5rem))] w-[calc(100vw-2rem)] max-w-[430px] flex-col overflow-hidden rounded-[1.75rem] border border-white/65 bg-white shadow-[0_30px_90px_rgba(0,0,0,0.42)] animate-slideUp md:right-6">
+    <div className="fixed bottom-24 right-4 z-[2147483646] flex max-h-[min(720px,calc(100svh-7.5rem))] w-[calc(100vw-2rem)] max-w-[430px] flex-col overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#0a0a0a] shadow-[0_30px_90px_rgba(0,0,0,0.65)] animate-slideUp md:right-6">
       <div className="flex items-center justify-between border-b border-white/10 bg-[#111827] px-5 py-4 text-white">
         <div className="flex items-center space-x-3">
           <div className="flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/10">
@@ -100,16 +99,29 @@ export default function AssistantChat() {
             <p className="text-xs font-medium text-white/72">Always here to help</p>
           </div>
         </div>
-        <div className="size-2.5 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.8)]" />
+        <div className="flex items-center space-x-3">
+          <div className="size-2.5 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.8)]" />
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="grid size-8 place-items-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Close assistant"
+            >
+              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="min-h-[330px] flex-1 space-y-4 overflow-y-auto bg-[radial-gradient(circle_at_top,rgba(17,24,39,0.08),transparent_34%),linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)] px-5 py-5 text-slate-900 md:min-h-[390px]">
+      <div className="min-h-[330px] flex-1 space-y-4 overflow-y-auto bg-[#0a0a0a] px-5 py-5 text-slate-100 md:min-h-[390px]">
         {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center text-center text-slate-400">
+          <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
             <svg className="mb-4 size-16 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <p className="text-sm font-black text-slate-500">Start a conversation</p>
+            <p className="text-sm font-black text-slate-400">Start a conversation</p>
             <p className="mt-1 text-xs font-medium">Ask me anything!</p>
           </div>
         )}
@@ -123,13 +135,13 @@ export default function AssistantChat() {
               className={`max-w-[82%] rounded-2xl px-4 py-3 shadow-sm ${
                 m.role === "user"
                   ? "rounded-br-sm bg-[#111827] text-white"
-                  : "rounded-bl-sm border border-slate-200 bg-white text-slate-800"
+                  : "rounded-bl-sm border border-white/10 bg-[#161616] text-slate-100"
               }`}
             >
               {m.role === "user" ? (
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.text}</p>
               ) : (
-                <div className="prose prose-sm max-w-none whitespace-pre-wrap text-sm leading-relaxed">
+                <div className="prose prose-sm prose-invert max-w-none whitespace-pre-wrap text-sm leading-relaxed">
                   <ReactMarkdown>{m.text}</ReactMarkdown>
                 </div>
               )}
@@ -139,11 +151,11 @@ export default function AssistantChat() {
 
         {loading && (
           <div className="flex justify-start animate-fadeIn">
-            <div className="rounded-2xl rounded-bl-sm border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div className="rounded-2xl rounded-bl-sm border border-white/10 bg-[#161616] px-4 py-3 shadow-sm">
               <div className="flex space-x-2">
-                <div className="size-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="size-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="size-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div className="size-2 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="size-2 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="size-2 rounded-full bg-slate-500 animate-bounce" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           </div>
@@ -151,7 +163,7 @@ export default function AssistantChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-slate-200 bg-white px-4 py-4">
+      <div className="border-t border-white/10 bg-[#0a0a0a] px-4 py-4">
         <div className="flex items-end space-x-3">
           <div className="relative flex-1">
             <textarea
@@ -159,7 +171,7 @@ export default function AssistantChat() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-3 pr-12 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              className="w-full resize-none rounded-2xl border border-white/15 bg-[#161616] px-4 py-3 pr-12 text-sm text-slate-100 transition-colors placeholder:text-slate-500 focus:border-white/30 focus:outline-none focus:ring-2 focus:ring-white/10"
               placeholder="Type your message..."
               style={{ minHeight: "44px", maxHeight: "120px" }}
             />
