@@ -25,6 +25,24 @@ export const CartProvider = ({ children }) => {
     const token = getToken();
     const userStr = getUser();
     
+    // Helper: merge duplicate cart items (same productId + color + size)
+    const dedupeItems = (items) => {
+      if (!Array.isArray(items)) return [];
+      const merged = [];
+      items.forEach((item) => {
+        const key = `${item.productId || item._id || ''}-${item.color || 'default'}-${item.size || 'default'}`;
+        const existing = merged.find(
+          (m) => `${m.productId || m._id || ''}-${m.color || 'default'}-${m.size || 'default'}` === key
+        );
+        if (existing) {
+          existing.quantity = Number(existing.quantity || 1) + Number(item.quantity || 1);
+        } else {
+          merged.push({ ...item, cartItemId: key });
+        }
+      });
+      return merged;
+    };
+    
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -36,19 +54,20 @@ export const CartProvider = ({ children }) => {
         
         if (res.ok) {
           const data = await res.json();
-          setCartItems(data.items || []);
-          localStorage.setItem('nikeCart', JSON.stringify(data.items || []));
+          const deduped = dedupeItems(data.items || []);
+          setCartItems(deduped);
+          localStorage.setItem('nikeCart', JSON.stringify(deduped));
         } else {
           const savedCart = localStorage.getItem('nikeCart');
           if (savedCart) {
-            setCartItems(JSON.parse(savedCart));
+            setCartItems(dedupeItems(JSON.parse(savedCart)));
           }
         }
       } catch (error) {
         console.error('Error refreshing cart:', error);
         const savedCart = localStorage.getItem('nikeCart');
         if (savedCart) {
-          setCartItems(JSON.parse(savedCart));
+          setCartItems(dedupeItems(JSON.parse(savedCart)));
         }
       }
     } else {
@@ -56,7 +75,7 @@ export const CartProvider = ({ children }) => {
       const savedCart = localStorage.getItem('nikeCart');
       if (savedCart) {
         try {
-          setCartItems(JSON.parse(savedCart));
+          setCartItems(dedupeItems(JSON.parse(savedCart)));
         } catch (error) {
           console.error('Error loading cart:', error);
         }

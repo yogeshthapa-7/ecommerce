@@ -91,9 +91,13 @@ const CartSidebar = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {cartItems.map((item, index) => (
+              {cartItems.map((item, index) => {
+                const itemKey = item.cartItemId
+                  ? `${item.cartItemId}-${index}`
+                  : `${item.productId || item._id || index}-${item.color || 'default'}-${item.size || 'default'}-${index}`;
+                return (
                 <article
-                  key={item.cartItemId || `${item.productId || item._id || index}-${item.color || 'default'}-${item.size || 'default'}`}
+                  key={itemKey}
                   className="group rounded-[22px] border border-white/[0.08] bg-white/[0.02] p-3 transition-colors hover:border-white/20"
                 >
                   <div className="flex gap-4">
@@ -161,7 +165,8 @@ const CartSidebar = () => {
                     </div>
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

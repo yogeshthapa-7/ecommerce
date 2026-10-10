@@ -122,7 +122,7 @@ exports.clearCart = async (req, res) => {
     }
 };
 
-// POST sync local cart items to backend (merge)
+// POST sync local cart items to backend (replace entire cart)
 exports.syncCart = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -133,28 +133,22 @@ exports.syncCart = async (req, res) => {
             cart = new Cart({ userId, items: [] });
         }
 
+        // Replace the cart with the client's full cart state
+        // This ensures deletions and quantity changes are reflected exactly
         if (Array.isArray(items)) {
-            items.forEach((item) => {
-                const cartItemId = `${item.productId}-${item.color || 'default'}-${item.size || 'default'}`;
-                const existingIndex = cart.items.findIndex(
-                    (ci) => `${ci.productId}-${ci.color || 'default'}-${ci.size || 'default'}` === cartItemId
-                );
-                if (existingIndex > -1) {
-                    cart.items[existingIndex].quantity += Number(item.quantity || 1);
-                } else {
-                    cart.items.push({
-                        productId: item.productId,
-                        name: item.name,
-                        price: Number(item.price || 0),
-                        quantity: Number(item.quantity || 1),
-                        color: item.color || 'Default',
-                        size: item.size || '',
-                        image: item.image || '',
-                        currency: item.currency || '$',
-                        category: item.category || ''
-                    });
-                }
-            });
+            cart.items = items.map((item) => ({
+                productId: item.productId,
+                name: item.name,
+                price: Number(item.price || 0),
+                quantity: Number(item.quantity || 1),
+                color: item.color || 'Default',
+                size: item.size || '',
+                image: item.image || '',
+                currency: item.currency || '$',
+                category: item.category || ''
+            }));
+        } else {
+            cart.items = [];
         }
 
         await cart.save();

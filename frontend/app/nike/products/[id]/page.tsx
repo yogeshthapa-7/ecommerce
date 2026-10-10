@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Check,
@@ -85,8 +85,12 @@ const getApiUrl = () => {
 const ProductDetailPage = () => {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const { addToCart } = useCart();
+
+  // Determine where "Back to collection" should go (default: products page)
+  const redirectTo = searchParams?.get("redirect") || "/nike/products";
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -270,7 +274,7 @@ const ProductDetailPage = () => {
         <section className="relative mx-auto grid min-h-[calc(100vh-6rem)] max-w-7xl grid-cols-1 gap-10 px-6 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-16">
           <div className="relative">
             <Link
-              href="/nike/products"
+              href={redirectTo}
               className="mb-8 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.24em] text-white/50 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -558,7 +562,7 @@ const ProductDetailPage = () => {
             </p>
           </div>
           <Link
-            href="/nike/products"
+            href={redirectTo}
             className="inline-flex items-center justify-center rounded-full bg-white px-7 py-4 text-sm font-black uppercase text-black transition hover:bg-red-500 hover:text-white"
           >
             Explore Collection

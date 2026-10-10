@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Fuse from "fuse.js";
 import {
   ArrowRight,
   Flame,
@@ -10,6 +12,7 @@ import {
   ShoppingBag,
   Star,
   Timer,
+  TrendingUp,
   Zap,
 } from "lucide-react";
 import useSWR from "swr";
@@ -120,7 +123,7 @@ const SaleProductCard = ({ product, index }: { product: Product; index: number }
 
   return (
     <Link
-      href={`/nike/products/${productId}`}
+      href={`/nike/products/${productId}?redirect=/nike/sale`}
       className="group relative flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-zinc-950 shadow-xl shadow-black/30 transition-transform duration-300 hover:-translate-y-1 hover:border-red-400/60"
     >
       <div className="relative aspect-[1.02] overflow-hidden bg-zinc-900">
@@ -213,8 +216,12 @@ const SaleProductCard = ({ product, index }: { product: Product; index: number }
 };
 
 const SalePage = () => {
+  const router = useRouter();
   const [activeFestival, setActiveFestival] = useState("dashain");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const countdown = useCountdown(SALE_END);
 
   const {
@@ -228,6 +235,115 @@ const SalePage = () => {
   });
 
   const safeProducts = Array.isArray(products) ? products : [];
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+        setHighlightedIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Hybrid suggestions: popular sale items when empty, fuzzy matching when typing
+  const suggestions = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    // Only suggest products that are on sale (discount > 0)
+    const onSaleProducts = safeProducts.filter(
+      (p) => p && Number(p.discount ?? 0) > 0
+    );
+
+    if (!normalizedSearch) {
+      // Show popular sale items (sorted by reviews_count, then rating)
+      return [...onSaleProducts]
+        .filter((p) => p.in_stock !== false)
+        .sort((a, b) => {
+          const reviewsDiff = (b.reviews_count || 0) - (a.reviews_count || 0);
+          if (reviewsDiff !== 0) return reviewsDiff;
+          return (b.rating || 0) - (a.rating || 0);
+        })
+        .slice(0, 6);
+    }
+
+    // Fuzzy search with Fuse.js (typo-tolerant) on sale products only
+    const fuse = new Fuse(onSaleProducts, {
+      keys: [
+        { name: "name", weight: 0.5 },
+        { name: "category", weight: 0.25 },
+        { name: "gender", weight: 0.25 },
+      ],
+      threshold: 0.4, // allows typos (0 = exact, 1 = match anything)
+      distance: 100,
+      minMatchCharLength: 1,
+      ignoreLocation: true,
+      includeScore: true,
+    });
+
+    const results = fuse.search(normalizedSearch);
+
+    // Sort matches: in-stock first, then by reviews_count
+    return results
+      .map((r) => r.item)
+      .sort((a, b) => {
+        const aInStock = a.in_stock !== false ? 1 : 0;
+        const bInStock = b.in_stock !== false ? 1 : 0;
+        if (aInStock !== bInStock) return bInStock - aInStock;
+        return (b.reviews_count || 0) - (a.reviews_count || 0);
+      })
+      .slice(0, 6);
+  }, [safeProducts, searchTerm]);
+
+  // Group suggestions by category
+  const groupedSuggestions = useMemo(() => {
+    const groups: Record<string, Product[]> = {};
+    suggestions.forEach((p) => {
+      if (!p) return;
+      const cat = p.category || "Other";
+      groups[cat] = groups[cat] || [];
+      groups[cat].push(p);
+    });
+    return groups;
+  }, [suggestions]);
+
+  const handleSuggestionClick = (product: Product) => {
+    const productId = product._id || product.id || "";
+    setShowSuggestions(false);
+    setHighlightedIndex(-1);
+    if (productId) {
+      router.push(`/nike/products/${productId}?redirect=/nike/sale`);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev > 0 ? prev - 1 : suggestions.length - 1
+      );
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && suggestions[highlightedIndex]) {
+        handleSuggestionClick(suggestions[highlightedIndex]);
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setHighlightedIndex(-1);
+    }
+  };
 
   // Products on sale (discount > 0), filtered by festival
   const saleProducts = useMemo(() => {
@@ -442,15 +558,173 @@ const SalePage = () => {
               </p>
             </div>
 
-            <div className="relative w-full lg:max-w-md">
+            <div className="relative w-full lg:max-w-md" ref={searchContainerRef}>
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setShowSuggestions(true);
+                  setHighlightedIndex(-1);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onKeyDown={handleKeyDown}
                 placeholder="Search deals..."
                 className="h-[52px] w-full rounded-full border border-white/10 bg-white/[0.06] py-4 pl-12 pr-4 text-sm font-semibold text-white outline-none transition placeholder:text-gray-500 focus:border-red-400 focus:bg-white/[0.09]"
               />
+
+              {/* SUGGESTIONS DROPDOWN */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute left-0 right-0 top-full z-50 mt-3 overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0b] shadow-2xl shadow-black/60 backdrop-blur-md">
+                  {/* Header */}
+                  <div className="flex items-center gap-2 border-b border-white/10 bg-white/[0.03] px-5 py-3">
+                    {searchTerm.trim() ? (
+                      <>
+                        <Search className="h-3.5 w-3.5 text-red-400" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/50">
+                          Deal Suggestions
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <TrendingUp className="h-3.5 w-3.5 text-red-400" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/50">
+                          Popular Deals
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Grouped suggestions */}
+                  <div className="max-h-[380px] overflow-y-auto">
+                    {Object.entries(groupedSuggestions).map(
+                      ([category, items]) => (
+                        <div key={category}>
+                          {/* Category label */}
+                          <div className="px-5 pt-3 pb-1">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35">
+                              {category}
+                            </span>
+                          </div>
+
+                          {items.map((product) => {
+                            const globalIndex = suggestions.indexOf(product);
+                            const isHighlighted = globalIndex === highlightedIndex;
+                            const productId = product._id || product.id || "";
+                            const discount = Number(product.discount ?? 0);
+
+                            return (
+                              <button
+                                key={productId || product.name}
+                                type="button"
+                                onClick={() => handleSuggestionClick(product)}
+                                onMouseEnter={() => setHighlightedIndex(globalIndex)}
+                                className={`flex w-full items-center gap-4 px-5 py-3 text-left transition-colors ${
+                                  isHighlighted
+                                    ? "bg-red-500/10"
+                                    : "hover:bg-white/[0.04]"
+                                }`}
+                              >
+                                {/* Product image */}
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#0a0a0a]">
+                                  {product.image_url ? (
+                                    <img
+                                      src={product.image_url}
+                                      alt={product.name || "Product"}
+                                      className="h-full w-full object-contain"
+                                      loading="lazy"
+                                      decoding="async"
+                                    />
+                                  ) : (
+                                    <ShoppingBag className="h-4 w-4 text-white/30" />
+                                  )}
+                                </div>
+
+                                {/* Name + meta */}
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-bold text-white">
+                                    {product.name || "Untitled Product"}
+                                  </p>
+                                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/35">
+                                    <span>{product.gender || "Unisex"}</span>
+                                    {Number(product.rating) > 0 && (
+                                      <span className="inline-flex items-center gap-1">
+                                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                        {product.rating}
+                                      </span>
+                                    )}
+                                    {(product.reviews_count || 0) > 0 && (
+                                      <span>
+                                        {product.reviews_count} reviews
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Price / discount */}
+                                <div className="shrink-0 text-right">
+                                  {discount > 0 ? (
+                                    <div className="space-y-0.5">
+                                      <span className="block text-[11px] font-bold text-white/35 line-through">
+                                        {product.currency || "$"}
+                                        {Number(product.price ?? 0).toFixed(2)}
+                                      </span>
+                                      <span className="block text-sm font-black text-red-400">
+                                        {product.currency || "$"}
+                                        {(
+                                          Number(product.price ?? 0) -
+                                          (Number(product.price ?? 0) * discount) / 100
+                                        ).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="block text-sm font-black text-white">
+                                      {product.currency || "$"}
+                                      {Number(product.price ?? 0).toFixed(2)}
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Arrow */}
+                                <ArrowRight
+                                  className={`h-4 w-4 shrink-0 transition-colors ${
+                                    isHighlighted
+                                      ? "text-red-400"
+                                      : "text-white/20"
+                                  }`}
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )
+                    )}
+                  </div>
+
+                  {/* Footer hint */}
+                  <div className="border-t border-white/10 bg-white/[0.02] px-5 py-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
+                      Use ↑ ↓ to navigate · Enter to select · Esc to close
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* No results dropdown */}
+              {showSuggestions &&
+                searchTerm.trim() &&
+                suggestions.length === 0 && (
+                  <div className="absolute left-0 right-0 top-full z-50 mt-3 overflow-hidden rounded-2xl border border-white/10 bg-[#0b0b0b] px-5 py-6 text-center shadow-2xl shadow-black/60 backdrop-blur-md">
+                    <Flame className="mx-auto mb-2 h-6 w-6 text-white/20" />
+                    <p className="text-sm font-bold text-white/60">
+                      No deals for "{searchTerm}"
+                    </p>
+                    <p className="mt-1 text-xs text-white/35">
+                      Try a different name, category, or gender
+                    </p>
+                  </div>
+                )}
             </div>
           </div>
 

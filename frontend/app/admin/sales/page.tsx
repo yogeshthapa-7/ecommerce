@@ -1,600 +1,542 @@
-"use client"
-import React, { useEffect, useState } from "react"
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
-  ArrowLeft,
-  BarChart3,
-  CalendarDays,
-  Download,
-  Package,
-  Receipt,
-  TrendingUp,
-  Users,
-} from "lucide-react"
-import axios from "axios"
-import Link from "next/link"
-import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable"
-import { AdminModal, PageBody, PageHeader, MetricCard, StatusBadge, adminPanel, adminTable, adminHeaderCell, adminCell, fieldClass, secondaryButton } from "@/components/admin/AdminSurface"
-import { NikeDatePicker } from "@/components/ui/nike-date-picker"
-import { getToken } from "@/lib/auth"
+  ArrowRight,
+  Flame,
+  Gift,
+  Search,
+  ShoppingBag,
+  Star,
+  Timer,
+  Zap,
+} from "lucide-react";
+import useSWR from "swr";
+import EcomFooter from "@/components/ecomfooter";
 
-type Period = "daily" | "weekly" | "monthly" | "yearly"
+type Product = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  category?: string;
+  gender?: string;
+  image_url?: string;
+  rating?: number;
+  reviews_count?: number;
+  in_stock?: boolean;
+  status?: string;
+  currency?: string;
+  price?: number | string;
+  discount?: number;
+  saleFestival?: string;
+  colors?: Array<{ stockQuantity?: number }>;
+  stockQuantity?: number;
+};
 
-type ReportRow = {
-  label: string
-  revenue: number
-  orders: number
-  paidOrders: number
-  pendingOrders: number
-  cancelledOrders: number
-  avgOrderValue: number
-}
-
-type TopProduct = {
-  productId: string
-  name: string
-  image: string
-  category: string
-  totalQuantity: number
-  totalRevenue: number
-  price: number
-}
-
-type CategoryRow = {
-  name: string
-  revenue: number
-  orderCount: number
-  quantity: number
-  percentage: number
-}
-
-type PaymentMethod = {
-  method: string
-  count: number
-  revenue: number
-  percentage: number
-}
-
-type StatusRow = {
-  status: string
-  count: number
-  revenue: number
-}
-
-type CustomerInsight = {
-  name: string
-  email: string
-  orders: number
-  totalSpent: number
-}
-
-const SalesPage = () => {
-  const [period, setPeriod] = useState<Period>("monthly")
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
-  const [report, setReport] = useState<ReportRow[]>([])
-  const [totals, setTotals] = useState({ totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 })
-  const [topProducts, setTopProducts] = useState<TopProduct[]>([])
-  const [categories, setCategories] = useState<CategoryRow[]>([])
-  const [categoryTotal, setCategoryTotal] = useState(0)
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
-  const [paymentTotal, setPaymentTotal] = useState(0)
-  const [deliveryStatus, setDeliveryStatus] = useState<StatusRow[]>([])
-  const [paymentStatus, setPaymentStatus] = useState<StatusRow[]>([])
-  const [topCustomers, setTopCustomers] = useState<CustomerInsight[]>([])
-  const [customerSegments, setCustomerSegments] = useState({ new: 0, returning: 0, total: 0 })
-  const [loading, setLoading] = useState(true)
-
-  const token = getToken() || ""
-
-  const fetchAll = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams({ period })
-      if (startDate) params.set("startDate", startDate)
-      if (endDate) params.set("endDate", endDate)
-
-      const results = await Promise.allSettled([
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sales/report?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sales/top-products?limit=10`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sales/by-category?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sales/by-payment-method?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sales/status-breakdown?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sales/customer-insights?limit=10`, { headers: { Authorization: `Bearer ${token}` } }),
-      ])
-
-      const [reportRes, productsRes, categoryRes, paymentRes, statusRes, customersRes] = results.map(r => r.status === 'fulfilled' ? r.value : null)
-
-      if (reportRes?.data) {
-        setReport(reportRes.data.report || [])
-        setTotals(reportRes.data.totals || { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 })
-      }
-      if (productsRes?.data) {
-        setTopProducts(Array.isArray(productsRes.data) ? productsRes.data : [])
-      }
-      if (categoryRes?.data) {
-        setCategories(categoryRes.data.categories || [])
-        setCategoryTotal(categoryRes.data.totalRevenue || 0)
-      }
-      if (paymentRes?.data) {
-        setPaymentMethods(paymentRes.data.methods || [])
-        setPaymentTotal(paymentRes.data.totalRevenue || 0)
-      }
-      if (statusRes?.data) {
-        setDeliveryStatus(statusRes.data.deliveryStatus || [])
-        setPaymentStatus(statusRes.data.paymentStatus || [])
-      }
-      if (customersRes?.data) {
-        setTopCustomers(customersRes.data.topCustomers || [])
-        setCustomerSegments(customersRes.data.customerSegments || { new: 0, returning: 0, total: 0 })
-      }
-
-      results.forEach((r, i) => {
-        if (r.status === 'rejected') {
-          const err = r.reason
-          const details = err?.response?.data || err?.message || err
-          console.error(`Sales endpoint ${i} failed:`, details)
-        }
-      })
-    } catch (err) {
-      console.error("Error fetching sales data:", err)
-    } finally {
-      setLoading(false)
-    }
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Failed to fetch products");
   }
+  return res.json();
+};
+
+const formatPrice = (product: Product) => {
+  const price = Number(product.price ?? 0);
+  const safePrice = Number.isFinite(price) ? price : 0;
+  return `${product.currency || "$"}${safePrice.toFixed(2)}`;
+};
+
+const getTotalStock = (product: Product) => {
+  const colorStock = (product.colors || []).reduce(
+    (sum, c) => sum + (c.stockQuantity || 0),
+    0
+  );
+  return colorStock + (product.stockQuantity || 0);
+};
+
+const getProductId = (product: Product) => product._id || product.id || "";
+
+const getDiscountedPrice = (product: Product) => {
+  const price = Number(product.price ?? 0);
+  const discount = Number(product.discount ?? 0);
+  if (!Number.isFinite(price) || discount <= 0) return price;
+  return price - price * (discount / 100);
+};
+
+// Nepali festivals
+const FESTIVALS = [
+  { id: "dashain", label: "Dashain", tagline: "The biggest festival of Nepal — celebrate with exclusive drops" },
+  { id: "tihar", label: "Tihar", tagline: "Festival of lights — illuminate your collection" },
+  { id: "holi", label: "Holi", tagline: "Festival of colors — play in style" },
+  { id: "teej", label: "Teej", tagline: "Festival of women — festive essentials" },
+  { id: "chhath", label: "Chhath", tagline: "Festival of the sun — rise with new gear" },
+  { id: "maghi", label: "Maghi", tagline: "Tharu New Year — fresh starts, fresh kicks" },
+];
+
+// Sale end date (set ~2 weeks from now for demo purposes)
+const SALE_END = new Date();
+SALE_END.setDate(SALE_END.getDate() + 14);
+SALE_END.setHours(23, 59, 59, 999);
+
+const useCountdown = (target: Date) => {
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
   useEffect(() => {
-    fetchAll()
-  }, [period, startDate, endDate])
-
-  const maxRevenue = Math.max(...report.map(r => r.revenue), 1)
-  const chartHeight = 320
-
-  const downloadPDF = () => {
-    const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" })
-    const pageWidth = doc.internal.pageSize.getWidth()
-    let cursorY = 60
-
-    const header = () => {
-      doc.setFillColor(0, 0, 0)
-      doc.rect(0, 0, pageWidth, 60, "F")
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(20)
-      doc.setFont("helvetica", "bold")
-      doc.text("NIKE", 40, 38)
-      doc.setFontSize(9)
-      doc.setFont("helvetica", "normal")
-      doc.setTextColor(163, 163, 163)
-      doc.text("ADMIN PANEL — SALES REPORT", 40, 52)
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(14)
-      doc.setFont("helvetica", "bold")
-      doc.text("Sales Management Report", pageWidth - 40, 38, { align: "right" })
-      doc.setFontSize(9)
-      doc.setFont("helvetica", "normal")
-      doc.setTextColor(163, 163, 163)
-      doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 40, 52, { align: "right" })
-    }
-
-    const footer = (pageNum: number, total: number) => {
-      doc.setFillColor(0, 0, 0)
-      doc.rect(0, doc.internal.pageSize.getHeight() - 30, pageWidth, 30, "F")
-      doc.setTextColor(163, 163, 163)
-      doc.setFontSize(8)
-      doc.setFont("helvetica", "normal")
-      doc.text(`Nike Admin — Sales Report — Page ${pageNum} of ${total}`, 40, doc.internal.pageSize.getHeight() - 10)
-      doc.text("CONFIDENTIAL", pageWidth - 40, doc.internal.pageSize.getHeight() - 10, { align: "right" })
-    }
-
-    const sectionTitle = (title: string) => {
-      doc.setFillColor(190, 242, 100)
-      doc.rect(40, cursorY, pageWidth - 80, 22, "F")
-      doc.setTextColor(0, 0, 0)
-      doc.setFontSize(11)
-      doc.setFont("helvetica", "bold")
-      doc.text(title, 48, cursorY + 14)
-      cursorY += 32
-    }
-
-    const ensureSpace = () => {
-      const pageHeight = doc.internal.pageSize.getHeight()
-      if (cursorY + 110 > pageHeight - 30) {
-        doc.addPage()
-        cursorY = 72
+    const tick = () => {
+      const now = new Date().getTime();
+      const diff = target.getTime() - now;
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
       }
-    }
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      });
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [target]);
 
-    header()
+  return timeLeft;
+};
 
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(9)
-    doc.setFont("helvetica", "bold")
-    doc.text(`Period: ${period}     |     Total Revenue: $${totals.totalRevenue.toLocaleString()}     |     Total Orders: ${totals.totalOrders}     |     Avg Order Value: $${totals.avgOrderValue}`, 40, 88, { align: "left" })
-    cursorY = 108
-
-    ensureSpace()
-    sectionTitle("Revenue Trend")
-    autoTable(doc as any, {
-      head: [["Period", "Revenue", "Orders", "Paid", "Pending", "Cancelled", "Avg Value"]],
-      body: report.map(r => [r.label, `$${r.revenue.toLocaleString()}`, r.orders, r.paidOrders, r.pendingOrders, r.cancelledOrders, `$${r.avgOrderValue}`]),
-      startY: cursorY,
-      theme: "grid",
-      repeatHeaders: true,
-      headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
-      bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
-      alternateRowStyles: { fillColor: [17, 17, 17] },
-      styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
-      margin: { left: 40, right: 40 },
-    } as any)
-    cursorY = (doc as any).lastAutoTable.finalY + 24
-
-    ensureSpace()
-    sectionTitle("Top Products")
-    autoTable(doc as any, {
-      head: [["Product", "Category", "Price", "Units Sold", "Revenue"]],
-      body: topProducts.map(p => [p.name, p.category, `$${p.price.toLocaleString()}`, p.totalQuantity, `$${p.totalRevenue.toLocaleString()}`]),
-      startY: cursorY,
-      theme: "grid",
-      repeatHeaders: true,
-      headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
-      bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
-      alternateRowStyles: { fillColor: [17, 17, 17] },
-      styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
-      margin: { left: 40, right: 40 },
-    } as any)
-    cursorY = (doc as any).lastAutoTable.finalY + 24
-
-    ensureSpace()
-    sectionTitle("Category Breakdown")
-    autoTable(doc as any, {
-      head: [["Category", "Revenue", "Orders", "Quantity", "Share"]],
-      body: categories.map(c => [c.name, `$${c.revenue.toLocaleString()}`, c.orderCount, c.quantity, `${c.percentage}%`]),
-      startY: cursorY,
-      theme: "grid",
-      repeatHeaders: true,
-      headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
-      bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
-      alternateRowStyles: { fillColor: [17, 17, 17] },
-      styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
-      margin: { left: 40, right: 40 },
-    } as any)
-    cursorY = (doc as any).lastAutoTable.finalY + 24
-
-    ensureSpace()
-    sectionTitle("Payment Methods")
-    autoTable(doc as any, {
-      head: [["Method", "Count", "Revenue", "Share"]],
-      body: paymentMethods.map(p => [p.method, p.count, `$${p.revenue.toLocaleString()}`, `${p.percentage}%`]),
-      startY: cursorY,
-      theme: "grid",
-      repeatHeaders: true,
-      headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
-      bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
-      alternateRowStyles: { fillColor: [17, 17, 17] },
-      styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
-      margin: { left: 40, right: 40 },
-    } as any)
-    cursorY = (doc as any).lastAutoTable.finalY + 24
-
-    ensureSpace()
-    sectionTitle("Delivery & Payment Status")
-    autoTable(doc as any, {
-      head: [["Delivery Status", "Count", "Revenue", "Payment Status", "Count", "Revenue"]],
-      body: Array.from({ length: Math.max(deliveryStatus.length, paymentStatus.length) }, (_, i) => {
-        const d = deliveryStatus[i] || { status: "—", count: 0, revenue: 0 }
-        const p = paymentStatus[i] || { status: "—", count: 0, revenue: 0 }
-        return [d.status, d.count, `$${d.revenue.toLocaleString()}`, p.status, p.count, `$${p.revenue.toLocaleString()}`]
-      }),
-      startY: cursorY,
-      theme: "grid",
-      repeatHeaders: true,
-      headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
-      bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
-      alternateRowStyles: { fillColor: [17, 17, 17] },
-      styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
-      margin: { left: 40, right: 40 },
-    } as any)
-    cursorY = (doc as any).lastAutoTable.finalY + 24
-
-    ensureSpace()
-    sectionTitle("Top Customers")
-    autoTable(doc as any, {
-      head: [["Customer", "Email", "Orders", "Total Spent"]],
-      body: topCustomers.map(c => [c.name, c.email, c.orders, `$${c.totalSpent.toLocaleString()}`]),
-      startY: cursorY,
-      theme: "grid",
-      repeatHeaders: true,
-      headStyles: { fillColor: [24, 24, 24], textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, cellPadding: 8 },
-      bodyStyles: { fillColor: [11, 11, 11], textColor: [200, 200, 200], fontSize: 8, cellPadding: 6 },
-      alternateRowStyles: { fillColor: [17, 17, 17] },
-      styles: { lineColor: [255, 255, 255] as [number, number, number], lineWidth: 0.5 },
-      margin: { left: 40, right: 40 },
-    } as any)
-
-    const pageCount = (doc as any).getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-      footer(i, pageCount)
-    }
-
-    doc.save(`sales-report-${period}-${new Date().toISOString().split("T")[0]}.pdf`)
-  }
-
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`
-    if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`
-    return `$${value}`
-  }
+const SaleProductCard = ({ product, index }: { product: Product; index: number }) => {
+  const productId = getProductId(product);
+  const discount = Number(product.discount ?? 0);
+  const originalPrice = Number(product.price ?? 0);
+  const salePrice = getDiscountedPrice(product);
+  const inStock = product.in_stock !== false && getTotalStock(product) > 0;
 
   return (
-    <div className="min-h-screen bg-[#080808]">
-      <PageHeader
-        title="Sales"
-        label="Sales Management"
-        description="Revenue, orders, products, customers, and payment analytics across the store."
-        action={
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={downloadPDF} className={secondaryButton}>
-              <Download size={16} />
-              Download PDF
-            </button>
-            <Link href="/admin" className={secondaryButton}>
-              <ArrowLeft size={16} />
-              Back
-            </Link>
-          </div>
-        }
-      />
+    <Link
+      href={`/nike/products/${productId}`}
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-zinc-900/90 to-zinc-950 shadow-2xl transition-all duration-500 hover:-translate-y-1.5 hover:border-red-500/50 hover:shadow-red-500/10"
+    >
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-zinc-900">
+        <img
+          src={product.image_url || ""}
+          alt={product.name || "Product"}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-80" />
 
-      <PageBody>
-        {/* FILTERS */}
-        <div className={`${adminPanel} p-5 sm:p-6 mb-6`}>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex flex-wrap items-end gap-3">
-              <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">Period</label>
-                <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className={fieldClass}>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">From</label>
-                <NikeDatePicker value={startDate} onChange={setStartDate} placeholder="From date" />
-              </div>
-              <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.18em] text-white/45">To</label>
-                <NikeDatePicker value={endDate} onChange={setEndDate} placeholder="To date" />
-              </div>
-            </div>
+        <div className="absolute left-3 top-3 z-10 flex flex-wrap gap-2">
+          {discount > 0 && (
+            <span className="rounded-full bg-red-600 px-3 py-1 text-[11px] font-black tracking-wider uppercase text-white shadow-md shadow-red-600/30">
+              -{discount}% OFF
+            </span>
+          )}
+          {!inStock && (
+            <span className="rounded-full bg-zinc-800/90 border border-white/20 px-3 py-1 text-[11px] font-black tracking-wider uppercase text-zinc-300 backdrop-blur-md">
+              Sold Out
+            </span>
+          )}
+          {inStock && discount >= 30 && (
+            <span className="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-black tracking-wider uppercase text-black shadow-md shadow-amber-400/20">
+              Hot Deal
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col justify-between p-5">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold tracking-wider text-red-500 uppercase">
+            <span>{product.category || "Uncategorized"}</span>
+            <span className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] text-zinc-400 border border-white/5">
+              {product.gender || "Unisex"}
+            </span>
           </div>
+          <h3 className="line-clamp-2 text-lg font-black tracking-tight text-white group-hover:text-red-400 transition-colors">
+            {product.name || "Untitled Product"}
+          </h3>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+        <div className="mt-5 pt-4 border-t border-white/10 flex items-end justify-between gap-3">
+          <div className="space-y-1.5">
+            {Number(product.rating) > 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-zinc-400">
+                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                <span className="font-bold text-white">{product.rating}</span>
+                <span className="text-[10px] text-zinc-500">({product.reviews_count || 0})</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5">
+              <span className={`h-2 w-2 rounded-full ${inStock ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
+              <span className="text-[11px] font-medium tracking-wide text-zinc-400 uppercase">
+                {inStock ? "In Stock" : "Out of Stock"}
+              </span>
+            </div>
           </div>
-        ) : (
-          <>
-            {/* SUMMARY CARDS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <MetricCard icon={<TrendingUp size={22} />} label="Total Revenue" value={`$${totals.totalRevenue.toLocaleString()}`} />
-              <MetricCard icon={<Receipt size={22} />} label="Total Orders" value={totals.totalOrders} />
-              <MetricCard icon={<BarChart3 size={22} />} label="Avg Order Value" value={`$${totals.avgOrderValue}`} />
-              <MetricCard icon={<Package size={22} />} label="Top Category" value={categories[0]?.name || "—"} note={categories[0] ? `${categories[0].percentage}% share` : undefined} />
-            </div>
 
-            {/* REVENUE CHART */}
-            <div className={`${adminPanel} p-5 sm:p-6 mb-6`}>
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xs font-black uppercase tracking-[0.18em] text-white/45">Revenue Trend</h3>
-                <p className="text-xs font-bold text-white/35">{period}</p>
+          <div className="text-right">
+            {discount > 0 ? (
+              <div className="space-y-0.5">
+                <span className="block text-xs font-semibold text-zinc-500 line-through">
+                  {formatPrice(product)}
+                </span>
+                <span className="block text-xl font-black text-red-500 tracking-tight">
+                  {product.currency || "$"}{salePrice.toFixed(2)}
+                </span>
               </div>
-              <div className="relative h-[340px]">
-                {report.length === 0 ? (
-                  <div className="flex h-full items-center justify-center text-white/35">No data available for this period.</div>
-                ) : (
-                  <>
-                    <div className="absolute inset-0 flex flex-col justify-between">
-                      {[0, 1, 2, 3, 4].map((i) => (
-                        <div key={i} className="border-t border-dashed border-white/10 w-full relative">
-                          <span className="absolute -top-2 left-0 text-[10px] font-black text-white/30">
-                            {formatCurrency(Math.round((maxRevenue / 4) * (4 - i)))}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="relative h-full flex items-end gap-3 sm:gap-4">
-                      {report.map((row, idx) => {
-                        const heightPct = maxRevenue > 0 ? (row.revenue / maxRevenue) * 100 : 0
-                        return (
-                          <div key={row.label} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                            <div className="w-full flex flex-col items-center justify-end h-[calc(100%-30px)]">
-                              <div
-                                className="w-full max-w-[60px] rounded-t-lg bg-gradient-to-t from-lime-300 to-white transition-all duration-500 hover:from-white hover:to-lime-300 relative group"
-                                style={{ height: `${Math.max(heightPct, 2)}%` }}
-                                title={`${row.label}: $${row.revenue.toLocaleString()}`}
-                              >
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-black px-2 py-1 text-[10px] font-black text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10">
-                                  ${row.revenue.toLocaleString()}
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-[10px] font-black uppercase tracking-normal text-white/40 whitespace-nowrap">{row.label}</p>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+            ) : (
+              <span className="block text-xl font-black text-white tracking-tight">
+                {formatPrice(product)}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+};
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* CATEGORY BREAKDOWN */}
-              <div className={`${adminPanel} p-5 sm:p-6`}>
-                <h3 className="mb-4 text-xs font-black uppercase tracking-[0.18em] text-white/45">By Category</h3>
-                <div className="space-y-3">
-                  {categories.map((cat) => (
-                    <div key={cat.name}>
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-bold text-white">{cat.name}</p>
-                        <p className="text-xs font-black text-white/50">{cat.percentage}%</p>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-white/10">
-                        <div className="h-2 rounded-full bg-lime-300 transition-all duration-500" style={{ width: `${cat.percentage}%` }} />
-                      </div>
-                      <p className="mt-1 text-xs text-white/35">${cat.revenue.toLocaleString()} · {cat.orderCount} orders</p>
-                    </div>
-                  ))}
-                  {categories.length === 0 && <p className="text-sm text-white/35">No category data available.</p>}
+const SalePage = () => {
+  const [activeFestival, setActiveFestival] = useState("dashain");
+  const [searchTerm, setSearchTerm] = useState("");
+  const countdown = useCountdown(SALE_END);
+
+  const {
+    data: products = [],
+    isLoading: loading,
+    error,
+  } = useSWR<Product[]>("/api/products", fetcher, {
+    refreshInterval: 10000,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+  });
+
+  const safeProducts = Array.isArray(products) ? products : [];
+
+  const saleProducts = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    return safeProducts.filter((product) => {
+      if (!product) return false;
+      const discount = Number(product.discount ?? 0);
+      if (discount <= 0) return false;
+
+      const productFestival = (product.saleFestival || "").toLowerCase();
+      const matchesFestival =
+        !productFestival || productFestival === activeFestival;
+
+      const productName = product.name?.toLowerCase() || "";
+      const productCategory = product.category?.toLowerCase() || "";
+      const matchesSearch =
+        !normalizedSearch ||
+        productName.includes(normalizedSearch) ||
+        productCategory.includes(normalizedSearch);
+
+      return matchesFestival && matchesSearch;
+    });
+  }, [safeProducts, activeFestival, searchTerm]);
+
+  const sortedSaleProducts = useMemo(() => {
+    return [...saleProducts].sort(
+      (a, b) => Number(b.discount ?? 0) - Number(a.discount ?? 0)
+    );
+  }, [saleProducts]);
+
+  const activeFestivalData = FESTIVALS.find((f) => f.id === activeFestival);
+  const maxDiscount = useMemo(() => {
+    return safeProducts.reduce(
+      (max, p) => Math.max(max, Number(p.discount ?? 0)),
+      0
+    );
+  }, [safeProducts]);
+
+  const timeUnits = [
+    { value: countdown.days, label: "Days" },
+    { value: countdown.hours, label: "Hours" },
+    { value: countdown.minutes, label: "Mins" },
+    { value: countdown.seconds, label: "Secs" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-black text-white selection:bg-red-600 selection:text-white">
+      {/* HERO SECTION */}
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden pt-28 pb-16">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1607083206968-13611e3d76db?w=1920&q=85"
+            alt="Festival celebration"
+            className="h-full w-full object-cover object-center opacity-35 scale-105 animate-pulse duration-[10000ms]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60" />
+          <div className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-7xl w-full px-6 flex flex-col items-start justify-center gap-8">
+          <div className="inline-flex items-center gap-3 rounded-full border border-red-500/30 bg-red-950/30 px-4 py-1.5 backdrop-blur-md">
+            <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
+            <span className="text-xs font-black uppercase tracking-[0.25em] text-red-400">
+              Limited Time Festival Event
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            <h1 className="text-6xl font-black uppercase tracking-tighter sm:text-7xl lg:text-8xl leading-[0.9]">
+              Festival <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-600 to-orange-500">
+                Mega Sale
+              </span>
+            </h1>
+            <p className="max-w-xl text-zinc-400 text-base sm:text-lg font-medium leading-relaxed">
+              Celebrate Nepal's greatest festivals with elite drops and exclusive price cuts. Get up to <span className="text-white font-bold">{maxDiscount}% off</span> selected signature footwear and apparel.
+            </p>
+          </div>
+
+          {/* COUNTDOWN WIDGET */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-zinc-400">
+              <Timer className="h-4 w-4 text-red-500" />
+              <span className="text-xs font-bold uppercase tracking-widest text-zinc-400">
+                Offer Ends In
+              </span>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {timeUnits.map((unit) => (
+                <div
+                  key={unit.label}
+                  className="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-zinc-900/80 px-4 py-3 backdrop-blur-xl shadow-xl min-w-[70px]"
+                >
+                  <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                    {String(unit.value).padStart(2, "0")}
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-0.5">
+                    {unit.label}
+                  </span>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
 
-              {/* PAYMENT METHODS */}
-              <div className={`${adminPanel} p-5 sm:p-6`}>
-                <h3 className="mb-4 text-xs font-black uppercase tracking-[0.18em] text-white/45">By Payment Method</h3>
-                <div className="space-y-3">
-                  {paymentMethods.map((pm) => (
-                    <div key={pm.method}>
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-bold text-white capitalize">{pm.method}</p>
-                        <p className="text-xs font-black text-white/50">{pm.percentage}%</p>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-white/10">
-                        <div className="h-2 rounded-full bg-white transition-all duration-500" style={{ width: `${pm.percentage}%` }} />
-                      </div>
-                      <p className="mt-1 text-xs text-white/35">{pm.count} orders · ${pm.revenue.toLocaleString()}</p>
-                    </div>
-                  ))}
-                  {paymentMethods.length === 0 && <p className="text-sm text-white/35">No payment data available.</p>}
+          <div className="flex flex-wrap gap-4 pt-2">
+            <a
+              href="#sale-collection"
+              className="inline-flex items-center justify-center gap-3 rounded-full bg-red-600 px-8 py-4 text-sm font-black uppercase tracking-wider text-white shadow-lg shadow-red-600/30 transition-all duration-300 hover:bg-white hover:text-black hover:scale-105"
+            >
+              Shop Festival Deals
+              <ArrowRight className="h-4 w-4" />
+            </a>
+            <a
+              href="#festivals"
+              className="inline-flex items-center justify-center gap-3 rounded-full border border-white/20 bg-white/5 px-8 py-4 text-sm font-black uppercase tracking-wider text-white backdrop-blur-md transition-all duration-300 hover:bg-white/10 hover:border-white"
+            >
+              Explore Festivals
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* FESTIVAL IMAGE STRIP */}
+      <section className="relative overflow-hidden border-y border-white/10 bg-zinc-950 py-10">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-sm font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+              <Gift className="h-4 w-4 text-red-500" /> Featured Celebrations
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            {[
+              {
+                src: "/dashain.jpg",
+                alt: "Dashain celebration",
+                label: "Dashain",
+                id: "dashain",
+              },
+              {
+                src: "/tihar.jpg",
+                alt: "Tihar lights",
+                label: "Tihar",
+                id: "tihar",
+              },
+              {
+                src: "/holi.jpg",
+                alt: "Festival colors",
+                label: "Holi",
+                id: "holi",
+              },
+            ].map((fest) => (
+              <button
+                key={fest.label}
+                type="button"
+                onClick={() => setActiveFestival(fest.id)}
+                className={`group relative overflow-hidden rounded-2xl border transition-all duration-500 text-left ${
+                  activeFestival === fest.id
+                    ? "border-red-500 ring-2 ring-red-500/30 shadow-xl shadow-red-500/10"
+                    : "border-white/10 hover:border-white/30"
+                }`}
+              >
+                <div className="absolute inset-0 bg-zinc-900">
+                  <img
+                    src={fest.src}
+                    alt={fest.alt}
+                    loading="lazy"
+                    className="h-44 w-full object-cover object-center transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-90"
+                  />
                 </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* ORDER STATUS */}
-              <div className={`${adminPanel} p-5 sm:p-6`}>
-                <h3 className="mb-4 text-xs font-black uppercase tracking-[0.18em] text-white/45">Delivery Status</h3>
-                <div className="space-y-2">
-                  {deliveryStatus.map((s) => (
-                    <div key={s.status} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                      <div>
-                        <p className="text-sm font-bold text-white">{s.status}</p>
-                        <p className="text-xs text-white/35">{s.count} orders</p>
-                      </div>
-                      <p className="text-sm font-black text-white">${s.revenue.toLocaleString()}</p>
-                    </div>
-                  ))}
-                  {deliveryStatus.length === 0 && <p className="text-sm text-white/35">No status data available.</p>}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                <div className="relative z-10 p-5 h-44 flex flex-col justify-end">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-red-400 mb-1">
+                    Special Event
+                  </span>
+                  <span className="text-xl font-black uppercase tracking-tight text-white">
+                    {fest.label} Drop
+                  </span>
                 </div>
-              </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              {/* PAYMENT STATUS */}
-              <div className={`${adminPanel} p-5 sm:p-6`}>
-                <h3 className="mb-4 text-xs font-black uppercase tracking-[0.18em] text-white/45">Payment Status</h3>
-                <div className="space-y-2">
-                  {paymentStatus.map((s) => (
-                    <div key={s.status} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
-                      <div>
-                        <p className="text-sm font-bold text-white">{s.status}</p>
-                        <p className="text-xs text-white/35">{s.count} orders</p>
-                      </div>
-                      <p className="text-sm font-black text-white">${s.revenue.toLocaleString()}</p>
-                    </div>
-                  ))}
-                  {paymentStatus.length === 0 && <p className="text-sm text-white/35">No payment status data available.</p>}
-                </div>
-              </div>
+      {/* FESTIVAL TABS */}
+      <section
+        id="festivals"
+        className="sticky top-0 z-40 border-b border-white/10 bg-black/90 backdrop-blur-xl py-4 shadow-2xl"
+      >
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-red-500" />
+              <span className="text-xs font-black uppercase tracking-widest text-zinc-400">
+                Select Festival Category
+              </span>
+            </div>
+            <span className="text-xs text-zinc-500 hidden sm:inline">
+              {activeFestivalData?.tagline}
+            </span>
+          </div>
+          <div className="flex gap-2.5 overflow-x-auto pb-1 no-scrollbar">
+            {FESTIVALS.map((festival) => (
+              <button
+                key={festival.id}
+                type="button"
+                onClick={() => setActiveFestival(festival.id)}
+                className={`shrink-0 rounded-full px-6 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                  activeFestival === festival.id
+                    ? "bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105"
+                    : "border border-white/10 bg-zinc-900/60 text-zinc-400 hover:border-white/30 hover:text-white"
+                }`}
+              >
+                {festival.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SALE COLLECTION */}
+      <main id="sale-collection" className="bg-black py-20">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b border-white/10 pb-8">
+            <div className="space-y-2">
+              <span className="text-xs font-black uppercase tracking-[0.3em] text-red-500">
+                {activeFestivalData?.label} Collection
+              </span>
+              <h2 className="text-4xl font-black uppercase tracking-tight md:text-5xl">
+                {sortedSaleProducts.length} Exclusive Deals
+              </h2>
+              <p className="max-w-xl text-zinc-400 text-sm">
+                {activeFestivalData?.tagline}. Discounts applied automatically. Stock is strictly limited.
+              </p>
             </div>
 
-            {/* TOP PRODUCTS */}
-            <div className={`${adminPanel} overflow-hidden mb-6`}>
-              <div className="border-b border-white/10 px-5 py-4">
-                <h3 className="text-xs font-black uppercase tracking-[0.18em] text-white/45">Top Products</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className={adminTable}>
-                  <thead>
-                    <tr>
-                      <TableHeader label="Product" />
-                      <TableHeader label="Category" />
-                      <TableHeader label="Price" />
-                      <TableHeader label="Units Sold" />
-                      <TableHeader label="Revenue" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topProducts.length === 0 ? (
-                      <tr><td colSpan={5} className="px-4 py-8 text-center text-white/35">No product data available.</td></tr>
-                    ) : (
-                      topProducts.map((p, idx) => (
-                        <tr key={p.productId || idx} className="transition-colors hover:bg-white/[0.04]">
-                          <td className={`${adminCell} text-sm font-medium text-white`}>{p.name}</td>
-                          <td className={`${adminCell} text-sm text-gray-300`}>{p.category}</td>
-                          <td className={`${adminCell} text-sm text-gray-300`}>${p.price.toLocaleString()}</td>
-                          <td className={`${adminCell} text-sm text-gray-300`}>{p.totalQuantity}</td>
-                          <td className={`${adminCell} text-sm font-black text-white`}>${p.totalRevenue.toLocaleString()}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search festival deals..."
+                className="h-12 w-full rounded-full border border-white/10 bg-zinc-900/80 py-3 pl-11 pr-4 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-500 focus:border-red-500 focus:bg-zinc-900 shadow-inner"
+              />
             </div>
+          </div>
 
-            {/* TOP CUSTOMERS */}
-            <div className={`${adminPanel} overflow-hidden`}>
-              <div className="border-b border-white/10 px-5 py-4">
-                <h3 className="text-xs font-black uppercase tracking-[0.18em] text-white/45">Top Customers</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className={adminTable}>
-                  <thead>
-                    <tr>
-                      <TableHeader label="Customer" />
-                      <TableHeader label="Email" />
-                      <TableHeader label="Orders" />
-                      <TableHeader label="Total Spent" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topCustomers.length === 0 ? (
-                      <tr><td colSpan={4} className="px-4 py-8 text-center text-white/35">No customer data available.</td></tr>
-                    ) : (
-                      topCustomers.map((c, idx) => (
-                        <tr key={c.email || idx} className="transition-colors hover:bg-white/[0.04]">
-                          <td className={`${adminCell} text-sm font-medium text-white`}>{c.name}</td>
-                          <td className={`${adminCell} text-sm text-gray-300`}>{c.email}</td>
-                          <td className={`${adminCell} text-sm text-gray-300`}>{c.orders}</td>
-                          <td className={`${adminCell} text-sm font-black text-white`}>${c.totalSpent.toLocaleString()}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="border-t border-white/10 px-5 py-4 flex items-center justify-between">
-                <p className="text-xs font-bold text-white/40">Customer Segments</p>
-                <p className="text-xs text-white/35">{customerSegments.new} new · {customerSegments.returning} returning · {customerSegments.total} total</p>
-              </div>
+          {loading ? (
+            <div className="mx-auto max-w-7xl px-6 py-32 text-center">
+              <div className="mx-auto h-12 w-12 rounded-full border-2 border-red-600 border-t-transparent animate-spin" />
+              <p className="mt-4 text-xs font-bold uppercase tracking-widest text-zinc-500">
+                Loading festival deals...
+              </p>
             </div>
-          </>
-        )}
-      </PageBody>
+          ) : error ? (
+            <div className="mx-auto max-w-md px-6 py-28 text-center rounded-3xl border border-white/10 bg-zinc-900/50">
+              <ShoppingBag className="mx-auto mb-4 h-12 w-12 text-red-500" />
+              <h2 className="text-2xl font-black uppercase tracking-tight">Deals unavailable</h2>
+              <p className="mt-2 text-sm text-zinc-400">
+                Please check the products API connection and try again.
+              </p>
+            </div>
+          ) : sortedSaleProducts.length === 0 ? (
+            <div className="mx-auto max-w-md px-6 py-28 text-center rounded-3xl border border-white/10 bg-zinc-900/50">
+              <Flame className="mx-auto mb-4 h-12 w-12 text-zinc-600" />
+              <h2 className="text-2xl font-black uppercase tracking-tight">No active deals found</h2>
+              <p className="mt-2 text-sm text-zinc-400">
+                Festival offers for {activeFestivalData?.label} are dropping soon. Try searching another term or festival.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {sortedSaleProducts.map((product, index) => (
+                <SaleProductCard key={getProductId(product) || `${index}`} product={product} index={index} />
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* CTA STRIP */}
+      <section className="relative overflow-hidden border-t border-white/10 bg-gradient-to-b from-zinc-950 to-black py-20">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1552346154-21d32810aba3?w=1920&q=80"
+            alt="Sneakers collection"
+            className="h-full w-full object-cover opacity-15"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+        </div>
+        <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-8 px-6 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 text-red-500 text-xs font-black uppercase tracking-widest">
+              <Zap className="h-4 w-4" /> Final Hours
+            </div>
+            <h2 className="text-3xl font-black uppercase tracking-tight sm:text-4xl md:text-5xl">
+              Don't Miss Out On <br />
+              <span className="text-red-500">The Drop.</span>
+            </h2>
+            <p className="max-w-xl text-zinc-400 text-sm sm:text-base">
+              Festival prices are valid only while supplies last. Once the countdown hits zero, regular pricing returns.
+            </p>
+          </div>
+          <Link
+            href="/nike/products"
+            className="inline-flex items-center justify-center gap-3 rounded-full bg-white px-8 py-4 text-sm font-black uppercase tracking-wider text-black shadow-xl transition-all duration-300 hover:bg-red-600 hover:text-white hover:scale-105 shrink-0"
+          >
+            Browse All Products
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+
+      <EcomFooter />
     </div>
-  )
-}
+  );
+};
 
-const TableHeader = ({ label, hidden, className = "" }: { label: string; hidden?: string; className?: string }) => (
-  <th className={`${adminHeaderCell} ${hidden ? `hidden ${hidden}:table-cell` : ""} ${className}`}>{label}</th>
-)
-
-function formatCurrency(value: number) {
-  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`
-  if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`
-  return `$${value}`
-}
-
-export default SalesPage
+export default SalePage;
