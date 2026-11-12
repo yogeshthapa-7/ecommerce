@@ -154,6 +154,8 @@ const AuditPage = () => {
       log.description || "—",
     ])
 
+    const originalGetNumberOfPages = (doc as any).getNumberOfPages.bind(doc as any)
+
     autoTable(doc as any, {
       head: [tableColumn],
       body: tableRows,
@@ -184,9 +186,7 @@ const AuditPage = () => {
 
     const afterTableY = (doc as any).lastAutoTable.finalY + 24
 
-    ;(doc as any).getNumberOfPages = () => (doc as any).getNumberOfPages()
-
-    const pageCount = (doc as any).getNumberOfPages()
+    const pageCount = originalGetNumberOfPages()
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i)
       doc.setFillColor(0, 0, 0)
